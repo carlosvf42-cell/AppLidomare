@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(curl -s -X GET https://api.notion.com/v1/databases/0f303a2d-ac1a-49ae-a970-813b630b7343 -H 'Authorization: Bearer ntn_V28286628711ef9rNIgBuep3T4dJWn2mkQqj9XQbNAN9C8' -H 'Notion-Version: 2022-06-28')",
+      "Bash(python3 -c ':*)",
+      "Bash(curl -s -X GET https://api.notion.com/v1/databases/1ab0a899-f857-80cf-945c-000bbaa90aae -H 'Authorization: Bearer ntn_V28286628711ef9rNIgBuep3T4dJWn2mkQqj9XQbNAN9C8' -H 'Notion-Version: 2022-06-28')",
+      "Bash(curl -s -X GET https://api.notion.com/v1/databases/1b50a899-f857-8085-b48d-000bd91f9afd -H 'Authorization: Bearer ntn_V28286628711ef9rNIgBuep3T4dJWn2mkQqj9XQbNAN9C8' -H 'Notion-Version: 2022-06-28')",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d['version']\\)\")",
+      "Bash(npm install:*)",
+      "Bash(kill 32743)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(python3 -c \" import json,sys d=json.load\\(sys.stdin\\) for page in d['results'][:3]: p=page['properties'] for k,v in p.items\\(\\): if v['type']=='url' and v.get\\('url'\\): print\\(' ',k,':',v['url'][:100]\\) elif v['type']=='files' and v.get\\('files'\\): for f in v['files']: url=f.get\\('external',{}\\).get\\('url'\\) or f.get\\('file',{}\\).get\\('url',''\\) if url and not url.startswith\\('data:'\\): print\\(' ',k,'\\(file\\):',url[:100]\\) \" done)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
+    ]
+  }
+}
