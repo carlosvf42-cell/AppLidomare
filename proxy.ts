@@ -43,14 +43,19 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Unauthenticated → send to /login (except when already there)
-  if (!user && !pathname.startsWith("/login")) {
+  const isPublic =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/auth/callback") ||
+    pathname.startsWith("/auth/set-password");
+
+  // Unauthenticated → send to /login (except public routes)
+  if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Authenticated + on /login → send home
+  // Authenticated + on /login (but not /auth/*) → send home
   if (user && pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
