@@ -40,13 +40,12 @@ function IconCalendar({ active }: { active: boolean }) {
   );
 }
 
-function IconClipboard({ active }: { active: boolean }) {
+function IconUser({ active }: { active: boolean }) {
   const c = active ? ACCENT : INACTIVE;
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect x="5" y="3" width="14" height="18" rx="2" stroke={c} strokeWidth="1.4"/>
-      <path d="M9 3h6v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V3z" stroke={c} strokeWidth="1.4"/>
-      <path d="M8 12h8M8 16h5" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
+      <circle cx="12" cy="8" r="4" stroke={c} strokeWidth="1.4"/>
+      <path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
     </svg>
   );
 }
@@ -55,6 +54,7 @@ export default function BottomNav() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isContent = pathname.startsWith("/contenido");
+  const isPerfil = pathname.startsWith("/perfil");
 
   const labelStyle = (active: boolean): React.CSSProperties => ({
     fontSize: 9,
@@ -64,7 +64,6 @@ export default function BottomNav() {
     lineHeight: 1,
   });
 
-  // Tab wrapper — full touch target height
   const tabClass = "flex flex-col items-center justify-center flex-1 relative";
   const tabStyle: React.CSSProperties = { minHeight: 44 };
 
@@ -103,17 +102,11 @@ export default function BottomNav() {
         </span>
       </div>
 
-      {/* Programa — visually disabled */}
-      <div className={tabClass} style={tabStyle}>
-        <IconClipboard active={false} />
-        <span style={labelStyle(false)}>programa</span>
-        <span
-          className="absolute top-2 right-[calc(50%-28px)] text-[8px] px-1 rounded-full leading-tight"
-          style={{ background: "#1a1a1a", color: "#555", paddingTop: 1, paddingBottom: 1 }}
-        >
-          pronto
-        </span>
-      </div>
+      {/* Perfil */}
+      <Link href="/perfil" className={tabClass} style={tabStyle}>
+        <IconUser active={isPerfil} />
+        <span style={labelStyle(isPerfil)}>perfil</span>
+      </Link>
     </nav>
   );
 }

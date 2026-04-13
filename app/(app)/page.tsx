@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { logoutAction } from "@/app/login/actions";
 
 const HERO_BG = "/images/hero-home.jpg";
 
@@ -31,18 +30,6 @@ export default function HomePage() {
           style={{ background: "linear-gradient(to bottom, rgba(8,8,8,0.2) 0%, rgba(8,8,8,0.55) 50%, #080808 100%)" }}
           aria-hidden="true"
         />
-
-        {/* Logout — top right */}
-        <div className="absolute top-0 right-0 z-10 p-5">
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              className="text-[#555] text-xs tracking-wider hover:text-[#888] transition-colors"
-            >
-              salir
-            </button>
-          </form>
-        </div>
 
         {/* Hero content — bottom of hero */}
         <div className="relative z-10 flex flex-col justify-end h-full px-6 pb-10" style={{ minHeight: "65vh" }}>
