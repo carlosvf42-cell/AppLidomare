@@ -1,9 +1,22 @@
-import { getActivaciones } from "@/lib/notion";
+"use client";
+
+import { useEffect, useState } from "react";
+import type { NotionActivacion } from "@/lib/notion";
 import ActivacionClient from "./ActivacionClient";
+import { LoadingState, ErrorState } from "@/components/ContentStates";
 
-export const revalidate = 3600;
+export default function ActivacionPage() {
+  const [data, setData] = useState<NotionActivacion[] | null>(null);
+  const [error, setError] = useState(false);
 
-export default async function ActivacionPage() {
-  const routines = await getActivaciones();
-  return <ActivacionClient routines={routines} />;
+  useEffect(() => {
+    fetch("/api/notion/activacion")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((json) => setData(json))
+      .catch(() => setError(true));
+  }, []);
+
+  if (error) return <ErrorState />;
+  if (!data)  return <LoadingState />;
+  return <ActivacionClient routines={data} />;
 }

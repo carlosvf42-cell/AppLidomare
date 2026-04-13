@@ -1,9 +1,22 @@
-import { getWebinars } from "@/lib/notion";
+"use client";
+
+import { useEffect, useState } from "react";
+import type { NotionWebinar } from "@/lib/notion";
 import WebinarsClient from "./WebinarsClient";
+import { LoadingState, ErrorState } from "@/components/ContentStates";
 
-export const revalidate = 3600;
+export default function WebinarsPage() {
+  const [data, setData] = useState<NotionWebinar[] | null>(null);
+  const [error, setError] = useState(false);
 
-export default async function WebinarsPage() {
-  const webinars = await getWebinars();
-  return <WebinarsClient webinars={webinars} />;
+  useEffect(() => {
+    fetch("/api/notion/webinars")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((json) => setData(json))
+      .catch(() => setError(true));
+  }, []);
+
+  if (error) return <ErrorState />;
+  if (!data)  return <LoadingState />;
+  return <WebinarsClient webinars={data} />;
 }
