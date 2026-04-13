@@ -12,16 +12,12 @@ export default function SetPasswordPage() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = e.currentTarget;
+    const form     = e.currentTarget;
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
-    const confirm = (form.elements.namedItem("confirm") as HTMLInputElement).value;
+    const confirm  = (form.elements.namedItem("confirm")  as HTMLInputElement).value;
 
     if (password !== confirm) {
       setError("Las contraseñas no coinciden.");
-      return;
-    }
-    if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
 
@@ -35,7 +31,6 @@ export default function SetPasswordPage() {
         return;
       }
 
-      // Session is already active after verifyOtp — go straight home.
       router.push("/");
       router.refresh();
     });
@@ -43,74 +38,63 @@ export default function SetPasswordPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6"
+      className="relative min-h-screen flex flex-col overflow-hidden"
       style={{ background: "#080808" }}
     >
-      {/* Logo */}
-      <div className="mb-10">
-        <Logo className="w-[180px]" />
-      </div>
+      {/* Content */}
+      <div className="relative z-10 flex flex-col flex-1">
+        {/* Logo — upper half */}
+        <div className="flex-1 flex items-center justify-center px-8 pt-20 pb-8">
+          <Logo className="w-full max-w-[280px]" />
+        </div>
 
-      {/* Card */}
-      <div
-        className="w-full max-w-sm rounded-2xl px-6 py-8"
-        style={{ background: "#141414", border: "1px solid #222" }}
-      >
-        <h1 className="text-[#f0f0f0] text-xl font-light mb-1">
-          Crea tu contraseña
-        </h1>
-        <p className="text-[#555] text-xs tracking-wide mb-8">
-          Elige una contraseña segura para acceder a la app.
-        </p>
+        {/* Form — lower half */}
+        <div className="bg-[#080808] px-6 pt-8 pb-14">
+          <h1 className="text-[#f0f0f0] text-xl font-light text-center mb-1">
+            Bienvenido a Lidomare
+          </h1>
+          <p className="text-[#888] text-xs tracking-[0.15em] text-center mb-8">
+            Crea tu contraseña para acceder
+          </p>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="block text-[10px] tracking-[0.2em] uppercase text-[#555] mb-2">
-              Nueva contraseña
-            </label>
+          <form onSubmit={handleSubmit} className="space-y-3 max-w-sm mx-auto">
             <input
               type="password"
               name="password"
-              placeholder="Mínimo 8 caracteres"
+              placeholder="Nueva contraseña"
               required
-              minLength={8}
+              minLength={6}
               autoComplete="new-password"
-              className="w-full bg-[#1a1a1a] border border-[#222] rounded-lg px-4 py-3.5 text-[#f0f0f0] placeholder-[#333] text-sm outline-none focus:border-[#2abfbf] transition-colors"
+              className="w-full bg-[#141414] border border-[#222] rounded-lg px-4 py-3.5 text-[#f0f0f0] placeholder-[#444] text-sm outline-none focus:border-[#2abfbf] transition-colors"
             />
-          </div>
-
-          <div>
-            <label className="block text-[10px] tracking-[0.2em] uppercase text-[#555] mb-2">
-              Confirmar contraseña
-            </label>
             <input
               type="password"
               name="confirm"
-              placeholder="Repite la contraseña"
+              placeholder="Confirmar contraseña"
               required
-              minLength={8}
+              minLength={6}
               autoComplete="new-password"
-              className="w-full bg-[#1a1a1a] border border-[#222] rounded-lg px-4 py-3.5 text-[#f0f0f0] placeholder-[#333] text-sm outline-none focus:border-[#2abfbf] transition-colors"
+              className="w-full bg-[#141414] border border-[#222] rounded-lg px-4 py-3.5 text-[#f0f0f0] placeholder-[#444] text-sm outline-none focus:border-[#2abfbf] transition-colors"
             />
-          </div>
 
-          {error && (
-            <p className="text-[#f0a0a0] text-xs text-center pt-1">{error}</p>
-          )}
+            {error && (
+              <p className="text-[#f0a0a0] text-xs text-center pt-1">{error}</p>
+            )}
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full bg-[#2abfbf] text-[#080808] font-semibold text-sm tracking-widest uppercase py-4 rounded-lg mt-2 hover:bg-[#25aaaa] active:bg-[#20959e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isPending ? "Guardando..." : "Establecer contraseña"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full bg-[#2abfbf] text-[#080808] font-semibold text-sm tracking-widest uppercase py-4 rounded-lg mt-2 hover:bg-[#25aaaa] active:bg-[#20959e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPending ? "Guardando..." : "Establecer contraseña"}
+            </button>
+          </form>
+
+          <p className="text-[#333] text-xs text-center mt-8 tracking-wider">
+            Powered by Antifrágil®
+          </p>
+        </div>
       </div>
-
-      <p className="text-[#2a2a2a] text-[10px] text-center mt-8 tracking-wider">
-        Powered by Antifrágil®
-      </p>
     </div>
   );
 }

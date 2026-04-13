@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import { createClient } from "@/lib/supabase/client";
@@ -9,31 +9,68 @@ const BG = "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q
 
 export default function LoginPage() {
   const router = useRouter();
+  const [phase, setPhase] = useState<"checking" | "form">("checking");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // On mount: check if Supabase redirected here with invite tokens in the hash.
+  // Supabase invite emails land on the Site URL with:
+  //   /login#access_token=...&refresh_token=...&type=invite
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const access_token  = params.get("access_token");
+    const refresh_token = params.get("refresh_token");
+    const type          = params.get("type");
+
+    if (access_token && refresh_token && type === "invite") {
+      const supabase = createClient();
+      supabase.auth
+        .setSession({ access_token, refresh_token })
+        .then(({ error }) => {
+          if (error) {
+            // Session failed — fall through to the normal login form
+            setPhase("form");
+          } else {
+            router.replace("/auth/set-password");
+          }
+        });
+      // Keep showing spinner while setSession resolves
+      return;
+    }
+
+    // No invite hash — show the normal login form
+    setPhase("form");
+  }, [router]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+    const email    = (form.elements.namedItem("email")    as HTMLInputElement).value;
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
 
     setError(null);
     startTransition(async () => {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-
       if (error) {
         setError("Email o contraseña incorrectos.");
         return;
       }
-
-      // Full navigation so the middleware reads the fresh session cookies.
       router.push("/");
       router.refresh();
     });
   }
 
+  // ── Spinner while checking the hash / calling setSession ──────────────────
+  if (phase === "checking") {
+    return (
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+        <div className="w-5 h-5 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // ── Normal login form ─────────────────────────────────────────────────────
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Background image */}
@@ -55,12 +92,12 @@ export default function LoginPage() {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col flex-1">
-        {/* Logo — upper half */}
+        {/* Logo */}
         <div className="flex-1 flex items-center justify-center px-8 pt-20 pb-8">
           <Logo className="w-full max-w-[280px]" />
         </div>
 
-        {/* Form — lower half */}
+        {/* Form */}
         <div className="bg-[#080808] px-6 pt-8 pb-14">
           <p className="text-[#888] text-xs tracking-[0.2em] uppercase mb-6 text-center">
             Acceso para miembros
