@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Send the branded email via Resend
     const { error: emailError } = await resend.emails.send({
-      from: "Lidomare <noreply@lidomare.com>",
+      from: "Lidomare Health App <noreply@antifragil.net>",
       to: email,
       subject: "Tu acceso a Lidomare Health App",
       html: buildEmailHtml(inviteUrl),
