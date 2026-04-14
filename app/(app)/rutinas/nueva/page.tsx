@@ -83,10 +83,13 @@ export default function NuevaRutinaPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      // 1. Insert rutina
+      // Deactivate existing routines
+      await supabase.from("rutinas").update({ activa: false }).eq("user_id", user.id);
+
+      // Insert new routine as active
       const { data: rutina, error: rutinaErr } = await supabase
         .from("rutinas")
-        .insert({ nombre: nombre.trim(), user_id: user.id })
+        .insert({ nombre: nombre.trim(), user_id: user.id, activa: true })
         .select("id")
         .single();
 
@@ -96,7 +99,7 @@ export default function NuevaRutinaPage() {
         return;
       }
 
-      // 2. Insert días
+      // Insert días
       const diasRows = dias.map((d, orden) => ({
         rutina_id: rutina.id,
         nombre: d.nombre.trim(),
@@ -114,7 +117,7 @@ export default function NuevaRutinaPage() {
         return;
       }
 
-      // 3. Insert ejercicios for each día
+      // Insert ejercicios
       const ejerciciosRows = dias.flatMap((d, diaIdx) =>
         d.ejercicios.map((ej, orden) => ({
           dia_id: diasData[diaIdx].id,
@@ -172,8 +175,12 @@ export default function NuevaRutinaPage() {
         <div>
           <div className="flex items-center justify-between mb-3 px-1">
             <p className="text-[10px] tracking-[0.2em] uppercase text-[#555]">Días ({dias.length})</p>
-            <button type="button" onClick={addDia}
-              className="flex items-center gap-1.5 text-xs font-light" style={{ color: "#2abfbf" }}>
+            <button
+              type="button"
+              onClick={addDia}
+              className="flex items-center gap-1.5 text-xs font-light"
+              style={{ color: "#2abfbf" }}
+            >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
@@ -183,8 +190,11 @@ export default function NuevaRutinaPage() {
 
           <div className="space-y-4">
             {dias.map((dia, diaIdx) => (
-              <div key={diaIdx} className="rounded-xl px-4 py-4 space-y-3"
-                style={{ background: "#141414", border: "1px solid #222" }}>
+              <div
+                key={diaIdx}
+                className="rounded-xl px-4 py-4 space-y-3"
+                style={{ background: "#141414", border: "1px solid #222" }}
+              >
                 {/* Día header */}
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-mono text-[#444] shrink-0">
@@ -198,9 +208,13 @@ export default function NuevaRutinaPage() {
                     className="flex-1 bg-[#1a1a1a] border border-[#222] rounded-lg px-3 py-2.5 text-[#f0f0f0] placeholder-[#333] text-sm outline-none focus:border-[#2abfbf] transition-colors"
                   />
                   {dias.length > 1 && (
-                    <button type="button" onClick={() => removeDia(diaIdx)}
+                    <button
+                      type="button"
+                      onClick={() => removeDia(diaIdx)}
                       className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg"
-                      style={{ color: "#555" }} aria-label="Eliminar día">
+                      style={{ color: "#555" }}
+                      aria-label="Eliminar día"
+                    >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                         <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                       </svg>
@@ -226,9 +240,13 @@ export default function NuevaRutinaPage() {
                           className="flex-1 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] placeholder-[#333] text-xs outline-none focus:border-[#2abfbf] transition-colors"
                         />
                         {dia.ejercicios.length > 1 && (
-                          <button type="button" onClick={() => removeEjercicio(diaIdx, ejIdx)}
+                          <button
+                            type="button"
+                            onClick={() => removeEjercicio(diaIdx, ejIdx)}
                             className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg"
-                            style={{ color: "#444" }} aria-label="Eliminar ejercicio">
+                            style={{ color: "#444" }}
+                            aria-label="Eliminar ejercicio"
+                          >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                               <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                             </svg>
@@ -239,7 +257,10 @@ export default function NuevaRutinaPage() {
                         <div>
                           <label className="block text-[9px] tracking-wider uppercase text-[#444] mb-1">Series</label>
                           <input
-                            type="number" min={1} max={20} value={ej.series}
+                            type="number"
+                            min={1}
+                            max={20}
+                            value={ej.series}
                             onChange={(e) => updateEjercicio(diaIdx, ejIdx, "series", parseInt(e.target.value) || 1)}
                             className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-2 py-1.5 text-[#f0f0f0] text-xs text-center outline-none focus:border-[#2abfbf] transition-colors"
                           />
@@ -247,7 +268,10 @@ export default function NuevaRutinaPage() {
                         <div>
                           <label className="block text-[9px] tracking-wider uppercase text-[#444] mb-1">Reps objetivo</label>
                           <input
-                            type="number" min={1} max={999} value={ej.repeticiones}
+                            type="number"
+                            min={1}
+                            max={999}
+                            value={ej.repeticiones}
                             onChange={(e) => updateEjercicio(diaIdx, ejIdx, "repeticiones", parseInt(e.target.value) || 1)}
                             className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-2 py-1.5 text-[#f0f0f0] text-xs text-center outline-none focus:border-[#2abfbf] transition-colors"
                           />
@@ -257,9 +281,12 @@ export default function NuevaRutinaPage() {
                   ))}
                 </div>
 
-                <button type="button" onClick={() => addEjercicio(diaIdx)}
+                <button
+                  type="button"
+                  onClick={() => addEjercicio(diaIdx)}
                   className="flex items-center gap-1 text-[10px] font-light pl-4"
-                  style={{ color: "#2abfbf" }}>
+                  style={{ color: "#2abfbf" }}
+                >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                     <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
                   </svg>
