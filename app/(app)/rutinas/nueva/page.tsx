@@ -67,7 +67,8 @@ export default function NuevaRutinaPage() {
         .single();
 
       if (rutinaErr || !rutina) {
-        setError("No se pudo guardar la rutina. Inténtalo de nuevo.");
+        console.error("Supabase rutina insert error:", rutinaErr);
+        setError(`No se pudo guardar la rutina. ${rutinaErr?.message ?? ""}`);
         return;
       }
 
@@ -84,7 +85,8 @@ export default function NuevaRutinaPage() {
       const { error: ejErr } = await supabase.from("ejercicios_rutina").insert(rows);
 
       if (ejErr) {
-        setError("Rutina creada pero hubo un error guardando los ejercicios.");
+        console.error("Supabase ejercicios insert error:", ejErr);
+        setError(`Rutina creada pero hubo un error guardando los ejercicios. ${ejErr.message}`);
         return;
       }
 
