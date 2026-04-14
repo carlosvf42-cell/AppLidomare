@@ -30,12 +30,15 @@ function IconGrid({ active }: { active: boolean }) {
   );
 }
 
-function IconCalendar({ active }: { active: boolean }) {
+function IconDumbbell({ active }: { active: boolean }) {
   const c = active ? ACCENT : INACTIVE;
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="5" width="18" height="16" rx="2" stroke={c} strokeWidth="1.4"/>
-      <path d="M3 10h18M8 3v4M16 3v4" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
+      <rect x="2" y="10.5" width="3.5" height="3" rx="0.8" stroke={c} strokeWidth="1.4"/>
+      <rect x="18.5" y="10.5" width="3.5" height="3" rx="0.8" stroke={c} strokeWidth="1.4"/>
+      <rect x="4.5" y="8.5" width="3" height="7" rx="0.8" stroke={c} strokeWidth="1.4"/>
+      <rect x="16.5" y="8.5" width="3" height="7" rx="0.8" stroke={c} strokeWidth="1.4"/>
+      <path d="M7.5 12h9" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
     </svg>
   );
 }
@@ -54,6 +57,7 @@ export default function BottomNav() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isContent = pathname.startsWith("/contenido");
+  const isRutinas = pathname.startsWith("/rutinas");
   const isPerfil = pathname.startsWith("/perfil");
 
   const labelStyle = (active: boolean): React.CSSProperties => ({
@@ -90,17 +94,11 @@ export default function BottomNav() {
         <span style={labelStyle(isContent)}>contenido</span>
       </Link>
 
-      {/* Cita — visually disabled */}
-      <div className={tabClass} style={tabStyle}>
-        <IconCalendar active={false} />
-        <span style={labelStyle(false)}>cita</span>
-        <span
-          className="absolute top-2 right-[calc(50%-22px)] text-[8px] px-1 rounded-full leading-tight"
-          style={{ background: "#1a1a1a", color: "#555", paddingTop: 1, paddingBottom: 1 }}
-        >
-          pronto
-        </span>
-      </div>
+      {/* Rutinas */}
+      <Link href="/rutinas" className={tabClass} style={tabStyle}>
+        <IconDumbbell active={isRutinas} />
+        <span style={labelStyle(isRutinas)}>rutinas</span>
+      </Link>
 
       {/* Perfil */}
       <Link href="/perfil" className={tabClass} style={tabStyle}>
