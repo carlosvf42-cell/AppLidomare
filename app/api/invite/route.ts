@@ -14,6 +14,11 @@ function getAdminClient() {
 }
 
 export async function POST(request: NextRequest) {
+  // Diagnóstico: verificar que las variables de entorno están cargadas
+  console.log("SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "OK" : "MISSING");
+  console.log("SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "MISSING");
+  console.log("RESEND_KEY:", process.env.RESEND_API_KEY ? "OK" : "MISSING");
+
   try {
     const { email } = await request.json();
 
@@ -36,7 +41,12 @@ export async function POST(request: NextRequest) {
     if (inviteError || !data?.properties?.action_link) {
       console.error("Supabase invite error:", inviteError);
       return NextResponse.json(
-        { error: "No se pudo generar la invitación." },
+        {
+          error: "No se pudo generar la invitación",
+          details: inviteError?.message ?? "action_link vacío",
+          code: (inviteError as any)?.code,
+          status: (inviteError as any)?.status,
+        },
         { status: 500 }
       );
     }
@@ -60,9 +70,17 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Invite route error:", err);
-    return NextResponse.json({ error: "Error interno." }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "No se pudo generar la invitación",
+        details: err?.message,
+        code: err?.code,
+        status: err?.status,
+      },
+      { status: 500 }
+    );
   }
 }
 
