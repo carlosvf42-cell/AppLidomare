@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+
+const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -68,6 +71,19 @@ export default function PerfilPage() {
           <p className="text-[#f0f0f0] text-sm font-light break-all">{email}</p>
         </div>
       </div>
+
+      {/* Admin link — only for admin */}
+      {email === ADMIN_EMAIL && (
+        <Link
+          href="/admin"
+          className="flex items-center justify-between w-full border border-[#222] px-5 py-4 rounded-xl mb-3 transition-colors hover:border-[#2abfbf]"
+        >
+          <span className="text-xs tracking-[0.2em] uppercase text-[#555]">Panel de administración</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M9 6l6 6-6 6" stroke="#333" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Link>
+      )}
 
       {/* Sign out */}
       <button
