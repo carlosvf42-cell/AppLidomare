@@ -5,24 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
-type Rutina = {
-  id: string;
-  nombre: string;
-  fecha: string;
-  ejercicios_rutina: { id: string }[];
-};
+type RutinaDia = { id: string; nombre: string; orden: number; rutina_ejercicios: { id: string }[] };
+type Rutina = { id: string; nombre: string; activa: boolean; rutina_dias: RutinaDia[] };
 
 function getSupabase() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
-}
-
-function formatFecha(dateStr: string) {
-  const [y, m, d] = dateStr.split("-");
-  const date = new Date(Number(y), Number(m) - 1, Number(d));
-  return date.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export default function RutinasPage() {
@@ -34,8 +24,8 @@ export default function RutinasPage() {
     const supabase = getSupabase();
     supabase
       .from("rutinas")
-      .select("id, nombre, fecha, ejercicios_rutina(id)")
-      .order("fecha", { ascending: false })
+      .select("id, nombre, activa, rutina_dias(id, nombre, orden, rutina_ejercicios(id))")
+      .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error) console.error(error);
         else setRutinas((data as Rutina[]) ?? []);
@@ -45,7 +35,6 @@ export default function RutinasPage() {
 
   return (
     <div className="min-h-screen bg-[#080808]">
-      {/* Header */}
       <div className="px-6 pt-14 pb-4 flex items-center justify-between">
         <div>
           <p className="text-[10px] tracking-[0.2em] uppercase text-[#444]">entrenamiento</p>
@@ -63,7 +52,6 @@ export default function RutinasPage() {
         </Link>
       </div>
 
-      {/* Content */}
       <div className="px-4 pb-6">
         {loading ? (
           <div className="flex justify-center pt-20">
@@ -71,10 +59,8 @@ export default function RutinasPage() {
           </div>
         ) : rutinas.length === 0 ? (
           <div className="text-center pt-20 px-8">
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: "#141414", border: "1px solid #222" }}
-            >
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{ background: "#141414", border: "1px solid #222" }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <rect x="2" y="10.5" width="3.5" height="3" rx="0.8" stroke="#444" strokeWidth="1.4"/>
                 <rect x="18.5" y="10.5" width="3.5" height="3" rx="0.8" stroke="#444" strokeWidth="1.4"/>
@@ -88,32 +74,48 @@ export default function RutinasPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {rutinas.map((r) => (
-              <button
-                key={r.id}
-                onClick={() => router.push(`/rutinas/${r.id}`)}
-                className="w-full text-left rounded-xl px-4 py-4 transition-colors"
-                style={{ background: "#141414", border: "1px solid #222" }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[#f0f0f0] text-sm font-light leading-snug">{r.nombre}</p>
-                    <p className="text-[#555] text-xs mt-0.5">{formatFecha(r.fecha)}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span
-                      className="text-[10px] px-2 py-0.5 rounded-full font-light"
-                      style={{ background: "#1a1a1a", color: "#666", border: "1px solid #2a2a2a" }}
-                    >
-                      {r.ejercicios_rutina.length} ejerc.
-                    </span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            {rutinas.map((r) => {
+              const dias = [...(r.rutina_dias ?? [])].sort((a, b) => a.orden - b.orden);
+              const totalEjercicios = dias.reduce((s, d) => s + (d.rutina_ejercicios?.length ?? 0), 0);
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => router.push(`/rutinas/${r.id}`)}
+                  className="w-full text-left rounded-xl px-4 py-4 transition-colors"
+                  style={{ background: "#141414", border: "1px solid #222" }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-[#f0f0f0] text-sm font-light leading-snug">{r.nombre}</p>
+                        {r.activa && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full"
+                            style={{ background: "rgba(42,191,191,0.12)", color: "#2abfbf", border: "1px solid rgba(42,191,191,0.2)" }}>
+                            activa
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[#555] text-xs mt-1">
+                        {dias.length} {dias.length === 1 ? "día" : "días"} · {totalEjercicios} ejercicios
+                      </p>
+                      {dias.length > 0 && (
+                        <div className="flex gap-1.5 mt-2 flex-wrap">
+                          {dias.map((d) => (
+                            <span key={d.id} className="text-[9px] px-2 py-0.5 rounded-full"
+                              style={{ background: "#1a1a1a", color: "#666", border: "1px solid #2a2a2a" }}>
+                              {d.nombre}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0 mt-1">
                       <path d="M9 6l6 6-6 6" stroke="#333" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
