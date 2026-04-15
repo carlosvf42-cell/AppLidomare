@@ -14,37 +14,36 @@ export default function CitasPage() {
       </div>
 
       {/* 2-column square grid */}
-      <div className="px-4 grid grid-cols-2 gap-3">
+      <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
         {/* Card izquierda — Reservar cita */}
         <a
           href="https://antifragil-1.salonized.com/widget_bookings/new"
-          className="block active:scale-[0.97] transition-transform"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: "block", cursor: "pointer" }}
         >
           <div
-            className="flex flex-col items-center justify-center rounded-2xl p-4"
             style={{
               aspectRatio: "1 / 1",
               background: "#141414",
               border: "1px solid #222",
+              borderRadius: 16,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 12,
+              padding: 20,
+              width: "100%",
             }}
           >
             <img
               src="/images/antifragil-logo.png"
               alt="Antifrágil"
-              width={80}
-              height={80}
-              style={{ objectFit: "contain", display: "block" }}
+              style={{ width: 72, height: 72, objectFit: "contain", display: "block" }}
             />
-            <p
-              style={{
-                marginTop: 14,
-                color: "#f0f0f0",
-                fontSize: 14,
-                fontWeight: 500,
-                textAlign: "center",
-                lineHeight: 1.3,
-              }}
-            >
+            <p style={{ color: "#f0f0f0", fontSize: 15, fontWeight: 500, textAlign: "center", margin: 0 }}>
               Reservar cita
             </p>
           </div>
@@ -53,39 +52,73 @@ export default function CitasPage() {
         {/* Card derecha — Asesoramiento */}
         <button
           onClick={() => router.push("/citas/asesoramiento")}
-          className="block w-full active:scale-[0.97] transition-transform"
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            width: "100%",
+            display: "block",
+          }}
         >
           <div
-            className="flex flex-col items-center justify-center rounded-2xl p-4"
             style={{
               aspectRatio: "1 / 1",
-              background: "#141414",
+              borderRadius: 16,
+              overflow: "hidden",
+              position: "relative",
+              width: "100%",
               border: "1px solid #222",
             }}
           >
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"
-                stroke="#2abfbf"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <p
+            {/* Background image */}
+            <div
               style={{
-                marginTop: 14,
-                color: "#f0f0f0",
-                fontSize: 14,
-                fontWeight: 500,
-                textAlign: "center",
-                lineHeight: 1.3,
+                position: "absolute",
+                inset: 0,
+                backgroundImage: "url(https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80)",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+            {/* Dark overlay */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "rgba(8,8,8,0.72)",
+              }}
+            />
+            {/* Content */}
+            <div
+              style={{
+                position: "relative",
+                zIndex: 1,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                padding: 20,
               }}
             >
-              Asesoramiento
-            </p>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"
+                  stroke="#2abfbf"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <p style={{ color: "#f0f0f0", fontSize: 15, fontWeight: 500, textAlign: "center", margin: 0 }}>
+                Asesoramiento
+              </p>
+            </div>
           </div>
         </button>
+
       </div>
     </div>
   );
