@@ -46,7 +46,8 @@ export async function proxy(request: NextRequest) {
   const isPublic =
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth/callback") ||
-    pathname.startsWith("/auth/set-password");
+    pathname.startsWith("/auth/set-password") ||
+    pathname.startsWith("/citas/asesoramiento");
 
   // Unauthenticated → send to /login (except public routes)
   if (!user && !isPublic) {
