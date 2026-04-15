@@ -15,7 +15,24 @@
       "Bash(python3 -c \" import json,sys d=json.load\\(sys.stdin\\) for page in d['results'][:3]: p=page['properties'] for k,v in p.items\\(\\): if v['type']=='url' and v.get\\('url'\\): print\\(' ',k,':',v['url'][:100]\\) elif v['type']=='files' and v.get\\('files'\\): for f in v['files']: url=f.get\\('external',{}\\).get\\('url'\\) or f.get\\('file',{}\\).get\\('url',''\\) if url and not url.startswith\\('data:'\\): print\\(' ',k,'\\(file\\):',url[:100]\\) \" done)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d.get\\('version'\\)\\); exports=d.get\\('exports',{}\\); [print\\(k,':',v\\) for k,v in exports.items\\(\\) if 'server' in k.lower\\(\\)]\")",
+      "Bash(grep -n \"afterSignInUrl\\\\|forceRedirectUrl\\\\|fallbackRedirectUrl\\\\|SignInProps\" /Users/CarlosVF/lidomare-app/node_modules/@clerk/nextjs/dist/types/*.d.ts)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(git commit:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('version:', d['version']\\); [print\\(k\\) for k in d.get\\('exports', {}\\).keys\\(\\)]\")",
+      "Bash(git push:*)",
+      "Bash(rm -rf \"/Users/CarlosVF/lidomare-app/app/\\(app\\)/rutinas/[id]\")",
+      "Bash(mkdir -p \"/Users/CarlosVF/lidomare-app/app/\\(app\\)/rutinas/entrenar\" \"/Users/CarlosVF/lidomare-app/app/\\(app\\)/rutinas/sesion/[id]\")",
+      "Bash(git -C /Users/CarlosVF/lidomare-app ls-files public/images/)",
+      "Bash(git -C /Users/CarlosVF/lidomare-app add \"public/images/antifragil-logo.png\")",
+      "Bash(git -C /Users/CarlosVF/lidomare-app commit -m \"Add Antifrágil logo\")",
+      "Bash(git -C /Users/CarlosVF/lidomare-app push)",
+      "Bash(git -C /Users/CarlosVF/lidomare-app add public/images/antifragil-logo.png)",
+      "Bash(git -C /Users/CarlosVF/lidomare-app status --short public/)",
+      "Bash(git -C /Users/CarlosVF/lidomare-app commit -m \"Add Antifrágil logo image\")",
+      "Bash(git checkout:*)"
     ]
   }
 }
