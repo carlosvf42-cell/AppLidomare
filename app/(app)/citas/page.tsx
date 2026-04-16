@@ -15,6 +15,9 @@ export default function CitasPage() {
         style={{
           height: "45vh",
           borderRadius: 20,
+          border: "0.5px solid rgba(255,255,255,0.08)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
           position: "relative",
           overflow: "hidden",
           display: "flex",
@@ -49,6 +52,9 @@ export default function CitasPage() {
         style={{
           height: "45vh",
           borderRadius: 20,
+          border: "0.5px solid rgba(255,255,255,0.08)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
           position: "relative",
           overflow: "hidden",
           display: "flex",
@@ -71,7 +77,7 @@ export default function CitasPage() {
           Asesoramiento<br />personal
         </div>
         <div style={{ fontSize: 12, color: "#333", marginTop: 10 }}>
-          +34 611 057 973 →
+          Contacta con tu entrenador →
         </div>
       </a>
 
