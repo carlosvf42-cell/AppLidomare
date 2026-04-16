@@ -2,13 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
+import type { Ejercicio, GrupoMuscular } from "@/lib/types";
 
-export interface Ejercicio {
-  id: string;
-  nombre: string;
-  grupo_muscular: string;
-  descripcion?: string | null;
-}
+export type { Ejercicio };
 
 interface Props {
   value: string;
@@ -16,7 +12,7 @@ interface Props {
   onChange: (nombre: string, ejercicioId: string | null) => void;
 }
 
-const GRUPOS = ["Pecho", "Espalda", "Piernas", "Hombro", "Brazo", "Core", "Otro"];
+const GRUPOS: GrupoMuscular[] = ["Pecho", "Espalda", "Piernas", "Hombro", "Brazo", "Core", "Otro"];
 
 function getSupabase() {
   return createBrowserClient(
@@ -25,16 +21,31 @@ function getSupabase() {
   );
 }
 
+type EjercicioRow = Ejercicio & { creado_por: string | null };
+
+function groupByMuscle(items: EjercicioRow[]): Record<string, EjercicioRow[]> {
+  const result: Record<string, EjercicioRow[]> = {};
+  for (const g of GRUPOS) {
+    const filtered = items.filter((e) => e.grupo_muscular === g);
+    if (filtered.length) result[g] = filtered;
+  }
+  // Catch any unknown grupo
+  const unknown = items.filter((e) => !GRUPOS.includes(e.grupo_muscular as GrupoMuscular));
+  if (unknown.length) result["Otro"] = [...(result["Otro"] ?? []), ...unknown];
+  return result;
+}
+
 export default function EjercicioSelector({ value, ejercicioId, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [catalogo, setCatalogo] = useState<Ejercicio[]>([]);
+  const [catalogo, setCatalogo] = useState<EjercicioRow[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loadingCatalogo, setLoadingCatalogo] = useState(false);
 
   // Modal crear ejercicio
   const [showModal, setShowModal] = useState(false);
   const [newNombre, setNewNombre] = useState("");
-  const [newGrupo, setNewGrupo] = useState("Otro");
+  const [newGrupo, setNewGrupo] = useState<GrupoMuscular>("Otro");
   const [newDesc, setNewDesc] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -46,15 +57,19 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
   useEffect(() => {
     if (!open || catalogo.length > 0) return;
     setLoadingCatalogo(true);
-    getSupabase()
-      .from("ejercicios")
-      .select("id, nombre, grupo_muscular, descripcion")
-      .order("grupo_muscular")
-      .order("nombre")
-      .then(({ data }) => {
-        setCatalogo((data as Ejercicio[]) ?? []);
-        setLoadingCatalogo(false);
-      });
+    const supabase = getSupabase();
+    Promise.all([
+      supabase.auth.getUser(),
+      supabase
+        .from("ejercicios")
+        .select("id, nombre, grupo_muscular, descripcion, creado_por, created_at")
+        .order("grupo_muscular")
+        .order("nombre"),
+    ]).then(([{ data: authData }, { data: ejData }]) => {
+      setUserId(authData.user?.id ?? null);
+      setCatalogo((ejData as EjercicioRow[]) ?? []);
+      setLoadingCatalogo(false);
+    });
   }, [open, catalogo.length]);
 
   // Focus search when dropdown opens
@@ -78,17 +93,13 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
     ? catalogo.filter((e) => e.nombre.toLowerCase().includes(search.toLowerCase()))
     : catalogo;
 
-  // Group filtered results
-  const grouped = GRUPOS.reduce<Record<string, Ejercicio[]>>((acc, g) => {
-    const items = filtered.filter((e) => e.grupo_muscular === g);
-    if (items.length) acc[g] = items;
-    return acc;
-  }, {});
-  // Catch any grupo not in GRUPOS
-  const otros = filtered.filter((e) => !GRUPOS.includes(e.grupo_muscular));
-  if (otros.length) grouped["Otro"] = [...(grouped["Otro"] ?? []), ...otros];
+  const gymEjercicios = filtered.filter((e) => e.creado_por === null);
+  const misEjercicios = filtered.filter((e) => e.creado_por !== null && e.creado_por === userId);
 
-  function select(ej: Ejercicio) {
+  const gymGrouped = groupByMuscle(gymEjercicios);
+  const misGrouped = groupByMuscle(misEjercicios);
+
+  function select(ej: EjercicioRow) {
     onChange(ej.nombre, ej.id);
     setOpen(false);
     setSearch("");
@@ -100,15 +111,17 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
     setSaveError(null);
     const supabase = getSupabase();
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setSaveError("Debes iniciar sesión."); setSaving(false); return; }
+
     const { data, error } = await supabase
       .from("ejercicios")
       .insert({
         nombre: newNombre.trim(),
         grupo_muscular: newGrupo,
         descripcion: newDesc.trim() || null,
-        creado_por: user?.id ?? null,
+        creado_por: user.id,
       })
-      .select("id, nombre, grupo_muscular, descripcion")
+      .select("id, nombre, grupo_muscular, descripcion, creado_por, created_at")
       .single();
 
     if (error || !data) {
@@ -117,10 +130,13 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
       return;
     }
 
-    const nuevo = data as Ejercicio;
-    setCatalogo((prev) => [...prev, nuevo].sort((a, b) =>
-      a.grupo_muscular.localeCompare(b.grupo_muscular) || a.nombre.localeCompare(b.nombre)
-    ));
+    const nuevo = data as EjercicioRow;
+    setCatalogo((prev) =>
+      [...prev, nuevo].sort(
+        (a, b) => a.grupo_muscular.localeCompare(b.grupo_muscular) || a.nombre.localeCompare(b.nombre)
+      )
+    );
+    setUserId(user.id);
     onChange(nuevo.nombre, nuevo.id);
     setShowModal(false);
     setOpen(false);
@@ -148,7 +164,6 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
             placeholder="Nombre del ejercicio"
             className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] placeholder-[#333] text-xs outline-none focus:border-[#2abfbf] transition-colors pr-7"
           />
-          {/* Chevron icon */}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -165,9 +180,9 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
         {open && (
           <div
             className="absolute left-0 right-0 top-full mt-1 rounded-xl overflow-hidden z-50 shadow-2xl"
-            style={{ background: "#141414", border: "1px solid #222", maxHeight: 280 }}
+            style={{ background: "#141414", border: "1px solid #222", maxHeight: 320 }}
           >
-            {/* Search inside dropdown */}
+            {/* Search */}
             <div className="px-3 pt-2 pb-1.5 border-b border-[#1e1e1e]">
               <input
                 ref={searchRef}
@@ -179,35 +194,51 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
               />
             </div>
 
-            <div className="overflow-y-auto" style={{ maxHeight: 190 }}>
+            <div className="overflow-y-auto" style={{ maxHeight: 230 }}>
               {loadingCatalogo ? (
                 <div className="flex items-center justify-center py-6">
                   <div className="w-4 h-4 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
                 </div>
-              ) : Object.keys(grouped).length === 0 ? (
+              ) : filtered.length === 0 ? (
                 <p className="text-[#444] text-xs text-center py-4">Sin resultados</p>
               ) : (
-                Object.entries(grouped).map(([grupo, items]) => (
-                  <div key={grupo}>
-                    <p className="px-3 py-1.5 text-[9px] tracking-[0.18em] uppercase text-[#444]">{grupo}</p>
-                    {items.map((ej) => (
-                      <button
-                        key={ej.id}
-                        type="button"
-                        onClick={() => select(ej)}
-                        className="w-full text-left px-3 py-2 text-xs transition-colors hover:bg-[#1a1a1a] flex items-center justify-between gap-2"
-                        style={{ color: ej.id === ejercicioId ? "#2abfbf" : "#d0d0d0" }}
-                      >
-                        <span>{ej.nombre}</span>
-                        {ej.id === ejercicioId && (
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                            <path d="M5 12l5 5L19 7" stroke="#2abfbf" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                ))
+                <>
+                  {/* Sección: Ejercicios del gym */}
+                  {Object.keys(gymGrouped).length > 0 && (
+                    <>
+                      <div className="px-3 pt-2 pb-1 flex items-center gap-2">
+                        <span className="text-[8px] tracking-[0.2em] uppercase font-semibold text-[#2abfbf]">Ejercicios del gym</span>
+                        <div className="flex-1 h-px" style={{ background: "rgba(42,191,191,0.15)" }} />
+                      </div>
+                      {Object.entries(gymGrouped).map(([grupo, items]) => (
+                        <div key={`gym-${grupo}`}>
+                          <p className="px-3 py-1 text-[9px] tracking-[0.15em] uppercase text-[#3a3a3a]">{grupo}</p>
+                          {items.map((ej) => (
+                            <EjercicioItem key={ej.id} ej={ej} selected={ej.id === ejercicioId} onSelect={select} />
+                          ))}
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  {/* Sección: Mis ejercicios */}
+                  {Object.keys(misGrouped).length > 0 && (
+                    <>
+                      <div className="px-3 pt-2 pb-1 flex items-center gap-2">
+                        <span className="text-[8px] tracking-[0.2em] uppercase font-semibold text-[#555]">Mis ejercicios</span>
+                        <div className="flex-1 h-px bg-[#222]" />
+                      </div>
+                      {Object.entries(misGrouped).map(([grupo, items]) => (
+                        <div key={`mis-${grupo}`}>
+                          <p className="px-3 py-1 text-[9px] tracking-[0.15em] uppercase text-[#3a3a3a]">{grupo}</p>
+                          {items.map((ej) => (
+                            <EjercicioItem key={ej.id} ej={ej} selected={ej.id === ejercicioId} onSelect={select} />
+                          ))}
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </>
               )}
             </div>
 
@@ -222,7 +253,7 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                   <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
                 </svg>
-                Crear ejercicio
+                Crear ejercicio propio
               </button>
             </div>
           </div>
@@ -233,7 +264,7 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
       {showModal && (
         <div
           className="fixed inset-0 z-[100] flex items-end justify-center"
-          style={{ background: "rgba(0,0,0,0.7)" }}
+          style={{ background: "rgba(0,0,0,0.75)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
         >
           <div
@@ -241,7 +272,10 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
             style={{ background: "#141414", border: "1px solid #222" }}
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-light text-[#f0f0f0]">Nuevo ejercicio</h2>
+              <div>
+                <p className="text-[9px] tracking-[0.2em] uppercase text-[#444]">catálogo personal</p>
+                <h2 className="text-sm font-light text-[#f0f0f0]">Nuevo ejercicio</h2>
+              </div>
               <button type="button" onClick={() => setShowModal(false)} style={{ color: "#555" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -308,5 +342,31 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
         </div>
       )}
     </>
+  );
+}
+
+function EjercicioItem({
+  ej,
+  selected,
+  onSelect,
+}: {
+  ej: EjercicioRow;
+  selected: boolean;
+  onSelect: (ej: EjercicioRow) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(ej)}
+      className="w-full text-left px-3 py-2 text-xs transition-colors hover:bg-[#1a1a1a] flex items-center justify-between gap-2"
+      style={{ color: selected ? "#2abfbf" : "#d0d0d0" }}
+    >
+      <span>{ej.nombre}</span>
+      {selected && (
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="shrink-0">
+          <path d="M5 12l5 5L19 7" stroke="#2abfbf" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+    </button>
   );
 }
