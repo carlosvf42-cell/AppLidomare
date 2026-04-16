@@ -232,7 +232,7 @@ export default function EntrenarPage() {
         </div>
       </div>
 
-      <div className="px-4 pb-28 space-y-4">
+      <div className="px-4 pb-[calc(148px+env(safe-area-inset-bottom))] space-y-4">
         {/* Progress bar */}
         <div
           className="rounded-xl px-4 py-3 flex items-center gap-4"
@@ -327,7 +327,7 @@ export default function EntrenarPage() {
 
       {/* Floating finish button */}
       <div
-        className="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 px-4 pb-6 pt-4"
+        className="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 px-4 pb-[calc(56px+env(safe-area-inset-bottom)+8px)] pt-4"
         style={{ background: "linear-gradient(to top, #080808 70%, transparent)" }}
       >
         <button
