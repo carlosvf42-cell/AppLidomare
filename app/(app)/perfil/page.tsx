@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import ProgresoSection from "@/components/ProgresoSection";
 
 const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
@@ -40,15 +41,15 @@ export default function PerfilPage() {
   const initials = email.slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#080808] px-6 pt-14 pb-8">
+    <div className="min-h-screen bg-[#080808] pt-14 pb-[calc(80px+env(safe-area-inset-bottom))]">
 
       {/* Header */}
-      <p className="text-[10px] tracking-[0.25em] uppercase text-[#2abfbf] mb-8">
+      <p className="text-[10px] tracking-[0.25em] uppercase text-[#2abfbf] mb-8 px-6">
         Perfil
       </p>
 
       {/* Avatar + email */}
-      <div className="flex items-center gap-4 mb-10">
+      <div className="flex items-center gap-4 mb-10 px-6">
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center text-lg font-light shrink-0"
           style={{ background: "#141414", border: "1px solid #222", color: "#2abfbf" }}
@@ -63,7 +64,7 @@ export default function PerfilPage() {
 
       {/* Info row */}
       <div
-        className="rounded-xl overflow-hidden mb-10"
+        className="rounded-xl overflow-hidden mb-6 mx-6"
         style={{ border: "1px solid #222", background: "#141414" }}
       >
         <div className="px-5 py-4">
@@ -76,7 +77,8 @@ export default function PerfilPage() {
       {email === ADMIN_EMAIL && (
         <Link
           href="/admin"
-          className="flex items-center justify-between w-full border border-[#222] px-5 py-4 rounded-xl mb-3 transition-colors hover:border-[#2abfbf]"
+          className="flex items-center justify-between w-full border border-[#222] px-5 py-4 rounded-xl mb-3 mx-6 transition-colors hover:border-[#2abfbf]"
+          style={{ width: "calc(100% - 3rem)" }}
         >
           <span className="text-xs tracking-[0.2em] uppercase text-[#555]">Panel de administración</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -88,10 +90,14 @@ export default function PerfilPage() {
       {/* Sign out */}
       <button
         onClick={handleSignOut}
-        className="w-full border border-[#222] text-[#888] text-xs tracking-[0.2em] uppercase py-4 rounded-xl hover:border-[#f0a0a0] hover:text-[#f0a0a0] transition-colors"
+        className="border border-[#222] text-[#888] text-xs tracking-[0.2em] uppercase py-4 rounded-xl hover:border-[#f0a0a0] hover:text-[#f0a0a0] transition-colors mb-8 mx-6"
+        style={{ width: "calc(100% - 3rem)" }}
       >
         Cerrar sesión
       </button>
+
+      {/* ── Mi Progreso ── */}
+      <ProgresoSection />
     </div>
   );
 }
