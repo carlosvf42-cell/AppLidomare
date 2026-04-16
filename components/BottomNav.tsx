@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ACCENT = "#2abfbf";
-const INACTIVE = "#444444";
+const INACTIVE = "rgba(255,255,255,0.35)";
 
 function IconHome({ active }: { active: boolean }) {
   const c = active ? ACCENT : INACTIVE;
@@ -59,9 +59,9 @@ export default function BottomNav() {
 
   const labelStyle = (active: boolean): React.CSSProperties => ({
     fontSize: 9,
-    letterSpacing: "0.08em",
+    letterSpacing: "0.06em",
     color: active ? ACCENT : INACTIVE,
-    marginTop: 2,
+    marginTop: 3,
     lineHeight: 1,
   });
 
@@ -74,30 +74,25 @@ export default function BottomNav() {
       style={{
         maxWidth: 430,
         transform: "translateX(-50%)",
-        background: "#080808",
-        borderTop: "1px solid #1a1a1a",
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(40px) saturate(180%)",
+        WebkitBackdropFilter: "blur(40px) saturate(180%)",
+        borderTop: "0.5px solid rgba(255,255,255,0.15)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      {/* Home */}
       <Link href="/" className={tabClass} style={tabStyle}>
         <IconHome active={isHome} />
         <span style={labelStyle(isHome)}>home</span>
       </Link>
-
-      {/* Contenido */}
       <Link href="/contenido" className={tabClass} style={tabStyle}>
         <IconGrid active={isContent} />
         <span style={labelStyle(isContent)}>contenido</span>
       </Link>
-
-      {/* Citas */}
       <Link href="/citas" className={tabClass} style={tabStyle}>
         <IconCalendar active={isCitas} />
         <span style={labelStyle(isCitas)}>citas</span>
       </Link>
-
-      {/* Perfil */}
       <Link href="/perfil" className={tabClass} style={tabStyle}>
         <IconUser active={isPerfil} />
         <span style={labelStyle(isPerfil)}>perfil</span>

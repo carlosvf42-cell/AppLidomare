@@ -46,6 +46,14 @@ type GrupoBar   = { grupo: string; count: number };
 
 const GRUPOS_ORDER = ["Pecho", "Espalda", "Piernas", "Hombro", "Brazo", "Core", "Otro"];
 
+const GLASS: React.CSSProperties = {
+  background: "rgba(255,255,255,0.07)",
+  backdropFilter: "blur(24px) saturate(180%)",
+  WebkitBackdropFilter: "blur(24px) saturate(180%)",
+  border: "0.5px solid rgba(255,255,255,0.13)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 24px rgba(0,0,0,0.4)",
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isoWeek(dateStr: string): string {
@@ -54,7 +62,7 @@ function isoWeek(dateStr: string): string {
   d.setUTCDate(d.getUTCDate() + 4 - day);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   const wn = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(wn).padStart(2, "0")}`;
+  return `${d.getUTCFullYear()}-W${String(wn).padStart(2, "00")}`;
 }
 
 function mondayLabel(weekKey: string): string {
@@ -87,7 +95,12 @@ function fmtVol(kg: number): string {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={`animate-pulse rounded-lg bg-[#1a1a1a] ${className}`} />;
+  return (
+    <div
+      className={`animate-pulse rounded-lg ${className}`}
+      style={{ background: "rgba(255,255,255,0.06)" }}
+    />
+  );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -100,10 +113,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div
-      className={`rounded-[14px] px-4 py-4 ${className ?? ""}`}
-      style={{ background: "#111", border: "0.5px solid #222" }}
-    >
+    <div className={`rounded-[14px] px-4 py-4 ${className ?? ""}`} style={GLASS}>
       {children}
     </div>
   );
@@ -112,8 +122,8 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 function MetricCell({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xl font-light text-[#f0f0f0]">{value}</span>
-      <span className="text-[9px] tracking-[0.15em] uppercase text-[#444]">{label}</span>
+      <span className="text-xl font-light" style={{ color: "rgba(255,255,255,0.9)" }}>{value}</span>
+      <span className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>{label}</span>
     </div>
   );
 }
@@ -133,7 +143,10 @@ function BarChart({ bars }: { bars: WeekBar[] }) {
               >
                 <div
                   className="absolute inset-0 rounded-t-sm"
-                  style={{ background: b.vol > 0 ? "#2abfbf" : "#1e1e1e", opacity: b.vol > 0 ? 0.7 + pct * 0.3 : 1 }}
+                  style={{
+                    background: b.vol > 0 ? "#2abfbf" : "rgba(255,255,255,0.05)",
+                    opacity: b.vol > 0 ? 0.7 + pct * 0.3 : 1,
+                  }}
                 />
               </div>
             </div>
@@ -143,7 +156,7 @@ function BarChart({ bars }: { bars: WeekBar[] }) {
       <div className="flex gap-1.5 mt-1.5">
         {bars.map((b) => (
           <div key={b.key} className="flex-1 text-center">
-            <span className="text-[8px] text-[#333]">{b.label}</span>
+            <span className="text-[8px]" style={{ color: "rgba(255,255,255,0.2)" }}>{b.label}</span>
           </div>
         ))}
       </div>
@@ -153,13 +166,17 @@ function BarChart({ bars }: { bars: WeekBar[] }) {
 
 function LineChart({ data }: { data: LinePoint[] }) {
   if (data.length === 0) {
-    return <p className="text-[#444] text-xs text-center py-4">Entrena este ejercicio para ver la progresión</p>;
+    return (
+      <p className="text-xs text-center py-4" style={{ color: "rgba(255,255,255,0.35)" }}>
+        Entrena este ejercicio para ver la progresión
+      </p>
+    );
   }
   if (data.length === 1) {
     return (
       <div className="text-center py-3">
-        <p className="text-[#2abfbf] text-base font-light">{data[0].peso} kg</p>
-        <p className="text-[#444] text-[10px] mt-0.5">Primera sesión — sigue entrenando</p>
+        <p className="text-base font-light" style={{ color: "#2abfbf" }}>{data[0].peso} kg</p>
+        <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>Primera sesión — sigue entrenando</p>
       </div>
     );
   }
@@ -183,9 +200,9 @@ function LineChart({ data }: { data: LinePoint[] }) {
         {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#2abfbf" />)}
       </svg>
       <div className="flex justify-between mt-1 px-0.5">
-        <span className="text-[9px] text-[#444]">{data[0].fecha.slice(5).replace("-", "/")}</span>
-        <span className="text-[9px] text-[#2abfbf]">{maxP} kg</span>
-        <span className="text-[9px] text-[#444]">{data[data.length - 1].fecha.slice(5).replace("-", "/")}</span>
+        <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>{data[0].fecha.slice(5).replace("-", "/")}</span>
+        <span className="text-[9px]" style={{ color: "#2abfbf" }}>{maxP} kg</span>
+        <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>{data[data.length - 1].fecha.slice(5).replace("-", "/")}</span>
       </div>
     </div>
   );
@@ -198,14 +215,14 @@ function HBars({ bars }: { bars: GrupoBar[] }) {
     <div className="space-y-2.5">
       {bars.map((b) => (
         <div key={b.grupo} className="flex items-center gap-3">
-          <span className="text-[10px] text-[#555] w-14 shrink-0 truncate">{b.grupo}</span>
-          <div className="flex-1 h-1.5 rounded-full bg-[#1a1a1a] overflow-hidden">
+          <span className="text-[10px] w-14 shrink-0 truncate" style={{ color: "rgba(255,255,255,0.4)" }}>{b.grupo}</span>
+          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{ width: `${(b.count / max) * 100}%`, background: "#2abfbf", opacity: 0.6 + (b.count / max) * 0.4 }}
             />
           </div>
-          <span className="text-[9px] text-[#444] w-16 text-right shrink-0">{b.count} series</span>
+          <span className="text-[9px] w-16 text-right shrink-0" style={{ color: "rgba(255,255,255,0.35)" }}>{b.count} series</span>
         </div>
       ))}
     </div>
@@ -231,7 +248,7 @@ export default function ProgresoSection() {
   const [showGestionar, setShowGestionar] = useState(false);
   const [catalogo, setCatalogo]           = useState<EjBase[]>([]);
   const [catLoading, setCatLoading]       = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null); // ejercicioId en proceso
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // ── Carga inicial ──────────────────────────────────────────────────────────
   useEffect(() => { loadAll(); }, []);
@@ -448,16 +465,20 @@ export default function ProgresoSection() {
 
       {/* ── Header ── */}
       <div className="flex items-center gap-3 pt-2">
-        <div className="h-px flex-1 bg-[#1a1a1a]" />
+        <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
         <p className="text-[9px] tracking-[0.25em] uppercase" style={{ color: "#2abfbf" }}>Mi Progreso</p>
-        <div className="h-px flex-1 bg-[#1a1a1a]" />
+        <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
       </div>
 
       {/* ── 1. Métricas 2×2 ── */}
       <div>
         <SectionLabel>Resumen</SectionLabel>
         {metrics && metrics.total === 0 ? (
-          <Card><p className="text-[#444] text-xs text-center py-2">Completa tu primer entrenamiento para ver métricas</p></Card>
+          <Card>
+            <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+              Completa tu primer entrenamiento para ver métricas
+            </p>
+          </Card>
         ) : (
           <div className="grid grid-cols-2 gap-2">
             <Card><MetricCell value={String(metrics?.completadas ?? 0)} label="Entrenamientos" /></Card>
@@ -473,7 +494,7 @@ export default function ProgresoSection() {
         <SectionLabel>Volumen semanal — últimas 8 semanas</SectionLabel>
         <Card>
           {semanas.every((s) => s.vol === 0)
-            ? <p className="text-[#444] text-xs text-center py-2">Sin datos de volumen aún</p>
+            ? <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>Sin datos de volumen aún</p>
             : <BarChart bars={semanas} />}
         </Card>
       </div>
@@ -482,21 +503,25 @@ export default function ProgresoSection() {
       <div>
         <SectionLabel>Mejores marcas</SectionLabel>
         {prs.length === 0 ? (
-          <Card><p className="text-[#444] text-xs text-center py-2">Registra series con peso para ver tus PRs</p></Card>
+          <Card>
+            <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+              Registra series con peso para ver tus PRs
+            </p>
+          </Card>
         ) : (
           <div className="space-y-1.5">
             {prs.map((pr) => (
               <Card key={pr.nombre} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="text-[#f0f0f0] text-xs font-light truncate">{pr.nombre}</p>
-                  <p className="text-[#444] text-[10px] mt-0.5">{pr.grupo}</p>
+                  <p className="text-xs font-light truncate" style={{ color: "rgba(255,255,255,0.9)" }}>{pr.nombre}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{pr.grupo}</p>
                 </div>
                 <div className="shrink-0 flex flex-col items-end gap-0.5">
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-md"
                     style={{ background: "rgba(42,191,191,0.12)", color: "#2abfbf", border: "0.5px solid rgba(42,191,191,0.25)" }}>
                     {pr.pesoMax} kg
                   </span>
-                  <span className="text-[9px] text-[#333]">×{pr.reps} reps</span>
+                  <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.25)" }}>×{pr.reps} reps</span>
                 </div>
               </Card>
             ))}
@@ -515,7 +540,7 @@ export default function ProgresoSection() {
             type="button"
             onClick={openGestionar}
             className="text-[10px] flex items-center gap-1 transition-colors"
-            style={{ color: "#555" }}
+            style={{ color: "rgba(255,255,255,0.35)" }}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
               <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"
@@ -535,9 +560,11 @@ export default function ProgresoSection() {
                 onClick={() => setSeguidoIdx(i)}
                 className="shrink-0 px-3 py-1.5 rounded-full text-[10px] transition-colors whitespace-nowrap"
                 style={{
-                  background: i === seguidoIdx ? "rgba(42,191,191,0.15)" : "#141414",
-                  border: `1px solid ${i === seguidoIdx ? "rgba(42,191,191,0.4)" : "#222"}`,
-                  color: i === seguidoIdx ? "#2abfbf" : "#555",
+                  background: i === seguidoIdx ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.06)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: `0.5px solid ${i === seguidoIdx ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.1)"}`,
+                  color: i === seguidoIdx ? "#2abfbf" : "rgba(255,255,255,0.35)",
                 }}
               >
                 {s.nombre}
@@ -550,7 +577,9 @@ export default function ProgresoSection() {
         <Card>
           {seguidos.length === 0 ? (
             <div className="text-center py-3 space-y-3">
-              <p className="text-[#444] text-xs">Añade ejercicios a tu seguimiento para ver tu progresión</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                Añade ejercicios a tu seguimiento para ver tu progresión
+              </p>
               <button
                 type="button"
                 onClick={openGestionar}
@@ -582,7 +611,7 @@ export default function ProgresoSection() {
         <SectionLabel>Frecuencia — {MESES[now.getMonth()]} {now.getFullYear()}</SectionLabel>
         <Card>
           {diasMes.length === 0 ? (
-            <p className="text-[#444] text-xs text-center py-2">Sin sesiones este mes</p>
+            <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>Sin sesiones este mes</p>
           ) : (
             <>
               <div className="flex flex-wrap gap-1.5">
@@ -590,9 +619,9 @@ export default function ProgresoSection() {
                   <div key={day} title={`Día ${day}`}
                     className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-mono transition-colors"
                     style={{
-                      background: status === "done" ? "rgba(42,191,191,0.2)" : status === "partial" ? "rgba(42,191,191,0.06)" : "#161616",
-                      border: status === "done" ? "1px solid rgba(42,191,191,0.5)" : status === "partial" ? "1px solid rgba(42,191,191,0.15)" : "1px solid #1e1e1e",
-                      color: status === "done" ? "#2abfbf" : status === "partial" ? "rgba(42,191,191,0.4)" : "#2a2a2a",
+                      background: status === "done" ? "rgba(42,191,191,0.2)" : status === "partial" ? "rgba(42,191,191,0.06)" : "rgba(255,255,255,0.04)",
+                      border: status === "done" ? "1px solid rgba(42,191,191,0.5)" : status === "partial" ? "1px solid rgba(42,191,191,0.15)" : "1px solid rgba(255,255,255,0.07)",
+                      color: status === "done" ? "#2abfbf" : status === "partial" ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.15)",
                     }}
                   >
                     {day}
@@ -603,11 +632,11 @@ export default function ProgresoSection() {
                 {[
                   { color: "rgba(42,191,191,0.5)", label: "Completado" },
                   { color: "rgba(42,191,191,0.15)", label: "Iniciado" },
-                  { color: "#1e1e1e", label: "Sin sesión" },
+                  { color: "rgba(255,255,255,0.07)", label: "Sin sesión" },
                 ].map(({ color, label }) => (
                   <div key={label} className="flex items-center gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-                    <span className="text-[9px] text-[#444]">{label}</span>
+                    <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>{label}</span>
                   </div>
                 ))}
               </div>
@@ -621,7 +650,7 @@ export default function ProgresoSection() {
         <SectionLabel>Series por grupo muscular</SectionLabel>
         <Card>
           {grupos.length === 0
-            ? <p className="text-[#444] text-xs text-center py-2">El historial de grupos se construirá con tus próximas sesiones</p>
+            ? <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>El historial de grupos se construirá con tus próximas sesiones</p>
             : <HBars bars={grupos} />}
         </Card>
       </div>
@@ -635,16 +664,29 @@ export default function ProgresoSection() {
         >
           <div
             className="w-full max-w-[430px] rounded-t-2xl flex flex-col"
-            style={{ background: "#141414", border: "1px solid #222", maxHeight: "78vh" }}
+            style={{
+              background: "rgba(10,10,20,0.92)",
+              backdropFilter: "blur(40px) saturate(180%)",
+              WebkitBackdropFilter: "blur(40px) saturate(180%)",
+              border: "0.5px solid rgba(255,255,255,0.12)",
+              borderBottom: "none",
+              maxHeight: "78vh",
+            }}
           >
             {/* Sticky header */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0"
-              style={{ borderBottom: "0.5px solid #1e1e1e" }}>
+            <div
+              className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0"
+              style={{ borderBottom: "0.5px solid rgba(255,255,255,0.07)" }}
+            >
               <div>
-                <p className="text-[9px] tracking-[0.2em] uppercase text-[#444]">seguimiento</p>
-                <h2 className="text-sm font-light text-[#f0f0f0]">Mis ejercicios</h2>
+                <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>seguimiento</p>
+                <h2 className="text-sm font-light" style={{ color: "rgba(255,255,255,0.92)" }}>Mis ejercicios</h2>
               </div>
-              <button type="button" onClick={() => setShowGestionar(false)} style={{ color: "#555" }}>
+              <button
+                type="button"
+                onClick={() => setShowGestionar(false)}
+                style={{ color: "rgba(255,255,255,0.4)" }}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                 </svg>
@@ -655,41 +697,41 @@ export default function ProgresoSection() {
             <div className="overflow-y-auto flex-1 pb-8">
               {catLoading ? (
                 <div className="flex justify-center py-10">
-                  <div className="w-5 h-5 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 rounded-full animate-spin" style={{ border: "1.5px solid rgba(255,255,255,0.1)", borderTopColor: "#2abfbf" }} />
                 </div>
               ) : (
                 Object.entries(catalogoGrupado).map(([grupo, items]) => (
                   <div key={grupo}>
-                    <p className="px-5 py-2 text-[8px] tracking-[0.2em] uppercase text-[#333]">{grupo}</p>
+                    <p className="px-5 py-2 text-[8px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.25)" }}>{grupo}</p>
                     {items.map((ej) => {
                       const isSeguido  = seguidosIds.has(ej.id);
                       const isLoading  = actionLoading === ej.id;
                       return (
                         <div key={ej.id}
                           className="flex items-center justify-between gap-3 px-5 py-3"
-                          style={{ borderBottom: "0.5px solid #1a1a1a" }}
+                          style={{ borderBottom: "0.5px solid rgba(255,255,255,0.05)" }}
                         >
-                          <p className="text-[#d0d0d0] text-xs font-light">{ej.nombre}</p>
+                          <p className="text-xs font-light" style={{ color: "rgba(255,255,255,0.85)" }}>{ej.nombre}</p>
                           <button
                             type="button"
                             disabled={isLoading}
                             onClick={() => isSeguido ? handleRemove(ej.id) : handleAdd(ej)}
                             className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all disabled:opacity-40"
                             style={{
-                              background: isSeguido ? "rgba(42,191,191,0.15)" : "#1e1e1e",
-                              border: `1px solid ${isSeguido ? "rgba(42,191,191,0.4)" : "#2a2a2a"}`,
+                              background: isSeguido ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.06)",
+                              border: `0.5px solid ${isSeguido ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.1)"}`,
                             }}
                             aria-label={isSeguido ? "Quitar del seguimiento" : "Añadir al seguimiento"}
                           >
                             {isLoading ? (
-                              <div className="w-3 h-3 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
+                              <div className="w-3 h-3 rounded-full animate-spin" style={{ border: "1.5px solid rgba(42,191,191,0.3)", borderTopColor: "#2abfbf" }} />
                             ) : isSeguido ? (
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                                 <path d="M5 12l5 5L19 7" stroke="#2abfbf" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
                             ) : (
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 5v14M5 12h14" stroke="#555" strokeWidth="1.8" strokeLinecap="round"/>
+                                <path d="M12 5v14M5 12h14" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinecap="round"/>
                               </svg>
                             )}
                           </button>

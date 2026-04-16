@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
-    "theme-color": "#2abfbf",
-    "msapplication-TileColor": "#080808",
+    "theme-color": "#000000",
+    "msapplication-TileColor": "#000000",
   },
 };
 
@@ -36,15 +36,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={inter.variable}>
-      {/*
-        body = outer shell (#050505) filling the whole viewport
-        #app  = centered column, max 430px, with the real app background
-      */}
-      <body className="bg-[#050505] min-h-screen">
+      <body style={{ background: "#000" }} className="min-h-screen">
         <div
           id="app"
-          className="relative mx-auto min-h-screen bg-[#080808] text-[#f0f0f0] overflow-x-hidden"
-          style={{ maxWidth: 430 }}
+          className="relative mx-auto min-h-screen overflow-x-hidden"
+          style={{ maxWidth: 430, background: "#000" }}
         >
           {children}
         </div>

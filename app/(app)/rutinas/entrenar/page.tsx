@@ -23,6 +23,14 @@ function todayISO() {
   return new Date().toISOString().split("T")[0];
 }
 
+const GLASS: React.CSSProperties = {
+  background: "rgba(255,255,255,0.07)",
+  backdropFilter: "blur(24px) saturate(180%)",
+  WebkitBackdropFilter: "blur(24px) saturate(180%)",
+  border: "0.5px solid rgba(255,255,255,0.13)",
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 24px rgba(0,0,0,0.4)",
+};
+
 export default function EntrenarPage() {
   const router = useRouter();
   const [rutina, setRutina] = useState<Rutina | null>(null);
@@ -98,12 +106,10 @@ export default function EntrenarPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      // Calcular duración en minutos desde que se seleccionó el día
       const duracion_minutos = horaInicio
         ? Math.max(1, Math.round((finAt.getTime() - horaInicio.getTime()) / 60_000))
         : null;
 
-      // Insertar sesión
       const { data: sesion, error: sesionErr } = await supabase
         .from("sesiones")
         .insert({ user_id: user.id, dia_id: selectedDia.id, fecha: todayISO() })
@@ -116,7 +122,6 @@ export default function EntrenarPage() {
         return;
       }
 
-      // Insertar series con ejercicio_catalogo_id para historial permanente
       const seriesRows = ejercicios.flatMap((ej) =>
         ej.seriesData.map((s, sIdx) => ({
           sesion_id: sesion.id,
@@ -136,7 +141,6 @@ export default function EntrenarPage() {
         return;
       }
 
-      // Marcar sesión como completada y guardar duración
       await supabase
         .from("sesiones")
         .update({ completada: true, duracion_minutos })
@@ -150,8 +154,8 @@ export default function EntrenarPage() {
   /* ── Loading ── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <div className="w-5 h-5 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full animate-spin" style={{ border: "1.5px solid rgba(255,255,255,0.1)", borderTopColor: "#2abfbf" }} />
       </div>
     );
   }
@@ -159,21 +163,21 @@ export default function EntrenarPage() {
   /* ── No active routine ── */
   if (!rutina) {
     return (
-      <div className="min-h-screen bg-[#080808]">
-        <div className="px-6 pt-14 pb-4 flex items-center gap-3">
-          <Link href="/rutinas" className="shrink-0" style={{ color: "#444" }}>
+      <div className="min-h-screen">
+        <div className="px-5 pt-14 pb-4 flex items-center gap-3">
+          <Link href="/rutinas" className="shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </Link>
-          <h1 className="text-xl font-light text-[#f0f0f0]">Entrenar</h1>
+          <h1 className="text-xl font-light" style={{ color: "rgba(255,255,255,0.9)" }}>Entrenar</h1>
         </div>
         <div className="text-center pt-20 px-8">
-          <p className="text-[#555] text-sm font-light">No tienes una rutina activa.</p>
+          <p className="text-sm font-light" style={{ color: "rgba(255,255,255,0.4)" }}>No tienes una rutina activa.</p>
           <Link
             href="/rutinas/nueva"
-            className="inline-block mt-4 px-6 py-2.5 rounded-xl text-xs font-semibold tracking-widest uppercase"
-            style={{ background: "#2abfbf", color: "#080808" }}
+            className="inline-block mt-4 px-6 py-2.5 rounded-2xl text-xs font-semibold tracking-widest uppercase active:scale-[0.98] transition-transform"
+            style={{ background: "#2abfbf", color: "#000", boxShadow: "0 4px 20px rgba(42,191,191,0.3)" }}
           >
             Crear rutina
           </Link>
@@ -185,16 +189,16 @@ export default function EntrenarPage() {
   /* ── Phase 1: Select day ── */
   if (!selectedDia) {
     return (
-      <div className="min-h-screen bg-[#080808]">
-        <div className="px-6 pt-14 pb-6 flex items-center gap-3">
-          <Link href="/rutinas" className="shrink-0" style={{ color: "#444" }}>
+      <div className="min-h-screen">
+        <div className="px-5 pt-14 pb-6 flex items-center gap-3">
+          <Link href="/rutinas" className="shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </Link>
           <div>
-            <p className="text-[10px] tracking-[0.2em] uppercase text-[#444]">{rutina.nombre}</p>
-            <h1 className="text-xl font-light text-[#f0f0f0]">¿Qué día entrenas hoy?</h1>
+            <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>{rutina.nombre}</p>
+            <h1 className="text-xl font-light" style={{ color: "rgba(255,255,255,0.9)" }}>¿Qué día entrenas hoy?</h1>
           </div>
         </div>
 
@@ -203,19 +207,16 @@ export default function EntrenarPage() {
             <button
               key={dia.id}
               onClick={() => selectDia(dia)}
-              className="w-full text-left rounded-xl px-4 py-4 transition-colors"
-              style={{ background: "#141414", border: "1px solid #222" }}
+              className="w-full text-left rounded-2xl px-4 py-4 transition-all active:scale-[0.98]"
+              style={GLASS}
             >
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[#f0f0f0] text-sm font-light">{dia.nombre}</p>
-                  <p className="text-[#555] text-xs mt-0.5">
-                    {dia.rutina_ejercicios.length} ejercicios
-                    {" · "}
-                    {dia.rutina_ejercicios.reduce((s, e) => s + e.series, 0)} series
+                  <p className="text-sm font-light" style={{ color: "rgba(255,255,255,0.9)" }}>{dia.nombre}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {dia.rutina_ejercicios.length} ejercicios · {dia.rutina_ejercicios.reduce((s, e) => s + e.series, 0)} series
                   </p>
-                  {/* Exercise preview */}
-                  <p className="text-[#333] text-[10px] mt-1 truncate">
+                  <p className="text-[10px] mt-1 truncate" style={{ color: "rgba(255,255,255,0.2)" }}>
                     {dia.rutina_ejercicios.slice(0, 3).map((e) => e.nombre).join(" · ")}
                     {dia.rutina_ejercicios.length > 3 ? " …" : ""}
                   </p>
@@ -236,35 +237,35 @@ export default function EntrenarPage() {
   const totalSeries = ejercicios.reduce((s, ej) => s + ej.seriesData.length, 0);
 
   return (
-    <div className="min-h-screen bg-[#080808]">
-      <div className="px-6 pt-14 pb-4 flex items-center gap-3">
-        <button onClick={() => setSelectedDia(null)} className="shrink-0" style={{ color: "#444" }}>
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="px-5 pt-14 pb-4 flex items-center gap-3">
+        <button onClick={() => setSelectedDia(null)} className="shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
         <div className="min-w-0">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-[#444]">registro de hoy</p>
-          <h1 className="text-xl font-light text-[#f0f0f0] truncate">{selectedDia.nombre}</h1>
+          <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>registro de hoy</p>
+          <h1 className="text-xl font-light truncate" style={{ color: "rgba(255,255,255,0.9)" }}>{selectedDia.nombre}</h1>
         </div>
       </div>
 
-      <div className="px-4 pb-[calc(148px+env(safe-area-inset-bottom))] space-y-4">
-        {/* Progress bar */}
-        <div
-          className="rounded-xl px-4 py-3 flex items-center gap-4"
-          style={{ background: "#141414", border: "1px solid #222" }}
-        >
+      <div className="px-4 pb-[calc(148px+env(safe-area-inset-bottom))] space-y-3">
+
+        {/* Progress */}
+        <div className="rounded-2xl px-4 py-3 flex items-center gap-4" style={GLASS}>
           <div className="shrink-0">
-            <p className="text-[#f0f0f0] text-lg font-light">{totalCompletadas}/{totalSeries}</p>
-            <p className="text-[9px] tracking-wider uppercase text-[#444]">series</p>
+            <p className="text-lg font-light" style={{ color: "rgba(255,255,255,0.9)" }}>{totalCompletadas}/{totalSeries}</p>
+            <p className="text-[9px] tracking-wider uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>series</p>
           </div>
-          <div className="flex-1 h-1 rounded-full bg-[#1e1e1e] overflow-hidden">
+          <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
             <div
               className="h-full rounded-full transition-all duration-300"
               style={{
                 width: totalSeries ? `${(totalCompletadas / totalSeries) * 100}%` : "0%",
                 background: "#2abfbf",
+                boxShadow: "0 0 8px rgba(42,191,191,0.5)",
               }}
             />
           </div>
@@ -272,57 +273,75 @@ export default function EntrenarPage() {
 
         {/* Exercises */}
         {ejercicios.map((ej, ejIdx) => (
-          <div key={ej.id} className="rounded-xl overflow-hidden" style={{ border: "1px solid #222" }}>
-            <div className="px-4 py-3" style={{ background: "#141414" }}>
-              <p className="text-[#f0f0f0] text-sm font-light">{ej.nombre}</p>
+          <div
+            key={ej.id}
+            className="rounded-2xl overflow-hidden"
+            style={{ border: "0.5px solid rgba(255,255,255,0.13)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)" }}
+          >
+            {/* Exercise header */}
+            <div
+              className="px-4 py-3"
+              style={{ background: "rgba(255,255,255,0.09)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}
+            >
+              <p className="text-sm font-light" style={{ color: "rgba(255,255,255,0.88)" }}>{ej.nombre}</p>
             </div>
-            <div className="divide-y divide-[#151515]" style={{ background: "#0f0f0f" }}>
+
+            {/* Series */}
+            <div style={{ background: "rgba(0,0,0,0.25)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}>
               {/* Column headers */}
               <div className="px-4 py-1.5 grid grid-cols-[28px_52px_1fr_1fr_36px] gap-2 items-center">
-                <span className="text-[8px] tracking-wider uppercase text-[#2a2a2a]">ser.</span>
-                <span className="text-[8px] tracking-wider uppercase text-[#2a2a2a]">obj.</span>
-                <span className="text-[8px] tracking-wider uppercase text-[#2a2a2a] text-center">kg</span>
-                <span className="text-[8px] tracking-wider uppercase text-[#2a2a2a] text-center">reps</span>
-                <span />
+                {["ser.", "obj.", "kg", "reps", ""].map((h, i) => (
+                  <span key={i} className={`text-[8px] tracking-wider uppercase ${i === 2 || i === 3 ? "text-center" : ""}`} style={{ color: "rgba(255,255,255,0.2)" }}>{h}</span>
+                ))}
               </div>
+
               {ej.seriesData.map((s, sIdx) => (
                 <div
                   key={sIdx}
-                  className="px-4 py-2 grid grid-cols-[28px_52px_1fr_1fr_36px] gap-2 items-center transition-colors"
-                  style={{ background: s.completada ? "rgba(42,191,191,0.04)" : undefined }}
+                  className="px-4 py-2 grid grid-cols-[28px_52px_1fr_1fr_36px] gap-2 items-center"
+                  style={{
+                    background: s.completada ? "rgba(42,191,191,0.06)" : undefined,
+                    borderTop: "0.5px solid rgba(255,255,255,0.05)",
+                  }}
                 >
-                  <span
-                    className="text-[10px] font-mono"
-                    style={{ color: s.completada ? "#2abfbf" : "#444" }}
-                  >
+                  <span className="text-[10px] font-mono" style={{ color: s.completada ? "#2abfbf" : "rgba(255,255,255,0.3)" }}>
                     {String(sIdx + 1).padStart(2, "0")}
                   </span>
-                  <span className="text-[10px] text-[#333]">×{ej.repeticiones}</span>
+                  <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>×{ej.repeticiones}</span>
+
                   <input
-                    type="number"
-                    min={0}
-                    step={0.5}
+                    type="number" min={0} step={0.5}
                     value={s.peso}
                     onChange={(e) => updateSerie(ejIdx, sIdx, "peso", e.target.value)}
                     placeholder="—"
-                    className="w-full bg-[#141414] border border-[#1e1e1e] rounded-lg px-1 py-2 text-[#f0f0f0] placeholder-[#333] text-xs text-center outline-none focus:border-[#2abfbf] transition-colors"
-                    style={{ opacity: s.completada ? 0.5 : 1 }}
+                    className="w-full rounded-lg px-1 py-2 text-xs text-center outline-none transition-colors"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "0.5px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.9)",
+                      opacity: s.completada ? 0.45 : 1,
+                    }}
                   />
                   <input
-                    type="number"
-                    min={0}
+                    type="number" min={0}
                     value={s.repeticiones}
                     onChange={(e) => updateSerie(ejIdx, sIdx, "repeticiones", e.target.value)}
-                    className="w-full bg-[#141414] border border-[#1e1e1e] rounded-lg px-1 py-2 text-[#f0f0f0] text-xs text-center outline-none focus:border-[#2abfbf] transition-colors"
-                    style={{ opacity: s.completada ? 0.5 : 1 }}
+                    className="w-full rounded-lg px-1 py-2 text-xs text-center outline-none transition-colors"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "0.5px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.9)",
+                      opacity: s.completada ? 0.45 : 1,
+                    }}
                   />
                   <button
                     type="button"
                     onClick={() => toggleSerie(ejIdx, sIdx)}
-                    className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
                     style={{
-                      background: s.completada ? "rgba(42,191,191,0.15)" : "#141414",
-                      border: `1px solid ${s.completada ? "rgba(42,191,191,0.4)" : "#222"}`,
+                      background: s.completada ? "rgba(42,191,191,0.2)" : "rgba(255,255,255,0.06)",
+                      border: `0.5px solid ${s.completada ? "rgba(42,191,191,0.5)" : "rgba(255,255,255,0.1)"}`,
+                      boxShadow: s.completada ? "0 0 10px rgba(42,191,191,0.2)" : undefined,
                     }}
                   >
                     {s.completada ? (
@@ -330,7 +349,7 @@ export default function EntrenarPage() {
                         <path d="M5 12l5 5L19 7" stroke="#2abfbf" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     ) : (
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#222" }} />
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.12)" }} />
                     )}
                   </button>
                 </div>
@@ -339,25 +358,26 @@ export default function EntrenarPage() {
           </div>
         ))}
 
-        {saveError && <p className="text-[#f0a0a0] text-xs text-center px-4">{saveError}</p>}
+        {saveError && <p className="text-xs text-center px-4" style={{ color: "rgba(255,120,120,0.9)" }}>{saveError}</p>}
       </div>
 
-      {/* Floating finish button */}
+      {/* Finish button */}
       <div
         className="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 px-4 pb-[calc(56px+env(safe-area-inset-bottom)+8px)] pt-4"
-        style={{ background: "linear-gradient(to top, #080808 70%, transparent)" }}
+        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.9) 60%, transparent)" }}
       >
         <button
           onClick={handleFinish}
           disabled={isSaving || saved}
-          className="w-full py-4 rounded-xl font-semibold text-sm tracking-widest uppercase transition-all disabled:opacity-60"
+          className="w-full py-4 rounded-2xl font-semibold text-sm tracking-widest uppercase transition-all disabled:opacity-60"
           style={{
             background: saved ? "rgba(42,191,191,0.15)" : "#2abfbf",
-            color: saved ? "#2abfbf" : "#080808",
-            border: saved ? "1px solid rgba(42,191,191,0.3)" : "none",
+            color: saved ? "#2abfbf" : "#000",
+            border: saved ? "0.5px solid rgba(42,191,191,0.3)" : "none",
+            boxShadow: saved ? undefined : "0 4px 24px rgba(42,191,191,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
           }}
         >
-          {saved ? "Entrenamiento guardado" : isSaving ? "Guardando…" : "Finalizar entrenamiento"}
+          {saved ? "Entrenamiento guardado ✓" : isSaving ? "Guardando…" : "Finalizar entrenamiento"}
         </button>
       </div>
     </div>

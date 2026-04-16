@@ -33,11 +33,15 @@ const sections = [
 
 export default function ContenidoPage() {
   return (
-    <div className="min-h-screen bg-[#080808]">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="px-6 pt-14 pb-6">
-        <p className="text-[#444] text-[10px] tracking-[0.25em] uppercase mb-1">biblioteca</p>
-        <h1 className="text-2xl font-light text-[#f0f0f0] tracking-tight">Contenido</h1>
+      <div className="px-5 pt-14 pb-6">
+        <p className="text-[10px] tracking-[0.25em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+          biblioteca
+        </p>
+        <h1 className="text-2xl font-light tracking-tight" style={{ color: "rgba(255,255,255,0.92)" }}>
+          Contenido
+        </h1>
       </div>
 
       {/* Section cards */}
@@ -48,33 +52,57 @@ export default function ContenidoPage() {
             href={section.href}
             className="block active:scale-[0.98] transition-transform"
           >
-            <div className="relative overflow-hidden rounded-xl" style={{ height: 140 }}>
-              {/* Background image */}
+            <div
+              className="relative overflow-hidden rounded-3xl"
+              style={{
+                height: 148,
+                border: "0.5px solid rgba(255,255,255,0.13)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.5)",
+              }}
+            >
+              {/* Photo */}
               <div
                 className="absolute inset-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${section.image})` }}
                 aria-hidden="true"
               />
-              {/* Dark gradient overlay */}
+              {/* Glass overlay */}
               <div
                 className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(to bottom, rgba(8,8,8,0.1) 0%, rgba(8,8,8,0.65) 60%, rgba(8,8,8,0.9) 100%)",
-                }}
+                style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.85) 100%)" }}
                 aria-hidden="true"
               />
-              {/* Content */}
-              <div className="relative z-10 flex items-end justify-between h-full px-5 pb-4">
-                <div>
-                  <h2 className="text-[#f0f0f0] text-base font-light leading-tight tracking-wide">
-                    {section.title}
-                  </h2>
-                  <p className="text-[#888] text-xs mt-0.5 font-light">{section.subtitle}</p>
+              {/* Glass bottom bar */}
+              <div
+                className="absolute inset-x-0 bottom-0 px-5 pb-4 pt-8"
+                style={{
+                  backdropFilter: "blur(0px)",
+                  WebkitBackdropFilter: "blur(0px)",
+                }}
+              >
+                <div className="flex items-end justify-between">
+                  <div>
+                    <h2 className="text-base font-light leading-tight" style={{ color: "rgba(255,255,255,0.95)" }}>
+                      {section.title}
+                    </h2>
+                    <p className="text-xs mt-0.5 font-light" style={{ color: "rgba(255,255,255,0.45)" }}>
+                      {section.subtitle}
+                    </p>
+                  </div>
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 ml-3"
+                    style={{
+                      background: "rgba(255,255,255,0.12)",
+                      backdropFilter: "blur(10px)",
+                      WebkitBackdropFilter: "blur(10px)",
+                      border: "0.5px solid rgba(255,255,255,0.2)",
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#666]">
-                  <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
               </div>
             </div>
           </Link>
