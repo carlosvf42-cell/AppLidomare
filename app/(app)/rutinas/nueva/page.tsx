@@ -4,11 +4,12 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import EjercicioSelector from "@/components/EjercicioSelector";
 
-type EjercicioForm = { nombre: string; series: number; repeticiones: number };
+type EjercicioForm = { nombre: string; ejercicio_id: string | null; series: number; repeticiones: number };
 type DiaForm = { nombre: string; ejercicios: EjercicioForm[] };
 
-const EJERCICIO_VACIO: EjercicioForm = { nombre: "", series: 3, repeticiones: 10 };
+const EJERCICIO_VACIO: EjercicioForm = { nombre: "", ejercicio_id: null, series: 3, repeticiones: 10 };
 const DIA_VACIO = (): DiaForm => ({ nombre: "", ejercicios: [{ ...EJERCICIO_VACIO }] });
 
 function getSupabase() {
@@ -63,6 +64,16 @@ export default function NuevaRutinaPage() {
       prev.map((d, i) =>
         i === diaIdx
           ? { ...d, ejercicios: d.ejercicios.map((e, j) => (j === ejIdx ? { ...e, [key]: value } : e)) }
+          : d
+      )
+    );
+  }
+
+  function updateEjercicioSelector(diaIdx: number, ejIdx: number, nombre: string, ejercicioId: string | null) {
+    setDias((prev) =>
+      prev.map((d, i) =>
+        i === diaIdx
+          ? { ...d, ejercicios: d.ejercicios.map((e, j) => j === ejIdx ? { ...e, nombre, ejercicio_id: ejercicioId } : e) }
           : d
       )
     );
@@ -125,6 +136,7 @@ export default function NuevaRutinaPage() {
           series: ej.series,
           repeticiones: ej.repeticiones,
           orden,
+          ...(ej.ejercicio_id ? { ejercicio_id: ej.ejercicio_id } : {}),
         }))
       );
 
@@ -232,12 +244,10 @@ export default function NuevaRutinaPage() {
                         <span className="text-[9px] font-mono text-[#333] shrink-0 w-4">
                           {String(ejIdx + 1).padStart(2, "0")}
                         </span>
-                        <input
-                          type="text"
+                        <EjercicioSelector
                           value={ej.nombre}
-                          onChange={(e) => updateEjercicio(diaIdx, ejIdx, "nombre", e.target.value)}
-                          placeholder="Nombre del ejercicio"
-                          className="flex-1 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] placeholder-[#333] text-xs outline-none focus:border-[#2abfbf] transition-colors"
+                          ejercicioId={ej.ejercicio_id}
+                          onChange={(nombre, ejercicioId) => updateEjercicioSelector(diaIdx, ejIdx, nombre, ejercicioId)}
                         />
                         {dia.ejercicios.length > 1 && (
                           <button
