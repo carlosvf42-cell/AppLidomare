@@ -171,11 +171,15 @@ export default async function HomePage() {
         {/* ── CTA ── */}
         <Link
           href="/contenido"
-          className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-sm font-light tracking-widest uppercase transition-all active:scale-[0.98]"
+          className="flex items-center justify-center gap-2 w-full py-4 text-sm font-light tracking-widest uppercase transition-all active:scale-[0.98]"
           style={{
-            background: "transparent",
-            border: "0.5px solid rgba(255,255,255,0.25)",
-            color: "rgba(255,255,255,0.75)",
+            background: "rgba(255,255,255,0.05)",
+            border: "0.5px solid rgba(255,255,255,0.15)",
+            borderRadius: 20,
+            backdropFilter: "blur(20px) saturate(180%)",
+            WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.3)",
+            color: "#f0f0f0",
           }}
         >
           Acceder a la biblioteca

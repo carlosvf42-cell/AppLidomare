@@ -56,8 +56,11 @@ export default function ContenidoPage() {
               className="relative overflow-hidden rounded-3xl"
               style={{
                 height: 148,
-                border: "0.5px solid rgba(255,255,255,0.13)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.5)",
+                background: "rgba(255,255,255,0.05)",
+                backdropFilter: "blur(20px) saturate(180%)",
+                WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                border: "0.5px solid rgba(255,255,255,0.15)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.3)",
               }}
             >
               {/* Photo */}
@@ -92,10 +95,11 @@ export default function ContenidoPage() {
                   <div
                     className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 ml-3"
                     style={{
-                      background: "rgba(255,255,255,0.12)",
-                      backdropFilter: "blur(10px)",
-                      WebkitBackdropFilter: "blur(10px)",
-                      border: "0.5px solid rgba(255,255,255,0.2)",
+                      background: "rgba(255,255,255,0.05)",
+                      backdropFilter: "blur(20px) saturate(180%)",
+                      WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                      border: "0.5px solid rgba(255,255,255,0.15)",
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
                     }}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
