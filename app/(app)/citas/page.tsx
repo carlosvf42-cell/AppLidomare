@@ -3,9 +3,8 @@ export default function CitasPage() {
     <div style={{
       display: "flex",
       flexDirection: "column",
-      height: "calc(100vh - 64px)",
-      gap: "1px",
-      background: "#111",
+      padding: "16px",
+      gap: "12px",
     }}>
 
       {/* Tarjeta 1 — Reservar cita */}
@@ -14,7 +13,8 @@ export default function CitasPage() {
         target="_blank"
         rel="noopener noreferrer"
         style={{
-          flex: 1,
+          height: "45vh",
+          borderRadius: 20,
           position: "relative",
           overflow: "hidden",
           display: "flex",
@@ -47,7 +47,8 @@ export default function CitasPage() {
         target="_blank"
         rel="noopener noreferrer"
         style={{
-          flex: 1,
+          height: "45vh",
+          borderRadius: 20,
           position: "relative",
           overflow: "hidden",
           display: "flex",
