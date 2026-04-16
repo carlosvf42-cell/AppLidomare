@@ -17,3 +17,24 @@ export interface RutinaEjercicio {
   orden: number;
   ejercicio_id?: string;
 }
+
+export interface Sesion {
+  id: string;
+  user_id: string;
+  dia_id: string;
+  fecha: string;
+  completada: boolean;
+  duracion_minutos?: number;
+  created_at: string;
+}
+
+export interface SerieRealizada {
+  id: string;
+  sesion_id: string;
+  ejercicio_id: string;
+  numero_serie: number;
+  repeticiones?: number;
+  peso?: number;
+  completada: boolean;
+  ejercicio_catalogo_id?: string;
+}

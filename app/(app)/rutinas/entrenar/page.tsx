@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
-type RutinaEjercicio = { id: string; nombre: string; series: number; repeticiones: number; orden: number };
+type RutinaEjercicio = { id: string; nombre: string; series: number; repeticiones: number; orden: number; ejercicio_id?: string | null };
 type RutinaDia = { id: string; nombre: string; orden: number; rutina_ejercicios: RutinaEjercicio[] };
 type Rutina = { id: string; nombre: string; rutina_dias: RutinaDia[] };
 
@@ -32,12 +32,13 @@ export default function EntrenarPage() {
   const [isSaving, startSave] = useTransition();
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [horaInicio, setHoraInicio] = useState<Date | null>(null);
 
   useEffect(() => {
     const supabase = getSupabase();
     supabase
       .from("rutinas")
-      .select("id, nombre, rutina_dias(id, nombre, orden, rutina_ejercicios(id, nombre, series, repeticiones, orden))")
+      .select("id, nombre, rutina_dias(id, nombre, orden, rutina_ejercicios(id, nombre, series, repeticiones, orden, ejercicio_id))")
       .eq("activa", true)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -55,6 +56,7 @@ export default function EntrenarPage() {
 
   function selectDia(dia: RutinaDia) {
     setSelectedDia(dia);
+    setHoraInicio(new Date());
     setEjercicios(
       dia.rutina_ejercicios.map((ej) => ({
         ...ej,
@@ -90,11 +92,18 @@ export default function EntrenarPage() {
   function handleFinish() {
     if (!selectedDia) return;
     setSaveError(null);
+    const finAt = new Date();
     startSave(async () => {
       const supabase = getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
+      // Calcular duración en minutos desde que se seleccionó el día
+      const duracion_minutos = horaInicio
+        ? Math.max(1, Math.round((finAt.getTime() - horaInicio.getTime()) / 60_000))
+        : null;
+
+      // Insertar sesión
       const { data: sesion, error: sesionErr } = await supabase
         .from("sesiones")
         .insert({ user_id: user.id, dia_id: selectedDia.id, fecha: todayISO() })
@@ -107,10 +116,12 @@ export default function EntrenarPage() {
         return;
       }
 
+      // Insertar series con ejercicio_catalogo_id para historial permanente
       const seriesRows = ejercicios.flatMap((ej) =>
         ej.seriesData.map((s, sIdx) => ({
           sesion_id: sesion.id,
           ejercicio_id: ej.id,
+          ejercicio_catalogo_id: ej.ejercicio_id ?? null,
           numero_serie: sIdx + 1,
           repeticiones: s.repeticiones ? parseInt(s.repeticiones) : null,
           peso: s.peso ? parseFloat(s.peso) : null,
@@ -124,6 +135,12 @@ export default function EntrenarPage() {
         setSaveError(`Sesión creada pero error en series. ${seriesErr.message}`);
         return;
       }
+
+      // Marcar sesión como completada y guardar duración
+      await supabase
+        .from("sesiones")
+        .update({ completada: true, duracion_minutos })
+        .eq("id", sesion.id);
 
       setSaved(true);
       setTimeout(() => router.push("/rutinas"), 1200);
