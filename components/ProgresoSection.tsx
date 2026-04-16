@@ -105,7 +105,7 @@ function Skeleton({ className }: { className?: string }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-3 px-0.5" style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "0.85rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "#2abfbf" }}>
+    <p className="text-[9px] tracking-[0.22em] uppercase font-medium mb-3 px-0.5" style={{ color: "#2abfbf" }}>
       {children}
     </p>
   );
@@ -466,7 +466,7 @@ export default function ProgresoSection() {
       {/* ── Header ── */}
       <div className="flex items-center gap-3 pt-2">
         <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
-        <p style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "1rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "#2abfbf" }}>Mi Progreso</p>
+        <p className="text-[9px] tracking-[0.25em] uppercase" style={{ color: "#2abfbf" }}>Mi Progreso</p>
         <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
       </div>
 

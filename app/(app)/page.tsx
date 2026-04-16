@@ -86,7 +86,7 @@ export default async function HomePage() {
         />
         {/* Text overlay — bottom-left */}
         <div className="absolute inset-x-0 bottom-0 px-5 pb-6">
-          <h1 className="leading-tight" style={{ color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "2.2rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          <h1 className="text-[2rem] font-light leading-tight tracking-tight" style={{ color: "rgba(255,255,255,0.95)" }}>
             Lidomare Health App
           </h1>
           <p style={{ fontSize: 9, color: "#2abfbf", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 4 }}>
@@ -103,7 +103,7 @@ export default async function HomePage() {
           <p style={{ fontSize: 10, color: "#555", letterSpacing: "0.2em", textTransform: "uppercase" }}>
             Bienvenido de nuevo
           </p>
-          <p className="leading-tight" style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: 34, color: "#f0f0f0", letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 2 }}>
+          <p className="font-bold leading-tight" style={{ fontSize: 30, color: "#f0f0f0", marginTop: 2 }}>
             {nombreUsuario}
           </p>
           <p style={{ fontSize: 12, color: "#333", marginTop: 4 }}>

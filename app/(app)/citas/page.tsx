@@ -36,7 +36,7 @@ export default function CitasPage() {
         <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#2abfbf", textTransform: "uppercase", marginBottom: 8 }}>
           Salonized
         </div>
-        <div style={{ fontSize: 36, fontWeight: 300, color: "#f0f0f0", lineHeight: 1.1, textTransform: "uppercase", letterSpacing: "0.15em", fontFamily: "var(--font-display)" }}>
+        <div style={{ fontSize: 36, fontWeight: 800, color: "#f0f0f0", lineHeight: 1, textTransform: "uppercase", fontFamily: "Barlow Condensed, sans-serif" }}>
           Reservar<br />cita
         </div>
         <div style={{ fontSize: 12, color: "#333", marginTop: 10 }}>
@@ -73,7 +73,7 @@ export default function CitasPage() {
         <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#2abfbf", textTransform: "uppercase", marginBottom: 8 }}>
           WhatsApp
         </div>
-        <div style={{ fontSize: 36, fontWeight: 300, color: "#f0f0f0", lineHeight: 1.1, textTransform: "uppercase", letterSpacing: "0.15em", fontFamily: "var(--font-display)" }}>
+        <div style={{ fontSize: 36, fontWeight: 800, color: "#f0f0f0", lineHeight: 1, textTransform: "uppercase", fontFamily: "Barlow Condensed, sans-serif" }}>
           Asesoramiento<br />personal
         </div>
         <div style={{ fontSize: 12, color: "#333", marginTop: 10 }}>

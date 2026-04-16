@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Cormorant_Garamond } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -7,13 +7,6 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   weight: ["300", "400", "500", "600"],
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "600"],
-  variable: "--font-cormorant",
-  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -42,7 +35,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${inter.variable} ${cormorant.variable}`}>
+    <html lang="es" className={inter.variable}>
       <body style={{ background: "#000" }} className="min-h-screen">
         <div
           id="app"
