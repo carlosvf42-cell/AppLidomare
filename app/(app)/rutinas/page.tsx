@@ -8,6 +8,7 @@ import { createBrowserClient } from "@supabase/ssr";
 type RutinaDia = { id: string; nombre: string; orden: number };
 type RutinaActiva = { id: string; nombre: string; rutina_dias: RutinaDia[] };
 type SesionHistorial = { id: string; fecha: string; dia_nombre: string };
+type RutinaResumen = { id: string; nombre: string; activa: boolean; num_dias: number };
 
 function getSupabase() {
   return createBrowserClient(
@@ -30,33 +31,54 @@ const GLASS: React.CSSProperties = {
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 24px rgba(0,0,0,0.4)",
 };
 
+const GLASS_SM: React.CSSProperties = {
+  background: "rgba(255,255,255,0.03)",
+  backdropFilter: "blur(10px)",
+  WebkitBackdropFilter: "blur(10px)",
+  border: "0.5px solid rgba(255,255,255,0.08)",
+  borderRadius: 12,
+};
+
 export default function RutinasPage() {
   const router = useRouter();
   const [rutina, setRutina] = useState<RutinaActiva | null>(null);
+  const [todasRutinas, setTodasRutinas] = useState<RutinaResumen[]>([]);
   const [historial, setHistorial] = useState<SesionHistorial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activando, setActivando] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = getSupabase();
     Promise.all([
       supabase
         .from("rutinas")
-        .select("id, nombre, rutina_dias(id, nombre, orden)")
-        .eq("activa", true)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .select("id, nombre, activa, rutina_dias(id, nombre, orden)")
+        .order("created_at", { ascending: false }),
       supabase
         .from("sesiones")
         .select("id, fecha, rutina_dias(nombre)")
         .order("fecha", { ascending: false })
         .limit(30),
-    ]).then(([rutinaRes, sesionesRes]) => {
-      if (rutinaRes.data) {
-        const r = rutinaRes.data as any;
-        r.rutina_dias.sort((a: any, b: any) => a.orden - b.orden);
-        setRutina(r);
+    ]).then(([rutinasRes, sesionesRes]) => {
+      const todas = (rutinasRes.data ?? []) as any[];
+
+      // Set active rutina
+      const activa = todas.find((r) => r.activa);
+      if (activa) {
+        activa.rutina_dias.sort((a: any, b: any) => a.orden - b.orden);
+        setRutina(activa);
       }
+
+      // Build summary list
+      setTodasRutinas(
+        todas.map((r) => ({
+          id: r.id,
+          nombre: r.nombre,
+          activa: r.activa,
+          num_dias: r.rutina_dias?.length ?? 0,
+        }))
+      );
+
       if (sesionesRes.data) {
         setHistorial(
           (sesionesRes.data as any[]).map((s) => ({
@@ -69,6 +91,35 @@ export default function RutinasPage() {
       setLoading(false);
     });
   }, []);
+
+  async function activarRutina(rutinaId: string) {
+    setActivando(rutinaId);
+    const supabase = getSupabase();
+    await supabase.from("rutinas").update({ activa: false }).neq("id", rutinaId);
+    await supabase.from("rutinas").update({ activa: true }).eq("id", rutinaId);
+
+    // Refresh local state
+    const { data } = await supabase
+      .from("rutinas")
+      .select("id, nombre, activa, rutina_dias(id, nombre, orden)")
+      .order("created_at", { ascending: false });
+
+    const todas = (data ?? []) as any[];
+    const activa = todas.find((r) => r.activa);
+    if (activa) {
+      activa.rutina_dias.sort((a: any, b: any) => a.orden - b.orden);
+      setRutina(activa);
+    }
+    setTodasRutinas(
+      todas.map((r) => ({
+        id: r.id,
+        nombre: r.nombre,
+        activa: r.activa,
+        num_dias: r.rutina_dias?.length ?? 0,
+      }))
+    );
+    setActivando(null);
+  }
 
   return (
     <div className="min-h-screen">
@@ -107,7 +158,7 @@ export default function RutinasPage() {
       ) : (
         <div className="px-4 pb-6 space-y-5">
 
-          {/* Mi rutina */}
+          {/* ── Rutina activa ── */}
           <section>
             <p className="text-[10px] tracking-[0.2em] uppercase mb-3 px-1" style={{ color: "rgba(255,255,255,0.3)" }}>
               Mi rutina
@@ -127,6 +178,7 @@ export default function RutinasPage() {
                     activa
                   </span>
                 </div>
+
                 {/* Day chips */}
                 <div className="flex gap-1.5 flex-wrap">
                   {rutina.rutina_dias.map((d) => (
@@ -143,6 +195,8 @@ export default function RutinasPage() {
                     </span>
                   ))}
                 </div>
+
+                {/* Primary CTA */}
                 <Link
                   href="/rutinas/entrenar"
                   className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all active:scale-[0.98]"
@@ -157,6 +211,26 @@ export default function RutinasPage() {
                   </svg>
                   Entrenar hoy
                 </Link>
+
+                {/* Secondary actions */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/rutinas/${rutina.id}/editar`)}
+                    className="flex-1 py-2.5 text-xs tracking-widest uppercase transition-all active:scale-[0.98]"
+                    style={{ ...GLASS_SM, color: "rgba(255,255,255,0.6)" }}
+                  >
+                    Editar rutina
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/rutinas/nueva")}
+                    className="flex-1 py-2.5 text-xs tracking-widest uppercase transition-all active:scale-[0.98]"
+                    style={{ ...GLASS_SM, color: "rgba(255,255,255,0.6)" }}
+                  >
+                    + Nueva rutina
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="rounded-3xl px-4 py-8 text-center space-y-4" style={GLASS}>
@@ -190,7 +264,78 @@ export default function RutinasPage() {
             )}
           </section>
 
-          {/* Historial */}
+          {/* ── Mis rutinas ── */}
+          {todasRutinas.length > 0 && (
+            <section>
+              <p className="text-[10px] tracking-[0.2em] uppercase mb-3 px-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                Mis rutinas
+              </p>
+              <div className="space-y-2">
+                {todasRutinas.map((r) => (
+                  <div
+                    key={r.id}
+                    className="rounded-2xl px-4 py-3.5 flex items-center gap-3"
+                    style={GLASS}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-light truncate" style={{ color: "rgba(255,255,255,0.85)" }}>
+                          {r.nombre}
+                        </p>
+                        {r.activa && (
+                          <span
+                            className="text-[8px] px-1.5 py-0.5 rounded-full shrink-0"
+                            style={{
+                              background: "rgba(42,191,191,0.12)",
+                              color: "#2abfbf",
+                              border: "0.5px solid rgba(42,191,191,0.25)",
+                            }}
+                          >
+                            activa
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                        {r.num_dias} {r.num_dias === 1 ? "día" : "días"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {!r.activa && (
+                        <button
+                          type="button"
+                          disabled={activando === r.id}
+                          onClick={() => activarRutina(r.id)}
+                          className="px-3 py-1.5 rounded-xl text-[10px] tracking-widest uppercase transition-all active:scale-[0.97] disabled:opacity-50"
+                          style={{
+                            background: "rgba(42,191,191,0.1)",
+                            border: "0.5px solid rgba(42,191,191,0.25)",
+                            color: "#2abfbf",
+                          }}
+                        >
+                          {activando === r.id ? "…" : "Activar"}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/rutinas/${r.id}/editar`)}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl transition-all active:scale-[0.97]"
+                        style={GLASS_SM}
+                        aria-label="Editar"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ── Historial ── */}
           {historial.length > 0 && (
             <section>
               <p className="text-[10px] tracking-[0.2em] uppercase mb-3 px-1" style={{ color: "rgba(255,255,255,0.3)" }}>
