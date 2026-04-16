@@ -78,7 +78,7 @@ export default function RutinasPage() {
           <p className="text-[10px] tracking-[0.2em] uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
             entrenamiento
           </p>
-          <h1 className="text-xl font-light tracking-tight" style={{ color: "rgba(255,255,255,0.92)" }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "1.6rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.92)" }}>
             Rutinas
           </h1>
         </div>

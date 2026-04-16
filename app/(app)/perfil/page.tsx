@@ -72,7 +72,7 @@ export default function PerfilPage() {
           {initials}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-light truncate" style={{ color: "rgba(255,255,255,0.9)" }}>{email}</p>
+          <p className="truncate" style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "1.1rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.9)" }}>{email}</p>
           <p className="text-xs font-light mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>Miembro activo</p>
         </div>
       </div>
