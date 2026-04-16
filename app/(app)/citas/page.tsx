@@ -13,7 +13,7 @@ export default function CitasPage() {
         target="_blank"
         rel="noopener noreferrer"
         style={{
-          height: "45vh",
+          height: "35vh",
           borderRadius: 20,
           border: "0.5px solid rgba(255,255,255,0.08)",
           backdropFilter: "blur(10px)",
@@ -50,7 +50,7 @@ export default function CitasPage() {
         target="_blank"
         rel="noopener noreferrer"
         style={{
-          height: "45vh",
+          height: "35vh",
           borderRadius: 20,
           border: "0.5px solid rgba(255,255,255,0.08)",
           backdropFilter: "blur(10px)",
