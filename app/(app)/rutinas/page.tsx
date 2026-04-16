@@ -46,6 +46,7 @@ export default function RutinasPage() {
   const [historial, setHistorial] = useState<SesionHistorial[]>([]);
   const [loading, setLoading] = useState(true);
   const [activando, setActivando] = useState<string | null>(null);
+  const [borrando, setBorrando] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -91,6 +92,42 @@ export default function RutinasPage() {
       setLoading(false);
     });
   }, []);
+
+  async function borrarRutina(r: RutinaResumen) {
+    if (r.activa) {
+      alert("Desactiva la rutina antes de eliminarla.");
+      return;
+    }
+    if (!confirm(`¿Eliminar "${r.nombre}"? El historial de entrenamientos se conservará.`)) return;
+
+    setBorrando(r.id);
+    const supabase = getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setBorrando(null); return; }
+
+    // 1. Obtener ids de los días
+    const { data: dias } = await supabase
+      .from("rutina_dias")
+      .select("id")
+      .eq("rutina_id", r.id);
+    const diasIds = (dias ?? []).map((d: any) => d.id);
+
+    // 2. Borrar ejercicios de todos los días
+    if (diasIds.length > 0) {
+      await supabase.from("rutina_ejercicios").delete().in("dia_id", diasIds);
+    }
+
+    // 3. Borrar los días
+    await supabase.from("rutina_dias").delete().eq("rutina_id", r.id);
+
+    // 4. Borrar la rutina
+    await supabase.from("rutinas").delete().eq("id", r.id).eq("user_id", user.id);
+
+    // Actualizar estado local
+    setTodasRutinas((prev) => prev.filter((x) => x.id !== r.id));
+    if (rutina?.id === r.id) setRutina(null);
+    setBorrando(null);
+  }
 
   async function activarRutina(rutinaId: string) {
     setActivando(rutinaId);
@@ -327,6 +364,28 @@ export default function RutinasPage() {
                           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                           <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={borrando === r.id}
+                        onClick={() => borrarRutina(r)}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl transition-all active:scale-[0.97] disabled:opacity-50"
+                        style={{
+                          background: "rgba(255,80,80,0.07)",
+                          backdropFilter: "blur(10px)",
+                          WebkitBackdropFilter: "blur(10px)",
+                          border: "0.5px solid rgba(255,80,80,0.15)",
+                          borderRadius: 12,
+                        }}
+                        aria-label="Eliminar"
+                      >
+                        {borrando === r.id ? (
+                          <div className="w-3 h-3 rounded-full animate-spin" style={{ border: "1.5px solid rgba(255,100,100,0.2)", borderTopColor: "rgba(255,100,100,0.7)" }} />
+                        ) : (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="rgba(255,100,100,0.6)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
                       </button>
                     </div>
                   </div>
