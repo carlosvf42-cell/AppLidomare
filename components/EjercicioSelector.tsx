@@ -90,7 +90,11 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
   }, [open]);
 
   const filtered = search.trim()
-    ? catalogo.filter((e) => e.nombre.toLowerCase().includes(search.toLowerCase()))
+    ? catalogo.filter((e) => {
+        const terminos = search.toLowerCase().split(" ").filter(Boolean);
+        const nombre = e.nombre.toLowerCase();
+        return terminos.every((termino) => nombre.includes(termino));
+      })
     : catalogo;
 
   const gymEjercicios = filtered.filter((e) => e.creado_por === null);

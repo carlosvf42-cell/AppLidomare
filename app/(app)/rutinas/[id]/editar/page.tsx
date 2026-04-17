@@ -368,10 +368,12 @@ export default function EditarRutinaPage() {
                           <label className="block text-[9px] tracking-wider uppercase mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Series</label>
                           <input
                             type="number"
+                            inputMode="numeric"
                             min={1}
                             max={20}
                             value={ej.series}
                             onChange={(e) => updateEjercicio(diaIdx, ejIdx, "series", parseInt(e.target.value) || 1)}
+                            onFocus={(e) => e.target.select()}
                             className="w-full rounded-lg px-2 py-1.5 text-xs text-center outline-none transition-colors"
                             style={{
                               background: "rgba(255,255,255,0.06)",
@@ -384,10 +386,12 @@ export default function EditarRutinaPage() {
                           <label className="block text-[9px] tracking-wider uppercase mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Reps objetivo</label>
                           <input
                             type="number"
+                            inputMode="numeric"
                             min={1}
                             max={999}
                             value={ej.repeticiones}
                             onChange={(e) => updateEjercicio(diaIdx, ejIdx, "repeticiones", parseInt(e.target.value) || 1)}
+                            onFocus={(e) => e.target.select()}
                             className="w-full rounded-lg px-2 py-1.5 text-xs text-center outline-none transition-colors"
                             style={{
                               background: "rgba(255,255,255,0.06)",

@@ -268,10 +268,12 @@ export default function NuevaRutinaPage() {
                           <label className="block text-[9px] tracking-wider uppercase text-[#444] mb-1">Series</label>
                           <input
                             type="number"
+                            inputMode="numeric"
                             min={1}
                             max={20}
                             value={ej.series}
                             onChange={(e) => updateEjercicio(diaIdx, ejIdx, "series", parseInt(e.target.value) || 1)}
+                            onFocus={(e) => e.target.select()}
                             className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-2 py-1.5 text-[#f0f0f0] text-xs text-center outline-none focus:border-[#2abfbf] transition-colors"
                           />
                         </div>
@@ -279,10 +281,12 @@ export default function NuevaRutinaPage() {
                           <label className="block text-[9px] tracking-wider uppercase text-[#444] mb-1">Reps objetivo</label>
                           <input
                             type="number"
+                            inputMode="numeric"
                             min={1}
                             max={999}
                             value={ej.repeticiones}
                             onChange={(e) => updateEjercicio(diaIdx, ejIdx, "repeticiones", parseInt(e.target.value) || 1)}
+                            onFocus={(e) => e.target.select()}
                             className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-2 py-1.5 text-[#f0f0f0] text-xs text-center outline-none focus:border-[#2abfbf] transition-colors"
                           />
                         </div>

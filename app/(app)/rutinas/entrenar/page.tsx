@@ -316,9 +316,10 @@ function EntrenarInner() {
                   <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>×{ej.repeticiones}</span>
 
                   <input
-                    type="number" min={0} step={0.5}
+                    type="number" inputMode="decimal" min={0} step={0.5}
                     value={s.peso}
                     onChange={(e) => updateSerie(ejIdx, sIdx, "peso", e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     placeholder="—"
                     className="w-full rounded-lg px-1 py-2 text-xs text-center outline-none transition-colors"
                     style={{
@@ -329,9 +330,10 @@ function EntrenarInner() {
                     }}
                   />
                   <input
-                    type="number" min={0}
+                    type="number" inputMode="numeric" min={0}
                     value={s.repeticiones}
                     onChange={(e) => updateSerie(ejIdx, sIdx, "repeticiones", e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     className="w-full rounded-lg px-1 py-2 text-xs text-center outline-none transition-colors"
                     style={{
                       background: "rgba(255,255,255,0.06)",
@@ -343,20 +345,26 @@ function EntrenarInner() {
                   <button
                     type="button"
                     onClick={() => toggleSerie(ejIdx, sIdx)}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
                     style={{
-                      background: s.completada ? "rgba(42,191,191,0.2)" : "rgba(255,255,255,0.06)",
-                      border: `0.5px solid ${s.completada ? "rgba(42,191,191,0.5)" : "rgba(255,255,255,0.1)"}`,
-                      boxShadow: s.completada ? "0 0 10px rgba(42,191,191,0.2)" : undefined,
+                      width: 44, height: 44,
+                      borderRadius: 10,
+                      border: `1.5px solid ${s.completada ? "#2abfbf" : "rgba(255,255,255,0.1)"}`,
+                      background: s.completada ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.03)",
+                      backdropFilter: "blur(10px)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
                     }}
                   >
-                    {s.completada ? (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 12l5 5L19 7" stroke="#2abfbf" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    ) : (
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.12)" }} />
-                    )}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path
+                        d="M3.5 9L7.5 13L14.5 5"
+                        stroke={s.completada ? "#2abfbf" : "rgba(255,255,255,0.2)"}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </button>
                 </div>
               ))}

@@ -291,21 +291,25 @@ export default function ProgresoSection() {
     }
 
     // ── Series esta semana ───────────────────────────────────────────────
-    const startOfWeek = new Date();
-    const day = startOfWeek.getDay();
-    const diff = day === 0 ? 6 : day - 1;
-    startOfWeek.setDate(startOfWeek.getDate() - diff);
-    startOfWeek.setHours(0, 0, 0, 0);
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-    const { count: weekCount } = await supabase
+    const hoy = new Date();
+    const diaSemana = hoy.getDay();
+    const diffLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() - diffLunes);
+    lunes.setHours(0, 0, 0, 0);
+    const domingoSem = new Date(lunes);
+    domingoSem.setDate(lunes.getDate() + 6);
+    domingoSem.setHours(23, 59, 59, 999);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: seriesEstaSemanaData } = await supabase
       .from("series_realizadas")
-      .select("id", { count: "exact", head: true })
+      .select("id, sesiones!inner(fecha, user_id)")
       .eq("completada", true)
-      .gte("created_at", startOfWeek.toISOString())
-      .lte("created_at", endOfWeek.toISOString());
-    setSeriesEstaSemana(weekCount ?? 0);
+      .eq("sesiones.user_id", user?.id ?? "")
+      .gte("sesiones.fecha", lunes.toISOString().split("T")[0])
+      .lte("sesiones.fecha", domingoSem.toISOString().split("T")[0]);
+    setSeriesEstaSemana(seriesEstaSemanaData?.length ?? 0);
 
     // ── Metrics ──────────────────────────────────────────────────────────
     const volumenKg = series.reduce(
