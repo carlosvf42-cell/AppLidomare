@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import SplashScreen from "@/components/SplashScreen";
 import "./globals.css";
 
 const inter = Inter({
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           className="relative mx-auto min-h-screen overflow-x-hidden"
           style={{ maxWidth: 430, background: "#000" }}
         >
+          <SplashScreen />
           {children}
         </div>
       </body>
