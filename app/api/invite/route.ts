@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { NextResponse, type NextRequest } from "next/server";
 
+const ADMIN_EMAIL = "carlosvf42@gmail.com";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Admin client — uses service_role key, never exposed to the browser
@@ -13,11 +14,18 @@ function getAdminClient() {
   );
 }
 
+async function verifyAdmin(request: NextRequest): Promise<boolean> {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return false;
+  const token = authHeader.slice(7);
+  const { data } = await getAdminClient().auth.getUser(token);
+  return data.user?.email === ADMIN_EMAIL;
+}
+
 export async function POST(request: NextRequest) {
-  // Diagnóstico: verificar que las variables de entorno están cargadas
-  console.log("SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "OK" : "MISSING");
-  console.log("SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "MISSING");
-  console.log("RESEND_KEY:", process.env.RESEND_API_KEY ? "OK" : "MISSING");
+  if (!(await verifyAdmin(request))) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
 
   try {
     const { email } = await request.json();

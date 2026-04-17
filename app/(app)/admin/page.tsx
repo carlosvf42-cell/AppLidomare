@@ -99,8 +99,8 @@ export default function AdminPage() {
 
   // Load users
   useEffect(() => {
-    if (checking) return;
-    fetch("/api/users")
+    if (checking || !token) return;
+    fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((data) => {
         if (data.error) {
@@ -119,7 +119,7 @@ export default function AdminPage() {
         setUsersError(err.message);
         setUsersLoading(false);
       });
-  }, [checking]);
+  }, [checking, token]);
 
   // ── Catálogo helpers ──
   function openCreate() {
@@ -184,7 +184,7 @@ export default function AdminPage() {
       try {
         const res = await fetch("/api/invite", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ email: email.trim() }),
         });
         const data = await res.json();

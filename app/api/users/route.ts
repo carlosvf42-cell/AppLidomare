@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+
+const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
 function getAdminClient() {
   return createClient(
@@ -9,7 +11,19 @@ function getAdminClient() {
   );
 }
 
-export async function GET() {
+async function verifyAdmin(request: NextRequest): Promise<boolean> {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return false;
+  const token = authHeader.slice(7);
+  const { data } = await getAdminClient().auth.getUser(token);
+  return data.user?.email === ADMIN_EMAIL;
+}
+
+export async function GET(request: NextRequest) {
+  if (!(await verifyAdmin(request))) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
   try {
     const supabase = getAdminClient();
     const { data, error } = await supabase.auth.admin.listUsers();
