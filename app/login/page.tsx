@@ -17,12 +17,12 @@ function LoginForm() {
     if (!email) return;
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/update-password`,
+      redirectTo: "https://app-lidomare.vercel.app/auth/update-password",
     });
     if (error) {
-      alert("Error al enviar el email. Verifica que el email es correcto.");
+      alert("Error: " + error.message);
     } else {
-      alert("Te hemos enviado un email con las instrucciones para recuperar tu contraseña.");
+      alert("Email enviado. Revisa tu bandeja de entrada y carpeta de spam.");
     }
   }
 
