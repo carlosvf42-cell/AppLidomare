@@ -108,8 +108,12 @@ export default async function HomePage() {
     (s) => s.fecha >= lunesISO && s.fecha <= domingoISO
   );
 
-  const doneSet  = new Set(sesionesEstaSemana.filter((s) => s.completada).map((s) => s.fecha));
-  const startSet = new Set(sesionesEstaSemana.filter((s) => !s.completada).map((s) => s.fecha));
+  const doneSet  = new Set<string>();
+  const startSet = new Set<string>();
+  for (const s of sesionesEstaSemana) {
+    if (s.completada) doneSet.add(s.fecha);
+    else startSet.add(s.fecha);
+  }
   const hoyISO   = toISODate(hoy);
 
   const semana = Array.from({ length: 7 }, (_, i) => {
@@ -126,8 +130,8 @@ export default async function HomePage() {
   const racha = calcularRacha(todasSesiones);
 
   // ── Próximo día ───────────────────────────────────────────────────────────
-  const diasConSesion = sesionesEstaSemana.map((s) => s.dia_id).filter(Boolean) as string[];
-  const proximoDia = rutina?.rutina_dias?.find((dia) => !diasConSesion.includes(dia.id)) ?? null;
+  const diasConSesion = new Set(sesionesEstaSemana.map((s) => s.dia_id).filter(Boolean) as string[]);
+  const proximoDia = rutina?.rutina_dias?.find((dia) => !diasConSesion.has(dia.id)) ?? null;
 
   return (
     <div className="min-h-screen">
@@ -185,7 +189,7 @@ export default async function HomePage() {
             Semana actual
           </p>
           <div className="flex justify-between">
-            {semana.map(({ num, iso, done, started, isToday }) => (
+            {semana.map(({ num, iso, done, started, isToday }, i) => (
               <div key={iso} className="flex flex-col items-center gap-1.5">
                 <div
                   className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-light transition-colors"
@@ -210,14 +214,14 @@ export default async function HomePage() {
                   {num}
                 </div>
                 <span style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "0.05em" }}>
-                  {DIAS_LABELS[semana.findIndex((d) => d.iso === iso)]}
+                  {DIAS_LABELS[i]}
                 </span>
                 <div style={{ height: 10 }}>
-                  {done && (
+                  {done ? (
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                       <path d="M5 12l5 5L19 7" stroke="#2abfbf" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                  )}
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -267,7 +271,7 @@ export default async function HomePage() {
         </div>
 
         {/* ── Próximo entrenamiento ── */}
-        {rutina && (
+        {rutina ? (
           proximoDia ? (
             <div>
               <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#555", textTransform: "uppercase", marginBottom: 10 }}>
@@ -322,7 +326,7 @@ export default async function HomePage() {
               <div style={{ fontSize: 11, color: "#333", marginTop: 4 }}>Descansa y vuelve la próxima semana</div>
             </div>
           )
-        )}
+        ) : null}
 
         {/* Footer */}
         <p className="text-center pt-2" style={{ fontSize: 10, color: "rgba(255,255,255,0.12)", letterSpacing: "0.1em" }}>
