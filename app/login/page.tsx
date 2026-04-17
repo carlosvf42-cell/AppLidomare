@@ -17,7 +17,7 @@ function LoginForm() {
     if (!email) return;
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://app-lidomare.vercel.app/auth/update-password",
+      redirectTo: "https://app-lidomare.vercel.app/auth/callback?type=recovery",
     });
     if (error) {
       alert("Error: " + error.message);
