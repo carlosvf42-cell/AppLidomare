@@ -10,6 +10,20 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  async function handleResetPassword() {
+    const email = prompt("Introduce tu email:");
+    if (!email) return;
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/update-password`,
+    });
+    if (error) {
+      alert("Error al enviar el email. Verifica que el email es correcto.");
+    } else {
+      alert("Te hemos enviado un email con las instrucciones para recuperar tu contraseña.");
+    }
+  }
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.hash.slice(1));
     const access_token  = params.get("access_token");
@@ -86,7 +100,7 @@ export default function LoginPage() {
 
         {/* ── 1. Logo / nombre ── */}
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.4em", color: "#333", textTransform: "uppercase" }}>
+          <div style={{ fontSize: 18, letterSpacing: "0.4em", color: "#333", textTransform: "uppercase" }}>
             Lidomare
           </div>
           <div style={{ fontSize: 32, letterSpacing: "0.3em", fontWeight: 300, color: "#f0f0f0", textTransform: "uppercase", fontFamily: "var(--font-cormorant), Georgia, serif", marginTop: 4 }}>
@@ -103,7 +117,7 @@ export default function LoginPage() {
           {/* Email */}
           <div>
             <label style={{ display: "block", fontSize: 8, letterSpacing: "0.25em", color: "rgba(255,255,255,0.25)", textTransform: "uppercase", marginBottom: 8 }}>
-              Identifier
+              Usuario
             </label>
             <input
               type="email"
@@ -128,7 +142,7 @@ export default function LoginPage() {
           {/* Password */}
           <div>
             <label style={{ display: "block", fontSize: 8, letterSpacing: "0.25em", color: "rgba(255,255,255,0.25)", textTransform: "uppercase", marginBottom: 8 }}>
-              Verification
+              Contraseña
             </label>
             <input
               type="password"
@@ -184,7 +198,7 @@ export default function LoginPage() {
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <button
             type="button"
-            onClick={() => router.push("/auth/reset-password")}
+            onClick={handleResetPassword}
             style={{
               background: "none",
               border: "none",
@@ -196,7 +210,7 @@ export default function LoginPage() {
               cursor: "pointer",
             }}
           >
-            Olvidé mi acceso
+            Olvidé mi contraseña
           </button>
         </div>
 
