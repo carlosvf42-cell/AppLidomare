@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       email,
       options: {
         // Supabase will append #access_token=...&type=invite to this URL
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://app-lidomare.vercel.app"}/login`,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://app-lidomare.vercel.app"}/auth/callback?type=invite`,
       },
     });
 

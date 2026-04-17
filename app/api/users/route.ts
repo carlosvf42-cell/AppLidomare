@@ -19,6 +19,30 @@ async function verifyAdmin(request: NextRequest): Promise<boolean> {
   return data.user?.email === ADMIN_EMAIL;
 }
 
+export async function DELETE(request: NextRequest) {
+  if (!(await verifyAdmin(request))) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
+  try {
+    const { id } = await request.json();
+    if (!id || typeof id !== "string") {
+      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+    }
+
+    const supabase = getAdminClient();
+    const { error } = await supabase.auth.admin.deleteUser(id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message ?? "Error desconocido" }, { status: 500 });
+  }
+}
+
 export async function GET(request: NextRequest) {
   if (!(await verifyAdmin(request))) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
