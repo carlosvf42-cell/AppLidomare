@@ -181,30 +181,39 @@ function LineChart({ data }: { data: LinePoint[] }) {
     );
   }
 
-  const W = 280, H = 72, PAD = 10;
-  const pesos = data.map((d) => d.peso);
-  const minP  = Math.min(...pesos);
-  const maxP  = Math.max(...pesos);
-  const range = maxP - minP || 1;
-  const pts   = data.map((d, i) => ({
-    x: PAD + (i / (data.length - 1)) * (W - PAD * 2),
-    y: PAD + (1 - (d.peso - minP) / range) * (H - PAD * 2),
-  }));
+  const W = 280, H = 100, PAD_X = 14, PAD_TOP = 24, PAD_BOTTOM = 18;
+  const chartH = H - PAD_TOP - PAD_BOTTOM;
+  const pesos  = data.map((d) => d.peso);
+  const minP   = Math.min(...pesos);
+  const maxP   = Math.max(...pesos);
+  const range  = maxP - minP || 1;
+  const pts    = data.map((d, i) => {
+    const [, m, dd] = d.fecha.split("-");
+    return {
+      x: PAD_X + (i / (data.length - 1)) * (W - PAD_X * 2),
+      y: PAD_TOP + (1 - (d.peso - minP) / range) * chartH,
+      peso: d.peso,
+      label: `${parseInt(dd)}/${parseInt(m)}`,
+    };
+  });
   const polyline = pts.map((p) => `${p.x},${p.y}`).join(" ");
 
   return (
-    <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
-        <polyline points={polyline} fill="none" stroke="#2abfbf" strokeWidth="1.5"
-          strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
-        {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#2abfbf" />)}
-      </svg>
-      <div className="flex justify-between mt-1 px-0.5">
-        <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>{data[0].fecha.slice(5).replace("-", "/")}</span>
-        <span className="text-[9px]" style={{ color: "#2abfbf" }}>{maxP} kg</span>
-        <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.35)" }}>{data[data.length - 1].fecha.slice(5).replace("-", "/")}</span>
-      </div>
-    </div>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
+      <polyline points={polyline} fill="none" stroke="#2abfbf" strokeWidth="1.5"
+        strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+      {pts.map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r={2.5} fill="#2abfbf" />
+          <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize={9} fill="#2abfbf" opacity="0.9">
+            {p.peso}kg
+          </text>
+          <text x={p.x} y={H - 3} textAnchor="middle" fontSize={8} fill="rgba(255,255,255,0.25)">
+            {p.label}
+          </text>
+        </g>
+      ))}
+    </svg>
   );
 }
 
@@ -232,9 +241,10 @@ function HBars({ bars }: { bars: GrupoBar[] }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ProgresoSection() {
-  const [loading, setLoading]   = useState(true);
-  const [metrics, setMetrics]   = useState<Metrics | null>(null);
-  const [semanas, setSemanas]   = useState<WeekBar[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [metrics, setMetrics]       = useState<Metrics | null>(null);
+  const [seriesEstaSemana, setSeriesEstaSemana] = useState<number>(0);
+  const [semanas, setSemanas]       = useState<WeekBar[]>([]);
   const [prs, setPrs]           = useState<PRItem[]>([]);
   const [diasMes, setDiasMes]   = useState<DiaItem[]>([]);
   const [grupos, setGrupos]     = useState<GrupoBar[]>([]);
@@ -280,20 +290,37 @@ export default function ProgresoSection() {
       series = (data ?? []) as SerieRow[];
     }
 
+    // ── Series esta semana ───────────────────────────────────────────────
+    const startOfWeek = new Date();
+    const day = startOfWeek.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    startOfWeek.setDate(startOfWeek.getDate() - diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+    const { count: weekCount } = await supabase
+      .from("series_realizadas")
+      .select("id", { count: "exact", head: true })
+      .eq("completada", true)
+      .gte("created_at", startOfWeek.toISOString())
+      .lte("created_at", endOfWeek.toISOString());
+    setSeriesEstaSemana(weekCount ?? 0);
+
     // ── Metrics ──────────────────────────────────────────────────────────
     const volumenKg = series.reduce(
       (sum, s) => sum + (s.peso && s.repeticiones ? s.peso * s.repeticiones : 0), 0
     );
     setMetrics({ completadas: completedSes.length, total: allSesiones.length, volumenKg, durMedia });
 
-    // ── Weekly bars ──────────────────────────────────────────────────────
+    // ── Weekly bars (series count) ────────────────────────────────────────
     const weeks      = getLast8Weeks();
     const sesionWeek = new Map(allSesiones.map((s) => [s.id, isoWeek(s.fecha)]));
     const weekVol    = new Map<string, number>(weeks.map((w) => [w, 0]));
     for (const s of series) {
       const wk = sesionWeek.get(s.sesion_id);
-      if (wk && weekVol.has(wk) && s.peso && s.repeticiones)
-        weekVol.set(wk, (weekVol.get(wk) ?? 0) + s.peso * s.repeticiones);
+      if (wk && weekVol.has(wk))
+        weekVol.set(wk, (weekVol.get(wk) ?? 0) + 1);
     }
     setSemanas(weeks.map((w) => ({ key: w, label: mondayLabel(w), vol: weekVol.get(w) ?? 0 })));
 
@@ -482,7 +509,7 @@ export default function ProgresoSection() {
         ) : (
           <div className="grid grid-cols-2 gap-2">
             <Card><MetricCell value={String(metrics?.completadas ?? 0)} label="Entrenamientos" /></Card>
-            <Card><MetricCell value={fmtVol(metrics?.volumenKg ?? 0)} label="Volumen total" /></Card>
+            <Card><MetricCell value={String(seriesEstaSemana)} label="Series esta semana" /></Card>
             <Card><MetricCell value={`${adherencia}%`} label="Adherencia" /></Card>
             <Card><MetricCell value={metrics?.durMedia != null ? `${metrics.durMedia} min` : "—"} label="Duración media" /></Card>
           </div>
@@ -491,10 +518,10 @@ export default function ProgresoSection() {
 
       {/* ── 2. Volumen semanal ── */}
       <div>
-        <SectionLabel>Volumen semanal — últimas 8 semanas</SectionLabel>
+        <SectionLabel>Series semanales — últimas 8 semanas</SectionLabel>
         <Card>
           {semanas.every((s) => s.vol === 0)
-            ? <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>Sin datos de volumen aún</p>
+            ? <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>Sin series registradas aún</p>
             : <BarChart bars={semanas} />}
         </Card>
       </div>
