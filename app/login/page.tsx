@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const resetSuccess = searchParams.get("reset") === "success";
   const [phase, setPhase] = useState<"checking" | "form">("checking");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -110,6 +112,13 @@ export default function LoginPage() {
             Precision Wellness
           </div>
         </div>
+
+        {/* ── Reset success ── */}
+        {resetSuccess && (
+          <div style={{ color: "#2abfbf", fontSize: 11, letterSpacing: "0.1em", textAlign: "center" }}>
+            Contraseña actualizada. Ya puedes iniciar sesión.
+          </div>
+        )}
 
         {/* ── 2. Formulario ── */}
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -222,5 +231,13 @@ export default function LoginPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
