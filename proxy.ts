@@ -47,6 +47,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth/callback") ||
     pathname.startsWith("/auth/set-password") ||
+    pathname.startsWith("/auth/update-password") ||
     pathname.startsWith("/citas/asesoramiento");
 
   // Unauthenticated → send to /login (except public routes)
