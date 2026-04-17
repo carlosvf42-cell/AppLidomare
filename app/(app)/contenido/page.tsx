@@ -46,49 +46,70 @@ export default function ContenidoPage() {
 
       {/* Section cards */}
       <div className="px-4 flex flex-col gap-3 pb-6">
-        {sections.map((section) => (
-          <Link
-            key={section.id}
-            href={section.href}
-            className="block active:scale-[0.98] transition-transform"
-            style={{ textDecoration: "none" }}
-          >
-            <div
+        {sections.map((section) => {
+          const isLocked = section.id === "webinars";
+          return (
+            <Link
+              key={section.id}
+              href={section.href}
+              className="block active:scale-[0.98] transition-transform"
               style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "0.5px solid rgba(255,255,255,0.08)",
-                borderRadius: 20,
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
-                padding: 20,
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-                minHeight: 110,
+                textDecoration: "none",
+                pointerEvents: isLocked ? "none" : undefined,
+                opacity: isLocked ? 0.5 : 1,
+                position: "relative",
               }}
             >
-              {/* Categoría */}
-              <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#2abfbf", textTransform: "uppercase" }}>
-                {section.categoria}
-              </div>
+              {isLocked && (
+                <div style={{
+                  position: "absolute", top: 12, right: 12, zIndex: 1,
+                  background: "rgba(42,191,191,0.1)",
+                  border: "0.5px solid #2abfbf",
+                  color: "#2abfbf",
+                  fontSize: 9, letterSpacing: "0.2em",
+                  borderRadius: 6, padding: "4px 10px",
+                  textTransform: "uppercase",
+                }}>
+                  Próximamente
+                </div>
+              )}
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "0.5px solid rgba(255,255,255,0.08)",
+                  borderRadius: 20,
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  padding: 20,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  minHeight: 110,
+                }}
+              >
+                {/* Categoría */}
+                <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#2abfbf", textTransform: "uppercase" }}>
+                  {section.categoria}
+                </div>
 
-              {/* Título */}
-              <div style={{ fontSize: 18, fontWeight: 600, color: "#f0f0f0", letterSpacing: "0.05em" }}>
-                {section.title}
-              </div>
+                {/* Título */}
+                <div style={{ fontSize: 18, fontWeight: 600, color: "#f0f0f0", letterSpacing: "0.05em" }}>
+                  {section.title}
+                </div>
 
-              {/* Descripción */}
-              <div style={{ fontSize: 12, color: "#444", lineHeight: 1.5 }}>
-                {section.subtitle}
-              </div>
+                {/* Descripción */}
+                <div style={{ fontSize: 12, color: "#444", lineHeight: 1.5 }}>
+                  {section.subtitle}
+                </div>
 
-              {/* Indicador */}
-              <div style={{ fontSize: 10, color: "#2abfbf", marginTop: "auto", letterSpacing: "0.1em" }}>
-                VER →
+                {/* Indicador */}
+                <div style={{ fontSize: 10, color: "#2abfbf", marginTop: "auto", letterSpacing: "0.1em" }}>
+                  VER →
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

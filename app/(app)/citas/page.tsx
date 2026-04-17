@@ -46,7 +46,7 @@ export default function CitasPage() {
 
       {/* Tarjeta 2 — Asesoramiento */}
       <a
-        href="https://wa.me/34611057973"
+        href="https://wa.me/34611057973?text=Hola%2C%20me%20gustar%C3%ADa%20recibir%20asesoramiento%20personalizado%20en%20Lidomare%20Health%20%26%20Fitness%20Club"
         target="_blank"
         rel="noopener noreferrer"
         style={{

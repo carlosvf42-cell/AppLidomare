@@ -12,12 +12,51 @@ function toISODate(d: Date): string {
 }
 
 function getMondayOfWeek(d: Date): Date {
-  const day = d.getDay(); // 0=Sun, 1=Mon … 6=Sat
+  const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   const mon = new Date(d);
   mon.setDate(d.getDate() + diff);
   return mon;
 }
+
+function calcularRacha(sesiones: { fecha: string; completada: boolean }[]): number {
+  let racha = 0;
+  const hoy = new Date();
+
+  const getLunesISO = (date: Date): string => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    d.setDate(d.getDate() - diff);
+    return toISODate(d);
+  };
+
+  let weekOffset = 0;
+  while (true) {
+    const ref = new Date(hoy);
+    ref.setDate(ref.getDate() - weekOffset * 7);
+    const lunesISO = getLunesISO(ref);
+    const lunesDate = new Date(lunesISO);
+    const domingoDate = new Date(lunesDate);
+    domingoDate.setDate(domingoDate.getDate() + 6);
+    const domingoISO = toISODate(domingoDate);
+
+    const tieneEntrenamiento = sesiones.some(
+      (s) => s.completada && s.fecha >= lunesISO && s.fecha <= domingoISO
+    );
+
+    if (!tieneEntrenamiento) break;
+    racha++;
+    weekOffset++;
+  }
+
+  return racha;
+}
+
+type SesionRow = { fecha: string; completada: boolean; dia_id: string | null };
+type RutinaEjItem = { id: string; nombre: string; series: number; repeticiones: number; orden: number };
+type RutinaDiaItem = { id: string; nombre: string; orden: number; rutina_ejercicios: RutinaEjItem[] };
+type RutinaActiva = { id: string; nombre: string; rutina_dias: RutinaDiaItem[] };
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -37,26 +76,42 @@ export default async function HomePage() {
     user?.email?.split("@")[0] ??
     "Usuario";
 
-  // ── Weekly sessions ───────────────────────────────────────────────────────
-  type SesionDia = { fecha: string; completada: boolean };
-  let sesiones: SesionDia[] = [];
+  // ── Fetch all sesiones + rutina activa ────────────────────────────────────
+  let todasSesiones: SesionRow[] = [];
+  let rutina: RutinaActiva | null = null;
 
   if (user) {
-    const { data } = await supabase
-      .from("sesiones")
-      .select("fecha, completada")
-      .eq("user_id", user.id)
-      .gte("fecha", toISODate(lunes))
-      .lte("fecha", toISODate(domingo));
-    sesiones = (data ?? []) as SesionDia[];
+    const [sesRes, rutRes] = await Promise.all([
+      supabase
+        .from("sesiones")
+        .select("fecha, completada, dia_id")
+        .eq("user_id", user.id),
+      supabase
+        .from("rutinas")
+        .select("id, nombre, rutina_dias(id, nombre, orden, rutina_ejercicios(id, nombre, series, repeticiones, orden))")
+        .eq("user_id", user.id)
+        .eq("activa", true)
+        .maybeSingle(),
+    ]);
+    todasSesiones = (sesRes.data ?? []) as SesionRow[];
+    rutina = (rutRes.data as RutinaActiva | null) ?? null;
+    if (rutina) {
+      rutina.rutina_dias.sort((a, b) => a.orden - b.orden);
+      rutina.rutina_dias.forEach((d) => d.rutina_ejercicios.sort((a, b) => a.orden - b.orden));
+    }
   }
 
-  // Build map: isoDate → "done" | "partial"
-  const doneSet  = new Set(sesiones.filter((s) => s.completada).map((s) => s.fecha));
-  const startSet = new Set(sesiones.filter((s) => !s.completada).map((s) => s.fecha));
+  // ── Weekly filter ─────────────────────────────────────────────────────────
+  const lunesISO  = toISODate(lunes);
+  const domingoISO = toISODate(domingo);
+  const sesionesEstaSemana = todasSesiones.filter(
+    (s) => s.fecha >= lunesISO && s.fecha <= domingoISO
+  );
+
+  const doneSet  = new Set(sesionesEstaSemana.filter((s) => s.completada).map((s) => s.fecha));
+  const startSet = new Set(sesionesEstaSemana.filter((s) => !s.completada).map((s) => s.fecha));
   const hoyISO   = toISODate(hoy);
 
-  // 7 days Mon–Sun
   const semana = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(lunes);
     d.setDate(lunes.getDate() + i);
@@ -67,24 +122,28 @@ export default async function HomePage() {
     return { num: d.getDate(), iso, done, started, isToday };
   });
 
+  // ── Racha ─────────────────────────────────────────────────────────────────
+  const racha = calcularRacha(todasSesiones);
+
+  // ── Próximo día ───────────────────────────────────────────────────────────
+  const diasConSesion = sesionesEstaSemana.map((s) => s.dia_id).filter(Boolean) as string[];
+  const proximoDia = rutina?.rutina_dias?.find((dia) => !diasConSesion.includes(dia.id)) ?? null;
+
   return (
     <div className="min-h-screen">
 
       {/* ── Hero ── */}
       <div className="relative overflow-hidden" style={{ height: 280 }}>
-        {/* Photo */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${HERO_BG})` }}
           aria-hidden="true"
         />
-        {/* Bottom gradient for text legibility */}
         <div
           className="absolute inset-0"
           style={{ background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.9) 100%)" }}
           aria-hidden="true"
         />
-        {/* Text overlay — bottom-left */}
         <div className="absolute inset-x-0 bottom-0 px-5 pb-6">
           <h1 className="text-[2rem] font-light leading-tight tracking-tight" style={{ color: "rgba(255,255,255,0.95)" }}>
             Lidomare Health App
@@ -128,7 +187,6 @@ export default async function HomePage() {
           <div className="flex justify-between">
             {semana.map(({ num, iso, done, started, isToday }) => (
               <div key={iso} className="flex flex-col items-center gap-1.5">
-                {/* Circle */}
                 <div
                   className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-light transition-colors"
                   style={{
@@ -151,11 +209,9 @@ export default async function HomePage() {
                 >
                   {num}
                 </div>
-                {/* Day label */}
                 <span style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "0.05em" }}>
-                  {DIAS_LABELS[(semana.findIndex((d) => d.iso === iso))]}
+                  {DIAS_LABELS[semana.findIndex((d) => d.iso === iso)]}
                 </span>
-                {/* Check mark */}
                 <div style={{ height: 10 }}>
                   {done && (
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
@@ -168,23 +224,105 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* ── CTA ── */}
-        <Link
-          href="/contenido"
-          className="flex items-center justify-center gap-2 w-full py-4 text-sm font-light tracking-widest uppercase transition-all active:scale-[0.98]"
+        {/* ── Racha ── */}
+        <div
           style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "0.5px solid rgba(255,255,255,0.15)",
-            borderRadius: 20,
-            backdropFilter: "blur(20px) saturate(180%)",
-            WebkitBackdropFilter: "blur(20px) saturate(180%)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.3)",
-            color: "#f0f0f0",
+            background: "rgba(255,255,255,0.03)",
+            border: "0.5px solid rgba(255,255,255,0.08)",
+            borderRadius: 16,
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          Acceder a la biblioteca
-          <span aria-hidden="true">→</span>
-        </Link>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#555", textTransform: "uppercase" }}>
+              Racha actual
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#f0f0f0", marginTop: 4 }}>
+              {racha} {racha === 1 ? "semana" : "semanas"}
+            </div>
+            <div style={{ fontSize: 11, color: racha > 0 ? "#2abfbf" : "#333", marginTop: 2 }}>
+              {racha === 0
+                ? "Entrena esta semana para empezar"
+                : racha >= 4
+                ? "Imparable"
+                : racha >= 2
+                ? "Muy bien, sigue así"
+                : "Buen comienzo"}
+            </div>
+          </div>
+          <div
+            style={{
+              width: 56, height: 56, borderRadius: "50%",
+              background: racha > 0 ? "rgba(42,191,191,0.1)" : "rgba(255,255,255,0.03)",
+              border: `1.5px solid ${racha > 0 ? "#2abfbf" : "rgba(255,255,255,0.06)"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 22,
+            }}
+          >
+            {racha >= 4 ? "🔥" : racha >= 2 ? "⚡" : "○"}
+          </div>
+        </div>
+
+        {/* ── Próximo entrenamiento ── */}
+        {rutina && (
+          proximoDia ? (
+            <div>
+              <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#555", textTransform: "uppercase", marginBottom: 10 }}>
+                Próximo entrenamiento
+              </div>
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "0.5px solid rgba(255,255,255,0.08)",
+                  borderRadius: 16,
+                  padding: "16px 20px",
+                  marginBottom: 12,
+                }}
+              >
+                <div style={{ fontSize: 9, color: "#2abfbf", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                  {rutina.nombre}
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: "#f0f0f0", marginTop: 4 }}>
+                  {proximoDia.nombre}
+                </div>
+                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
+                  {proximoDia.rutina_ejercicios.slice(0, 4).map((ej, i) => (
+                    <div key={i} style={{ fontSize: 11, color: "#444", display: "flex", justifyContent: "space-between" }}>
+                      <span>{ej.nombre}</span>
+                      <span style={{ color: "#2a2a2a" }}>{ej.series}×{ej.repeticiones}</span>
+                    </div>
+                  ))}
+                  {proximoDia.rutina_ejercicios.length > 4 && (
+                    <div style={{ fontSize: 10, color: "#2a2a2a", marginTop: 2 }}>
+                      +{proximoDia.rutina_ejercicios.length - 4} ejercicios más
+                    </div>
+                  )}
+                </div>
+              </div>
+              <Link
+                href={`/rutinas/entrenar?dia=${proximoDia.id}`}
+                style={{
+                  display: "block", width: "100%", padding: 16,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "0.5px solid rgba(255,255,255,0.2)",
+                  borderRadius: 6, color: "#f0f0f0", fontSize: 10,
+                  letterSpacing: "0.25em", textTransform: "uppercase",
+                  textAlign: "center", textDecoration: "none",
+                }}
+              >
+                Entrenar ahora →
+              </Link>
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: 20 }}>
+              <div style={{ fontSize: 13, color: "#2abfbf" }}>Semana completada 💪</div>
+              <div style={{ fontSize: 11, color: "#333", marginTop: 4 }}>Descansa y vuelve la próxima semana</div>
+            </div>
+          )
+        )}
 
         {/* Footer */}
         <p className="text-center pt-2" style={{ fontSize: 10, color: "rgba(255,255,255,0.12)", letterSpacing: "0.1em" }}>

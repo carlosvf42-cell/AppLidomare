@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { Suspense, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
 type RutinaEjercicio = { id: string; nombre: string; series: number; repeticiones: number; orden: number; ejercicio_id?: string | null };
@@ -31,8 +31,10 @@ const GLASS: React.CSSProperties = {
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 24px rgba(0,0,0,0.4)",
 };
 
-export default function EntrenarPage() {
+function EntrenarInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const diaParam = searchParams.get("dia");
   const [rutina, setRutina] = useState<Rutina | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDia, setSelectedDia] = useState<RutinaDia | null>(null);
@@ -57,6 +59,10 @@ export default function EntrenarPage() {
           r.rutina_dias.sort((a, b) => a.orden - b.orden);
           r.rutina_dias.forEach((d) => d.rutina_ejercicios.sort((a, b) => a.orden - b.orden));
           setRutina(r);
+          if (diaParam) {
+            const diaToSelect = r.rutina_dias.find((d) => d.id === diaParam);
+            if (diaToSelect) selectDia(diaToSelect);
+          }
         }
         setLoading(false);
       });
@@ -381,5 +387,13 @@ export default function EntrenarPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function EntrenarPage() {
+  return (
+    <Suspense>
+      <EntrenarInner />
+    </Suspense>
   );
 }
