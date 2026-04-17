@@ -14,23 +14,36 @@ export default function UpdatePasswordPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.includes("type=recovery")) {
-      supabase.auth.getSession().then(({ data }) => {
-        if (data.session) {
-          setReady(true);
-        } else {
-          setError("Link inválido o expirado. Solicita uno nuevo.");
-        }
-      });
-    } else {
-      const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-        if (event === "PASSWORD_RECOVERY") {
-          setReady(true);
-        }
-      });
-      return () => authListener.subscription.unsubscribe();
-    }
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const checkSession = async () => {
+      attempts++;
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        setReady(true);
+        return;
+      }
+
+      if (attempts < maxAttempts) {
+        setTimeout(checkSession, 500);
+      } else {
+        setError("Link inválido o expirado. Solicita uno nuevo.");
+      }
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+        setReady(true);
+      }
+    });
+
+    checkSession();
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
