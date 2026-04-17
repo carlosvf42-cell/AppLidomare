@@ -238,6 +238,8 @@ export default async function HomePage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
           }}
         >
           <div>
@@ -257,16 +259,37 @@ export default async function HomePage() {
                 : "Buen comienzo"}
             </div>
           </div>
-          <div
-            style={{
-              width: 56, height: 56, borderRadius: "50%",
-              background: racha > 0 ? "rgba(42,191,191,0.1)" : "rgba(255,255,255,0.03)",
-              border: `1.5px solid ${racha > 0 ? "#2abfbf" : "rgba(255,255,255,0.06)"}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 22,
-            }}
-          >
-            {racha >= 4 ? "🔥" : racha >= 2 ? "⚡" : "○"}
+          <div style={{ position: "relative", width: 64, height: 64, flexShrink: 0 }}>
+            <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: "rotate(-90deg)" }}>
+              <circle
+                cx="32" cy="32" r="26"
+                fill="none"
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth="5"
+              />
+              <circle
+                cx="32" cy="32" r="26"
+                fill="none"
+                stroke="#2abfbf"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 26}`}
+                strokeDashoffset={`${2 * Math.PI * 26 * (1 - Math.min(racha / 8, 1))}`}
+                style={{ transition: "stroke-dashoffset 0.6s ease" }}
+              />
+            </svg>
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+            }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f0f0", lineHeight: 1 }}>
+                {racha}
+              </div>
+              <div style={{ fontSize: 7, color: "#2abfbf", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 1 }}>
+                sem
+              </div>
+            </div>
           </div>
         </div>
 
