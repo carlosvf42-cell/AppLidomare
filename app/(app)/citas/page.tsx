@@ -9,7 +9,7 @@ export default function CitasPage() {
 
       {/* Tarjeta 1 — Reservar cita */}
       <a
-        href="https://lidomare.salonized.com"
+        href="https://antifragil-1.salonized.com/widget_bookings/new"
         target="_blank"
         rel="noopener noreferrer"
         style={{
