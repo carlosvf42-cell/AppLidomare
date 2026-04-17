@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import EjercicioSelector from "@/components/EjercicioSelector";
 
-type EjercicioForm = { nombre: string; ejercicio_id: string | null; series: number; repeticiones: number };
+type EjercicioForm = { nombre: string; ejercicio_id: string | null; series: string; repeticiones: string };
 type DiaForm = { nombre: string; ejercicios: EjercicioForm[] };
 
-const EJERCICIO_VACIO: EjercicioForm = { nombre: "", ejercicio_id: null, series: 3, repeticiones: 10 };
+const EJERCICIO_VACIO: EjercicioForm = { nombre: "", ejercicio_id: null, series: "3", repeticiones: "10" };
 const DIA_VACIO = (): DiaForm => ({ nombre: "", ejercicios: [{ ...EJERCICIO_VACIO }] });
 
 function getSupabase() {
@@ -133,8 +133,8 @@ export default function NuevaRutinaPage() {
         d.ejercicios.map((ej, orden) => ({
           dia_id: diasData[diaIdx].id,
           nombre: ej.nombre.trim(),
-          series: ej.series,
-          repeticiones: ej.repeticiones,
+          series: Number(ej.series) || 1,
+          repeticiones: Number(ej.repeticiones) || 1,
           orden,
           ...(ej.ejercicio_id ? { ejercicio_id: ej.ejercicio_id } : {}),
         }))
@@ -272,8 +272,9 @@ export default function NuevaRutinaPage() {
                             min={1}
                             max={20}
                             value={ej.series}
-                            onChange={(e) => updateEjercicio(diaIdx, ejIdx, "series", parseInt(e.target.value) || 1)}
+                            onChange={(e) => updateEjercicio(diaIdx, ejIdx, "series", e.target.value)}
                             onFocus={(e) => e.target.select()}
+                            onBlur={(e) => { if (!e.target.value || Number(e.target.value) < 1) updateEjercicio(diaIdx, ejIdx, "series", "1"); }}
                             className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-2 py-1.5 text-[#f0f0f0] text-xs text-center outline-none focus:border-[#2abfbf] transition-colors"
                           />
                         </div>
@@ -285,8 +286,9 @@ export default function NuevaRutinaPage() {
                             min={1}
                             max={999}
                             value={ej.repeticiones}
-                            onChange={(e) => updateEjercicio(diaIdx, ejIdx, "repeticiones", parseInt(e.target.value) || 1)}
+                            onChange={(e) => updateEjercicio(diaIdx, ejIdx, "repeticiones", e.target.value)}
                             onFocus={(e) => e.target.select()}
+                            onBlur={(e) => { if (!e.target.value || Number(e.target.value) < 1) updateEjercicio(diaIdx, ejIdx, "repeticiones", "1"); }}
                             className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-2 py-1.5 text-[#f0f0f0] text-xs text-center outline-none focus:border-[#2abfbf] transition-colors"
                           />
                         </div>

@@ -10,8 +10,8 @@ type EjercicioEdit = {
   id?: string;
   nombre: string;
   ejercicio_id: string | null;
-  series: number;
-  repeticiones: number;
+  series: string;
+  repeticiones: string;
 };
 
 type DiaEdit = {
@@ -21,7 +21,7 @@ type DiaEdit = {
   tieneSesiones?: boolean;
 };
 
-const EJ_VACIO = (): EjercicioEdit => ({ nombre: "", ejercicio_id: null, series: 3, repeticiones: 10 });
+const EJ_VACIO = (): EjercicioEdit => ({ nombre: "", ejercicio_id: null, series: "3", repeticiones: "10" });
 const DIA_VACIO = (): DiaEdit => ({ nombre: "", ejercicios: [EJ_VACIO()] });
 
 const GLASS: React.CSSProperties = {
@@ -84,8 +84,8 @@ export default function EditarRutinaPage() {
               id: ej.id,
               nombre: ej.nombre,
               ejercicio_id: ej.ejercicio_id ?? null,
-              series: ej.series ?? 3,
-              repeticiones: ej.repeticiones ?? 10,
+              series: String(ej.series ?? 3),
+              repeticiones: String(ej.repeticiones ?? 10),
             })),
         }));
 
@@ -190,8 +190,8 @@ export default function EditarRutinaPage() {
               // Update existing
               await supabase.from("rutina_ejercicios").update({
                 nombre: ej.nombre.trim(),
-                series: ej.series,
-                repeticiones: ej.repeticiones,
+                series: Number(ej.series) || 1,
+                repeticiones: Number(ej.repeticiones) || 1,
                 orden: ejOrden,
                 ...(ej.ejercicio_id ? { ejercicio_id: ej.ejercicio_id } : {}),
               }).eq("id", ej.id);
@@ -200,8 +200,8 @@ export default function EditarRutinaPage() {
               await supabase.from("rutina_ejercicios").insert({
                 dia_id: dia.id,
                 nombre: ej.nombre.trim(),
-                series: ej.series,
-                repeticiones: ej.repeticiones,
+                series: Number(ej.series) || 1,
+                repeticiones: Number(ej.repeticiones) || 1,
                 orden: ejOrden,
                 ...(ej.ejercicio_id ? { ejercicio_id: ej.ejercicio_id } : {}),
               });
@@ -219,8 +219,8 @@ export default function EditarRutinaPage() {
             const ejRows = dia.ejercicios.map((ej, ejOrden) => ({
               dia_id: (newDia as any).id,
               nombre: ej.nombre.trim(),
-              series: ej.series,
-              repeticiones: ej.repeticiones,
+              series: Number(ej.series) || 1,
+              repeticiones: Number(ej.repeticiones) || 1,
               orden: ejOrden,
               ...(ej.ejercicio_id ? { ejercicio_id: ej.ejercicio_id } : {}),
             }));
@@ -372,8 +372,9 @@ export default function EditarRutinaPage() {
                             min={1}
                             max={20}
                             value={ej.series}
-                            onChange={(e) => updateEjercicio(diaIdx, ejIdx, "series", parseInt(e.target.value) || 1)}
+                            onChange={(e) => updateEjercicio(diaIdx, ejIdx, "series", e.target.value)}
                             onFocus={(e) => e.target.select()}
+                            onBlur={(e) => { if (!e.target.value || Number(e.target.value) < 1) updateEjercicio(diaIdx, ejIdx, "series", "1"); }}
                             className="w-full rounded-lg px-2 py-1.5 text-xs text-center outline-none transition-colors"
                             style={{
                               background: "rgba(255,255,255,0.06)",
@@ -390,8 +391,9 @@ export default function EditarRutinaPage() {
                             min={1}
                             max={999}
                             value={ej.repeticiones}
-                            onChange={(e) => updateEjercicio(diaIdx, ejIdx, "repeticiones", parseInt(e.target.value) || 1)}
+                            onChange={(e) => updateEjercicio(diaIdx, ejIdx, "repeticiones", e.target.value)}
                             onFocus={(e) => e.target.select()}
+                            onBlur={(e) => { if (!e.target.value || Number(e.target.value) < 1) updateEjercicio(diaIdx, ejIdx, "repeticiones", "1"); }}
                             className="w-full rounded-lg px-2 py-1.5 text-xs text-center outline-none transition-colors"
                             style={{
                               background: "rgba(255,255,255,0.06)",
