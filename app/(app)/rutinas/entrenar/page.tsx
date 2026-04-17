@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import EjercicioSelector from "@/components/EjercicioSelector";
 
 type RutinaEjercicio = { id: string; nombre: string; series: number; repeticiones: number; orden: number; ejercicio_id?: string | null };
 type RutinaDia = { id: string; nombre: string; orden: number; rutina_ejercicios: RutinaEjercicio[] };
@@ -43,6 +44,10 @@ function EntrenarInner() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [horaInicio, setHoraInicio] = useState<Date | null>(null);
+  const [showAddExtra, setShowAddExtra] = useState(false);
+  const [extraName, setExtraName] = useState("");
+  const [extraEjId, setExtraEjId] = useState<string | null>(null);
+  const [addingExtra, setAddingExtra] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -101,6 +106,44 @@ function EntrenarInner() {
           : ej
       )
     );
+  }
+
+  async function handleAddExtra() {
+    if (!extraName.trim() || !selectedDia) return;
+    setAddingExtra(true);
+    const supabase = getSupabase();
+    const orden = ejercicios.length + 1;
+    const { data: nuevoEj } = await supabase
+      .from("rutina_ejercicios")
+      .insert({
+        dia_id: selectedDia.id,
+        nombre: extraName.trim(),
+        ejercicio_id: extraEjId,
+        series: 3,
+        repeticiones: 10,
+        orden,
+      })
+      .select("id, nombre, series, repeticiones, orden, ejercicio_id")
+      .single();
+
+    if (nuevoEj) {
+      const ej = nuevoEj as RutinaEjercicio;
+      setEjercicios((prev) => [
+        ...prev,
+        {
+          ...ej,
+          seriesData: Array.from({ length: ej.series }, () => ({
+            repeticiones: String(ej.repeticiones),
+            peso: "",
+            completada: false,
+          })),
+        },
+      ]);
+    }
+    setExtraName("");
+    setExtraEjId(null);
+    setShowAddExtra(false);
+    setAddingExtra(false);
   }
 
   function handleFinish() {
@@ -371,6 +414,57 @@ function EntrenarInner() {
             </div>
           </div>
         ))}
+
+        {/* Add extra exercise */}
+        {!saved && (
+          showAddExtra ? (
+            <div className="rounded-2xl px-4 py-4 space-y-3" style={GLASS}>
+              <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: "#2abfbf" }}>Añadir ejercicio extra</p>
+              <EjercicioSelector
+                value={extraName}
+                ejercicioId={extraEjId}
+                onChange={(nombre, ejId) => { setExtraName(nombre); setExtraEjId(ejId); }}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowAddExtra(false); setExtraName(""); setExtraEjId(null); }}
+                  className="flex-1 py-2.5 rounded-xl text-xs transition-colors"
+                  style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)", border: "0.5px solid rgba(255,255,255,0.1)" }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddExtra}
+                  disabled={!extraName.trim() || addingExtra}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-40"
+                  style={{ background: "rgba(42,191,191,0.15)", color: "#2abfbf", border: "0.5px solid rgba(42,191,191,0.3)" }}
+                >
+                  {addingExtra ? "Añadiendo..." : "Añadir"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowAddExtra(true)}
+              className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-xs transition-all active:scale-[0.98]"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "0.5px solid rgba(255,255,255,0.1)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                color: "rgba(255,255,255,0.35)",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              Añadir ejercicio extra
+            </button>
+          )
+        )}
 
         {saveError && <p className="text-xs text-center px-4" style={{ color: "rgba(255,120,120,0.9)" }}>{saveError}</p>}
       </div>
