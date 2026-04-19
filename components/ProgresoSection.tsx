@@ -47,11 +47,10 @@ type GrupoBar   = { grupo: string; count: number };
 const GRUPOS_ORDER = ["Pecho", "Espalda", "Piernas", "Hombro", "Brazo", "Core", "Otro"];
 
 const GLASS: React.CSSProperties = {
-  background: "rgba(255,255,255,0.07)",
-  backdropFilter: "blur(24px) saturate(180%)",
-  WebkitBackdropFilter: "blur(24px) saturate(180%)",
-  border: "0.5px solid rgba(255,255,255,0.13)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 24px rgba(0,0,0,0.4)",
+  background: "var(--glass-sm)",
+  backdropFilter: "var(--glass-blur-sm)",
+  WebkitBackdropFilter: "var(--glass-blur-sm)",
+  border: "0.5px solid var(--glass-border-sm)",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -105,7 +104,7 @@ function Skeleton({ className }: { className?: string }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[9px] tracking-[0.22em] uppercase font-medium mb-3 px-0.5" style={{ color: "#2abfbf" }}>
+    <p className="text-[9px] tracking-[0.22em] uppercase font-medium mb-3 px-0.5" style={{ color: "var(--accent)" }}>
       {children}
     </p>
   );
@@ -113,7 +112,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-[14px] px-4 py-4 ${className ?? ""}`} style={GLASS}>
+    <div className={`rounded-[18px] px-4 py-4 ${className ?? ""}`} style={GLASS}>
       {children}
     </div>
   );
@@ -121,9 +120,16 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 
 function MetricCell({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-xl font-light" style={{ color: "rgba(255,255,255,0.9)" }}>{value}</span>
-      <span className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>{label}</span>
+    <div className="flex flex-col gap-1">
+      <span style={{
+        fontFamily: "var(--font-ui)",
+        fontSize: 32,
+        fontWeight: 300,
+        fontFeatureSettings: "'tnum'",
+        color: "var(--fg)",
+        lineHeight: 1,
+      }}>{value}</span>
+      <span className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "var(--muted-2)" }}>{label}</span>
     </div>
   );
 }
@@ -144,7 +150,9 @@ function BarChart({ bars }: { bars: WeekBar[] }) {
                 <div
                   className="absolute inset-0 rounded-t-sm"
                   style={{
-                    background: b.vol > 0 ? "#2abfbf" : "rgba(255,255,255,0.05)",
+                    background: b.vol > 0
+                      ? "linear-gradient(to top, var(--accent) 0%, rgba(42,191,191,0.6) 100%)"
+                      : "rgba(255,255,255,0.05)",
                     opacity: b.vol > 0 ? 0.7 + pct * 0.3 : 1,
                   }}
                 />
@@ -221,17 +229,21 @@ function LineChart({ data }: { data: LinePoint[] }) {
 function HBars({ bars }: { bars: GrupoBar[] }) {
   const max = Math.max(...bars.map((b) => b.count), 1);
   return (
-    <div className="space-y-2.5">
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {bars.map((b) => (
         <div key={b.grupo} className="flex items-center gap-3">
-          <span className="text-[10px] w-14 shrink-0 truncate" style={{ color: "rgba(255,255,255,0.4)" }}>{b.grupo}</span>
+          <span className="text-[10px] w-14 shrink-0 truncate" style={{ color: "var(--muted)" }}>{b.grupo}</span>
           <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${(b.count / max) * 100}%`, background: "#2abfbf", opacity: 0.6 + (b.count / max) * 0.4 }}
+              style={{
+                width: `${(b.count / max) * 100}%`,
+                background: "linear-gradient(to right, rgba(42,191,191,0.5), var(--accent))",
+                opacity: 0.6 + (b.count / max) * 0.4,
+              }}
             />
           </div>
-          <span className="text-[9px] w-16 text-right shrink-0" style={{ color: "rgba(255,255,255,0.35)" }}>{b.count} series</span>
+          <span className="text-[9px] w-16 text-right shrink-0" style={{ color: "var(--muted-2)", fontFeatureSettings: "'tnum'" }}>{b.count} series</span>
         </div>
       ))}
     </div>
@@ -497,7 +509,7 @@ export default function ProgresoSection() {
       {/* ── Header ── */}
       <div className="flex items-center gap-3 pt-2">
         <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
-        <p className="text-[9px] tracking-[0.25em] uppercase" style={{ color: "#2abfbf" }}>Mi Progreso</p>
+        <p className="text-[9px] tracking-[0.25em] uppercase" style={{ color: "var(--accent)" }}>Mi Progreso</p>
         <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
       </div>
 
@@ -540,19 +552,19 @@ export default function ProgresoSection() {
             </p>
           </Card>
         ) : (
-          <div className="space-y-1.5">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {prs.map((pr) => (
               <Card key={pr.nombre} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-light truncate" style={{ color: "rgba(255,255,255,0.9)" }}>{pr.nombre}</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{pr.grupo}</p>
+                  <p className="text-xs font-light truncate" style={{ color: "var(--fg-2)" }}>{pr.nombre}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "var(--muted-2)" }}>{pr.grupo}</p>
                 </div>
                 <div className="shrink-0 flex flex-col items-end gap-0.5">
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-md"
-                    style={{ background: "rgba(42,191,191,0.12)", color: "#2abfbf", border: "0.5px solid rgba(42,191,191,0.25)" }}>
+                    style={{ background: "var(--accent-12)", color: "var(--accent)", border: "0.5px solid var(--accent-25)", fontFeatureSettings: "'tnum'" }}>
                     {pr.pesoMax} kg
                   </span>
-                  <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.25)" }}>×{pr.reps} reps</span>
+                  <span className="text-[9px]" style={{ color: "var(--subtle)", fontFeatureSettings: "'tnum'" }}>&times;{pr.reps} reps</span>
                 </div>
               </Card>
             ))}
@@ -648,11 +660,24 @@ export default function ProgresoSection() {
               <div className="flex flex-wrap gap-1.5">
                 {diasMes.map(({ day, status }) => (
                   <div key={day} title={`Día ${day}`}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-mono transition-colors"
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] transition-colors"
                     style={{
-                      background: status === "done" ? "rgba(42,191,191,0.2)" : status === "partial" ? "rgba(42,191,191,0.06)" : "rgba(255,255,255,0.04)",
-                      border: status === "done" ? "1px solid rgba(42,191,191,0.5)" : status === "partial" ? "1px solid rgba(42,191,191,0.15)" : "1px solid rgba(255,255,255,0.07)",
-                      color: status === "done" ? "#2abfbf" : status === "partial" ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.15)",
+                      fontFeatureSettings: "'tnum'",
+                      background: status === "done"
+                        ? "var(--accent-20)"
+                        : status === "partial"
+                        ? "rgba(42,191,191,0.06)"
+                        : "rgba(255,255,255,0.04)",
+                      border: status === "done"
+                        ? "1px solid var(--accent-60)"
+                        : status === "partial"
+                        ? "1px solid rgba(42,191,191,0.15)"
+                        : "1px solid rgba(255,255,255,0.07)",
+                      color: status === "done"
+                        ? "var(--accent)"
+                        : status === "partial"
+                        ? "rgba(42,191,191,0.4)"
+                        : "rgba(255,255,255,0.15)",
                     }}
                   >
                     {day}

@@ -1,11 +1,12 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
 }
 
-export default function MetaLabel({ children, className }: Props) {
+export default function MetaLabel({ children, className, style }: Props) {
   return (
     <div
       className={className}
@@ -15,6 +16,7 @@ export default function MetaLabel({ children, className }: Props) {
         textTransform: "uppercase",
         fontWeight: 500,
         color: "rgba(255,255,255,0.35)",
+        ...style,
       }}
     >
       {children}
