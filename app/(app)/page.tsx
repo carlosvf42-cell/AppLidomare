@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import GlassCard from "@/components/design/GlassCard";
+import Eyebrow from "@/components/design/Eyebrow";
+import PrimaryBtn from "@/components/design/PrimaryBtn";
+import { IconFlame, IconCheck, IconPlay } from "@/components/design/icons";
 
 const HERO_BG = "/images/hero-home.jpg";
 
@@ -114,7 +118,7 @@ export default async function HomePage() {
     if (s.completada) doneSet.add(s.fecha);
     else startSet.add(s.fecha);
   }
-  const hoyISO   = toISODate(hoy);
+  const hoyISO = toISODate(hoy);
 
   const semana = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(lunes);
@@ -136,224 +140,225 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
 
-      {/* ── Hero ── */}
-      <div className="relative overflow-hidden" style={{ height: 280 }}>
+      {/* ── Photo Hero ── */}
+      <div className="relative overflow-hidden" style={{ height: 380 }}>
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${HERO_BG})` }}
           aria-hidden="true"
         />
+        {/* Dark gradient overlay */}
         <div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.9) 100%)" }}
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 50%, #000 100%)" }}
           aria-hidden="true"
         />
-        <div className="absolute inset-x-0 bottom-0 px-5 pb-6">
-          <h1 className="text-[2rem] font-light leading-tight tracking-tight" style={{ color: "rgba(255,255,255,0.95)" }}>
-            Lidomare Health App
+        {/* Bottom content */}
+        <div className="absolute inset-x-0 bottom-0 px-5 pb-7">
+          {/* Avatar ring */}
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              border: "2px solid var(--accent)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16,
+              background: "rgba(0,0,0,0.4)",
+              boxShadow: "var(--shadow-avatar)",
+            }}
+          >
+            <span style={{ fontSize: 22, fontWeight: 300, color: "var(--fg)", fontFamily: "var(--font-serif)" }}>
+              {nombreUsuario.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          {/* Greeting */}
+          <Eyebrow>{fechaTexto}</Eyebrow>
+          <h1
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: 56,
+              fontWeight: 300,
+              lineHeight: 1,
+              letterSpacing: "-0.01em",
+              color: "var(--fg)",
+              marginTop: 6,
+            }}
+          >
+            {nombreUsuario}
           </h1>
-          <p style={{ fontSize: 9, color: "#2abfbf", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 4 }}>
-            Powered by Antifrágil®
-          </p>
         </div>
       </div>
 
       {/* ── Content ── */}
       <div className="px-4 pt-5 pb-6 space-y-5">
 
-        {/* ── Bienvenida ── */}
-        <div className="px-1">
-          <p style={{ fontSize: 10, color: "#555", letterSpacing: "0.2em", textTransform: "uppercase" }}>
-            Bienvenido de nuevo
-          </p>
-          <p className="font-bold leading-tight" style={{ fontSize: 30, color: "#f0f0f0", marginTop: 2 }}>
-            {nombreUsuario}
-          </p>
-          <p style={{ fontSize: 12, color: "#333", marginTop: 4 }}>
-            {fechaTexto}
-          </p>
-        </div>
-
         {/* ── Calendario semanal ── */}
-        <div
-          className="rounded-3xl px-4 py-4"
-          style={{
-            background: "rgba(255,255,255,0.07)",
-            backdropFilter: "blur(24px) saturate(180%)",
-            WebkitBackdropFilter: "blur(24px) saturate(180%)",
-            border: "0.5px solid rgba(255,255,255,0.13)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 24px rgba(0,0,0,0.4)",
-          }}
-        >
-          <p style={{ fontSize: 9, color: "#2abfbf", letterSpacing: "0.22em", textTransform: "uppercase", marginBottom: 12 }}>
-            Semana actual
-          </p>
+        <GlassCard variant="heavy" style={{ padding: "16px 16px" }}>
+          <Eyebrow style={{ marginBottom: 14 }}>Semana actual</Eyebrow>
           <div className="flex justify-between">
             {semana.map(({ num, iso, done, started, isToday }, i) => (
               <div key={iso} className="flex flex-col items-center gap-1.5">
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-light transition-colors"
                   style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 13,
+                    fontWeight: 300,
                     background: done
-                      ? "rgba(42,191,191,0.2)"
+                      ? "var(--accent-20)"
                       : started
                       ? "rgba(42,191,191,0.07)"
                       : "rgba(255,255,255,0.04)",
                     border: done
-                      ? "1.5px solid rgba(42,191,191,0.6)"
+                      ? "1.5px solid var(--accent-60)"
                       : isToday
-                      ? "1.5px solid rgba(42,191,191,0.45)"
+                      ? "1.5px solid var(--accent-45)"
                       : "1px solid rgba(255,255,255,0.08)",
                     color: done
-                      ? "#2abfbf"
+                      ? "var(--accent)"
                       : isToday
                       ? "rgba(42,191,191,0.8)"
-                      : "rgba(255,255,255,0.3)",
+                      : "var(--muted-3)",
+                    transition: "all 0.2s ease",
                   }}
                 >
                   {num}
                 </div>
-                <span style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", letterSpacing: "0.05em" }}>
+                <span style={{ fontSize: 8, color: "var(--subtle)", letterSpacing: "0.05em" }}>
                   {DIAS_LABELS[i]}
                 </span>
                 <div style={{ height: 10 }}>
-                  {done ? (
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                      <path d="M5 12l5 5L19 7" stroke="#2abfbf" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  ) : null}
+                  {done ? <IconCheck /> : null}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
 
         {/* ── Racha ── */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "0.5px solid rgba(255,255,255,0.08)",
-            borderRadius: 16,
-            padding: "16px 20px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#555", textTransform: "uppercase" }}>
-              Racha actual
-            </div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#f0f0f0", marginTop: 4 }}>
-              {racha} {racha === 1 ? "semana" : "semanas"}
-            </div>
-            <div style={{ fontSize: 11, color: racha > 0 ? "#2abfbf" : "#333", marginTop: 2 }}>
-              {racha === 0
-                ? "Entrena esta semana para empezar"
-                : racha >= 4
-                ? "Imparable"
-                : racha >= 2
-                ? "Muy bien, sigue así"
-                : "Buen comienzo"}
-            </div>
-          </div>
-          <div style={{ position: "relative", width: 64, height: 64, flexShrink: 0 }}>
-            <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: "rotate(-90deg)" }}>
-              <circle
-                cx="32" cy="32" r="26"
-                fill="none"
-                stroke="rgba(255,255,255,0.06)"
-                strokeWidth="5"
-              />
-              <circle
-                cx="32" cy="32" r="26"
-                fill="none"
-                stroke="#2abfbf"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 26}`}
-                strokeDashoffset={`${2 * Math.PI * 26 * (1 - Math.min(racha / 8, 1))}`}
-                style={{ transition: "stroke-dashoffset 0.6s ease" }}
-              />
-            </svg>
-            <div style={{
-              position: "absolute", inset: 0,
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-            }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f0f0", lineHeight: 1 }}>
-                {racha}
+        <GlassCard variant="light" style={{ padding: "16px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <IconFlame />
+                <Eyebrow>Racha actual</Eyebrow>
               </div>
-              <div style={{ fontSize: 7, color: "#2abfbf", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 1 }}>
-                sem
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: 36,
+                    fontWeight: 300,
+                    color: "var(--fg)",
+                    lineHeight: 1,
+                  }}
+                >
+                  {racha}
+                </span>
+                <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 400 }}>
+                  {racha === 1 ? "semana" : "semanas"}
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: racha > 0 ? "var(--accent)" : "var(--ink-3)", marginTop: 4 }}>
+                {racha === 0
+                  ? "Entrena esta semana para empezar"
+                  : racha >= 4
+                  ? "Imparable"
+                  : racha >= 2
+                  ? "Muy bien, sigue así"
+                  : "Buen comienzo"}
               </div>
             </div>
+            {/* Ring */}
+            <div style={{ position: "relative", width: 64, height: 64, flexShrink: 0 }}>
+              <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: "rotate(-90deg)" }}>
+                <circle
+                  cx="32" cy="32" r="26"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.06)"
+                  strokeWidth="5"
+                />
+                <circle
+                  cx="32" cy="32" r="26"
+                  fill="none"
+                  stroke="var(--accent)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 26}`}
+                  strokeDashoffset={`${2 * Math.PI * 26 * (1 - Math.min(racha / 8, 1))}`}
+                  style={{ transition: "stroke-dashoffset 0.6s ease" }}
+                />
+              </svg>
+              <div style={{
+                position: "absolute", inset: 0,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+              }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: 20,
+                    fontWeight: 300,
+                    color: "var(--fg-soft)",
+                    lineHeight: 1,
+                  }}
+                >
+                  {racha}
+                </div>
+                <div style={{ fontSize: 7, color: "var(--accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 1 }}>
+                  sem
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </GlassCard>
 
         {/* ── Próximo entrenamiento ── */}
         {rutina ? (
           proximoDia ? (
             <div>
-              <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#555", textTransform: "uppercase", marginBottom: 10 }}>
-                Próximo entrenamiento
-              </div>
-              <div
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "0.5px solid rgba(255,255,255,0.08)",
-                  borderRadius: 16,
-                  padding: "16px 20px",
-                  marginBottom: 12,
-                }}
-              >
-                <div style={{ fontSize: 9, color: "#2abfbf", letterSpacing: "0.2em", textTransform: "uppercase" }}>
-                  {rutina.nombre}
+              <GlassCard variant="lens" style={{ padding: "20px 20px", marginBottom: 12 }}>
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <Eyebrow>{rutina.nombre}</Eyebrow>
+                  <div
+                    style={{
+                      fontSize: 22,
+                      fontWeight: 700,
+                      color: "var(--fg-soft)",
+                      marginTop: 6,
+                    }}
+                  >
+                    {proximoDia.nombre}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>
+                    {proximoDia.rutina_ejercicios.length} ejercicios
+                  </div>
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 700, color: "#f0f0f0", marginTop: 4 }}>
-                  {proximoDia.nombre}
-                </div>
-                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
-                  {proximoDia.rutina_ejercicios.slice(0, 4).map((ej, i) => (
-                    <div key={i} style={{ fontSize: 11, color: "#444", display: "flex", justifyContent: "space-between" }}>
-                      <span>{ej.nombre}</span>
-                      <span style={{ color: "#2a2a2a" }}>{ej.series}×{ej.repeticiones}</span>
-                    </div>
-                  ))}
-                  {proximoDia.rutina_ejercicios.length > 4 && (
-                    <div style={{ fontSize: 10, color: "#2a2a2a", marginTop: 2 }}>
-                      +{proximoDia.rutina_ejercicios.length - 4} ejercicios más
-                    </div>
-                  )}
-                </div>
-              </div>
-              <Link
-                href={`/rutinas/entrenar?dia=${proximoDia.id}`}
-                style={{
-                  display: "block", width: "100%", padding: 16,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "0.5px solid rgba(255,255,255,0.2)",
-                  borderRadius: 6, color: "#f0f0f0", fontSize: 10,
-                  letterSpacing: "0.25em", textTransform: "uppercase",
-                  textAlign: "center", textDecoration: "none",
-                }}
-              >
-                Entrenar ahora →
+              </GlassCard>
+              <Link href={`/rutinas/entrenar?dia=${proximoDia.id}`} style={{ textDecoration: "none" }}>
+                <PrimaryBtn icon={<IconPlay c="#001a1a" />}>
+                  Entrenar ahora
+                </PrimaryBtn>
               </Link>
             </div>
           ) : (
-            <div style={{ textAlign: "center", padding: 20 }}>
-              <div style={{ fontSize: 13, color: "#2abfbf" }}>Semana completada 💪</div>
-              <div style={{ fontSize: 11, color: "#333", marginTop: 4 }}>Descansa y vuelve la próxima semana</div>
-            </div>
+            <GlassCard variant="light" style={{ padding: "24px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: 13, color: "var(--accent)" }}>Semana completada</div>
+              <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 4 }}>Descansa y vuelve la próxima semana</div>
+            </GlassCard>
           )
         ) : null}
 
         {/* Footer */}
-        <p className="text-center pt-2" style={{ fontSize: 10, color: "rgba(255,255,255,0.12)", letterSpacing: "0.1em" }}>
-          © {new Date().getFullYear()} Lidomare · Playamar, Torremolinos
+        <p className="text-center pt-2" style={{ fontSize: 10, color: "var(--faint)", letterSpacing: "0.1em" }}>
+          &copy; {new Date().getFullYear()} Lidomare &middot; Playamar, Torremolinos
         </p>
       </div>
     </div>
