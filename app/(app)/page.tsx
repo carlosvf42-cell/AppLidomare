@@ -140,55 +140,37 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
 
-      {/* ── Photo Hero ── */}
-      <div className="relative overflow-hidden" style={{ height: 380 }}>
+      {/* ── Hero ── */}
+      <div className="relative overflow-hidden" style={{ height: 280 }}>
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${HERO_BG})` }}
+          style={{
+            backgroundImage: `url(${HERO_BG})`,
+            filter: "saturate(0.85) brightness(0.85)",
+          }}
           aria-hidden="true"
         />
-        {/* Dark gradient overlay */}
         <div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 50%, #000 100%)" }}
+          style={{
+            background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.65) 70%, #000 100%)",
+          }}
           aria-hidden="true"
         />
-        {/* Bottom content */}
-        <div className="absolute inset-x-0 bottom-0 px-5 pb-7">
-          {/* Avatar ring */}
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: "50%",
-              border: "2px solid var(--accent)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 16,
-              background: "rgba(0,0,0,0.4)",
-              boxShadow: "var(--shadow-avatar)",
-            }}
-          >
-            <span style={{ fontSize: 22, fontWeight: 300, color: "var(--fg)", fontFamily: "var(--font-serif)" }}>
-              {nombreUsuario.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          {/* Greeting */}
-          <Eyebrow>{fechaTexto}</Eyebrow>
+        <div className="absolute inset-x-0 bottom-0 px-5 pb-6">
           <h1
+            className="font-light leading-tight tracking-tight"
             style={{
               fontFamily: "var(--font-serif)",
-              fontSize: 56,
-              fontWeight: 300,
-              lineHeight: 1,
-              letterSpacing: "-0.01em",
-              color: "var(--fg)",
-              marginTop: 6,
+              fontSize: "2rem",
+              color: "rgba(255,255,255,0.95)",
             }}
           >
-            {nombreUsuario}
+            Lidomare Health App
           </h1>
+          <p style={{ fontSize: 9, color: "var(--accent)", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 4, fontWeight: 500 }}>
+            Powered by Antifrágil®
+          </p>
         </div>
       </div>
 
@@ -253,9 +235,10 @@ export default async function HomePage() {
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span
                   style={{
-                    fontFamily: "var(--font-serif)",
+                    fontFamily: "var(--font-ui)",
                     fontSize: 36,
                     fontWeight: 300,
+                    fontFeatureSettings: "'tnum'",
                     color: "var(--fg)",
                     lineHeight: 1,
                   }}
@@ -303,9 +286,10 @@ export default async function HomePage() {
               }}>
                 <div
                   style={{
-                    fontFamily: "var(--font-serif)",
+                    fontFamily: "var(--font-ui)",
                     fontSize: 20,
                     fontWeight: 300,
+                    fontFeatureSettings: "'tnum'",
                     color: "var(--fg-soft)",
                     lineHeight: 1,
                   }}
