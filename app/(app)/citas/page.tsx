@@ -167,7 +167,7 @@ export default function CitasPage() {
             }} />
             {/* Contenido */}
             <div style={{ position: "relative", zIndex: 1 }}>
-              <Eyebrow>Salonized</Eyebrow>
+              <Eyebrow>Antifrágil</Eyebrow>
               <div style={{
                 fontSize: 40,
                 fontWeight: 800,
@@ -201,36 +201,48 @@ export default function CitasPage() {
           style={{ textDecoration: "none" }}
         >
           <div style={{
-            width: "100%",
-            borderRadius: 20,
-            padding: "16px 18px",
-            background: "rgba(255,255,255,0.03)",
-            backdropFilter: "blur(12px) saturate(140%)",
-            WebkitBackdropFilter: "blur(12px) saturate(140%)",
-            border: "0.5px solid rgba(123,140,255,0.2)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 14,
             position: "relative",
+            borderRadius: 24,
+            padding: 18,
             overflow: "hidden",
+            background: "rgba(255,255,255,0.045)",
+            backdropFilter: "blur(30px) saturate(200%)",
+            WebkitBackdropFilter: "blur(30px) saturate(200%)",
+            border: "0.5px solid rgba(123,140,255,0.25)",
+            boxShadow: [
+              "inset 0 1px 0 rgba(255,255,255,0.15)",
+              "inset 0 -1px 0 rgba(0,0,0,0.25)",
+              "inset 1px 0 0 rgba(123,140,255,0.06)",
+              "inset -1px 0 0 rgba(123,140,255,0.06)",
+              "0 8px 24px rgba(0,0,0,0.4)",
+            ].join(", "),
           }}>
-            {/* Blob indigo sutil */}
+            <LensSheen angle={135} />
+            {/* Blob indigo decorativo */}
             <div aria-hidden="true" style={{
-              position: "absolute", inset: 0,
-              background: "radial-gradient(circle at 100% 50%, rgba(123,140,255,0.12), transparent 60%)",
+              position: "absolute",
+              top: -30, right: -30,
+              width: 140, height: 140,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(123,140,255,0.28) 0%, transparent 70%)",
+              filter: "blur(25px)",
             }} />
-            <div style={{ position: "relative", textAlign: "left", flex: 1 }}>
-              <Eyebrow color="#7b8cff">WhatsApp &middot; 24 h</Eyebrow>
-              <div style={{ fontSize: 15, color: "#fff", marginTop: 4 }}>
-                Asesoramiento personal
+            <div style={{
+              position: "relative", zIndex: 1,
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14,
+            }}>
+              <div style={{ flex: 1, textAlign: "left" }}>
+                <Eyebrow color="#7b8cff">WhatsApp &middot; 24 h</Eyebrow>
+                <div style={{ fontSize: 15, color: "#fff", marginTop: 4, fontWeight: 500 }}>
+                  Asesoramiento personal
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
+                  Contacta con Antifrágil
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
-                Escribe a tu entrenador
+              <div style={{ color: "#7b8cff", flexShrink: 0 }}>
+                <IconArrow c="#7b8cff" />
               </div>
-            </div>
-            <div style={{ position: "relative", color: "#7b8cff" }}>
-              <IconArrow c="#7b8cff" />
             </div>
           </div>
         </a>

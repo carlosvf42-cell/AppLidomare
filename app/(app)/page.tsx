@@ -161,7 +161,7 @@ export default async function HomePage() {
           <h1
             className="font-light leading-tight tracking-tight"
             style={{
-              fontFamily: "var(--font-serif)",
+              fontFamily: "var(--font-ui)",
               fontSize: "2rem",
               color: "rgba(255,255,255,0.95)",
             }}
@@ -174,8 +174,24 @@ export default async function HomePage() {
         </div>
       </div>
 
+      {/* ── Greeting ── */}
+      <div style={{ padding: "20px 20px 8px", textAlign: "left" }}>
+        <div style={{
+          fontSize: 10,
+          letterSpacing: "0.25em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.45)",
+          fontWeight: 500,
+        }}>
+          Bienvenido de nuevo,{" "}
+          <span style={{ color: "var(--accent)" }}>
+            {nombreUsuario}
+          </span>
+        </div>
+      </div>
+
       {/* ── Content ── */}
-      <div className="px-4 pt-5 pb-6 space-y-5">
+      <div className="px-4 pt-2 pb-6 space-y-5">
 
         {/* ── Calendario semanal ── */}
         <GlassCard variant="heavy" style={{ padding: "16px 16px" }}>
