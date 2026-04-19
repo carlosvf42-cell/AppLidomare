@@ -23,6 +23,8 @@ export default function BottomNav() {
         left: 12,
         right: 12,
         bottom: "calc(12px + env(safe-area-inset-bottom))",
+        maxWidth: 406,
+        margin: "0 auto",
         zIndex: 50,
         height: 64,
         borderRadius: 28,
@@ -64,7 +66,7 @@ export default function BottomNav() {
         }}
       />
 
-      <div className="flex" style={{ position: "relative", width: "100%" }}>
+      <div className="flex" style={{ position: "relative", zIndex: 1, width: "100%" }}>
         {TABS.map(({ href, label, Icon }) => {
           const active = TABS.find((t) => t.match(pathname))?.href === href;
           return (
