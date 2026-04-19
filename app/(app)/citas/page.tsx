@@ -1,6 +1,8 @@
 import GlassCard from "@/components/design/GlassCard";
 import LensSheen from "@/components/design/LensSheen";
 import Eyebrow from "@/components/design/Eyebrow";
+import PrimaryBtn from "@/components/design/PrimaryBtn";
+import { IconArrow } from "@/components/design/icons";
 
 export default function CitasPage() {
   return (
@@ -125,69 +127,113 @@ export default function CitasPage() {
       <div style={{ margin: "36px 20px", height: 0.5, background: "rgba(255,255,255,0.08)" }} />
 
       {/* ── 3. CTAs — Reserva tu cita ── */}
-      <div>
-        <div style={{ padding: "0 20px", marginBottom: 14 }}>
-          <Eyebrow>Reserva tu cita</Eyebrow>
-        </div>
+      <div className="mt-6 px-4">
+        <Eyebrow className="pl-1 mb-3">Reserva tu cita</Eyebrow>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, margin: "0 16px" }}>
-          {/* Tarjeta 1 — Reservar cita */}
-          <a
-            href="https://antifragil-1.salonized.com/widget_bookings/new"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ textDecoration: "none", display: "block" }}
-          >
-            <GlassCard variant="lens" style={{
-              minHeight: 160,
-              borderRadius: 20,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-              padding: "20px 16px",
-            }}>
-              <LensSheen />
-              <div style={{ position: "relative", zIndex: 1 }}>
-                <Eyebrow style={{ marginBottom: 8 }}>Antifrágil</Eyebrow>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "#f0f0f0", lineHeight: 1.2, textTransform: "uppercase", fontFamily: "var(--font-barlow), Barlow Condensed, sans-serif", letterSpacing: "-0.5px" }}>
-                  Reservar<br />cita
-                </div>
-                <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 10 }}>
-                  Gestiona tus reservas online &rarr;
-                </div>
+        {/* CTA GRANDE — Reservar Cita (Salonized) */}
+        <a
+          href="https://antifragil-1.salonized.com/widget_bookings/new"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block active:scale-[0.98] transition-transform"
+          style={{ textDecoration: "none" }}
+        >
+          <div style={{
+            position: "relative",
+            borderRadius: 28,
+            padding: 22,
+            overflow: "hidden",
+            background: "rgba(255,255,255,0.045)",
+            backdropFilter: "blur(30px) saturate(200%)",
+            WebkitBackdropFilter: "blur(30px) saturate(200%)",
+            border: "0.5px solid rgba(255,255,255,0.14)",
+            boxShadow: [
+              "inset 0 1px 0 rgba(255,255,255,0.18)",
+              "inset 0 -1px 0 rgba(0,0,0,0.25)",
+              "inset 1px 0 0 rgba(42,191,191,0.05)",
+              "inset -1px 0 0 rgba(123,140,255,0.05)",
+              "0 10px 40px rgba(0,0,0,0.55)",
+            ].join(", "),
+          }}>
+            <LensSheen angle={135} />
+            {/* Blob turquesa decorativo */}
+            <div aria-hidden="true" style={{
+              position: "absolute",
+              top: -50, right: -50,
+              width: 200, height: 200,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(42,191,191,0.35) 0%, transparent 70%)",
+              filter: "blur(30px)",
+            }} />
+            {/* Contenido */}
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <Eyebrow>Salonized</Eyebrow>
+              <div style={{
+                fontSize: 40,
+                fontWeight: 800,
+                color: "#fff",
+                marginTop: 10,
+                textTransform: "uppercase",
+                lineHeight: 0.9,
+                fontFamily: "var(--font-barlow), 'Barlow Condensed', sans-serif",
+                letterSpacing: "-0.01em",
+              }}>
+                Reservar<br />cita
               </div>
-            </GlassCard>
-          </a>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 12 }}>
+                Consulta disponibilidad y reserva online en segundos.
+              </div>
+              <div style={{ marginTop: 18 }}>
+                <PrimaryBtn icon={<IconArrow c="#001a1a" size={14} />}>
+                  Ir a Salonized
+                </PrimaryBtn>
+              </div>
+            </div>
+          </div>
+        </a>
 
-          {/* Tarjeta 2 — Asesoramiento */}
-          <a
-            href="https://wa.me/34611057973?text=Hola%2C%20me%20gustar%C3%ADa%20recibir%20asesoramiento%20personalizado%20en%20Lidomare%20Health%20%26%20Fitness%20Club"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ textDecoration: "none", display: "block" }}
-          >
-            <GlassCard variant="lens" style={{
-              minHeight: 160,
-              borderRadius: 20,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-              padding: "20px 16px",
-            }}>
-              <LensSheen />
-              <div style={{ position: "relative", zIndex: 1 }}>
-                <Eyebrow style={{ marginBottom: 8 }}>WhatsApp</Eyebrow>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "#f0f0f0", lineHeight: 1.2, textTransform: "uppercase", fontFamily: "var(--font-barlow), Barlow Condensed, sans-serif", letterSpacing: "-0.5px" }}>
-                  <div>Asesoramiento</div>
-                  <div>personal</div>
-                </div>
-                <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 10 }}>
-                  Contacta con tu entrenador &rarr;
-                </div>
+        {/* CTA MEDIANA — Asesoramiento (WhatsApp) */}
+        <a
+          href="https://wa.me/34611057973?text=Hola%2C%20me%20gustar%C3%ADa%20recibir%20asesoramiento%20personalizado%20en%20Lidomare%20Health%20%26%20Fitness%20Club"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block mt-3 active:scale-[0.98] transition-transform"
+          style={{ textDecoration: "none" }}
+        >
+          <div style={{
+            width: "100%",
+            borderRadius: 20,
+            padding: "16px 18px",
+            background: "rgba(255,255,255,0.03)",
+            backdropFilter: "blur(12px) saturate(140%)",
+            WebkitBackdropFilter: "blur(12px) saturate(140%)",
+            border: "0.5px solid rgba(123,140,255,0.2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 14,
+            position: "relative",
+            overflow: "hidden",
+          }}>
+            {/* Blob indigo sutil */}
+            <div aria-hidden="true" style={{
+              position: "absolute", inset: 0,
+              background: "radial-gradient(circle at 100% 50%, rgba(123,140,255,0.12), transparent 60%)",
+            }} />
+            <div style={{ position: "relative", textAlign: "left", flex: 1 }}>
+              <Eyebrow color="#7b8cff">WhatsApp &middot; 24 h</Eyebrow>
+              <div style={{ fontSize: 15, color: "#fff", marginTop: 4 }}>
+                Asesoramiento personal
               </div>
-            </GlassCard>
-          </a>
-        </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+                Escribe a tu entrenador
+              </div>
+            </div>
+            <div style={{ position: "relative", color: "#7b8cff" }}>
+              <IconArrow c="#7b8cff" />
+            </div>
+          </div>
+        </a>
       </div>
 
     </div>

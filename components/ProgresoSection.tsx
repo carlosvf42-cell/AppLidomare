@@ -112,7 +112,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-[18px] px-4 py-4 ${className ?? ""}`} style={GLASS}>
+    <div className={`rounded-[18px] px-3.5 py-3.5 ${className ?? ""}`} style={GLASS}>
       {children}
     </div>
   );
@@ -120,14 +120,14 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 
 function MetricCell({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <span style={{
         fontFamily: "var(--font-ui)",
-        fontSize: 32,
+        fontSize: 24,
         fontWeight: 300,
         fontFeatureSettings: "'tnum'",
         color: "var(--fg)",
-        lineHeight: 1,
+        lineHeight: 1.1,
       }}>{value}</span>
       <span className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "var(--muted-2)" }}>{label}</span>
     </div>
