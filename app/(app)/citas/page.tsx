@@ -1,9 +1,9 @@
 export default function CitasPage() {
   return (
-    <div style={{ background: "#080808", minHeight: "100vh", paddingBottom: 40 }}>
+    <div style={{ background: "#080808", minHeight: "100vh", paddingBottom: 96, paddingTop: "calc(env(safe-area-inset-top, 0px) + 48px)" }}>
 
       {/* ── 1. Header — Quiénes somos ── */}
-      <div style={{ padding: "48px 20px 0" }}>
+      <div style={{ padding: "0 20px" }}>
         <div style={{ fontSize: 9, letterSpacing: "0.2em", color: "#2abfbf", textTransform: "uppercase", marginBottom: 6 }}>
           Quiénes somos
         </div>
@@ -30,7 +30,7 @@ export default function CitasPage() {
       </div>
 
       {/* Separador */}
-      <div style={{ margin: "28px 20px", height: 0.5, background: "rgba(255,255,255,0.08)" }} />
+      <div style={{ margin: "36px 20px", height: 0.5, background: "rgba(255,255,255,0.08)" }} />
 
       {/* ── 2. Servicios ── */}
       <div>
@@ -144,7 +144,7 @@ export default function CitasPage() {
       </div>
 
       {/* Separador */}
-      <div style={{ margin: "18px 20px 28px", height: 0.5, background: "rgba(255,255,255,0.08)" }} />
+      <div style={{ margin: "36px 20px", height: 0.5, background: "rgba(255,255,255,0.08)" }} />
 
       {/* ── 3. CTAs — Reserva tu cita ── */}
       <div>
