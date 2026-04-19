@@ -185,19 +185,8 @@ export default function NuevaRutinaPage() {
 
         {/* Días */}
         <div>
-          <div className="flex items-center justify-between mb-3 px-1">
+          <div className="mb-3 px-1">
             <p className="text-[10px] tracking-[0.2em] uppercase text-[#555]">Días ({dias.length})</p>
-            <button
-              type="button"
-              onClick={addDia}
-              className="flex items-center gap-1.5 text-xs font-light"
-              style={{ color: "#2abfbf" }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-              Añadir día
-            </button>
           </div>
 
           <div className="space-y-4">
@@ -311,6 +300,43 @@ export default function NuevaRutinaPage() {
               </div>
             ))}
           </div>
+
+          <button
+            onClick={addDia}
+            type="button"
+            style={{
+              width: "100%",
+              marginTop: 16,
+              padding: "20px 18px",
+              borderRadius: 20,
+              background: "rgba(255,255,255,0.03)",
+              border: "0.5px dashed rgba(42,191,191,0.35)",
+              color: "#2abfbf",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+            }}
+            className="active:scale-[0.98]"
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: "50%",
+              background: "rgba(42,191,191,0.12)",
+              border: "0.5px solid rgba(42,191,191,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="#2abfbf" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <span style={{
+              fontSize: 13, fontWeight: 500,
+              letterSpacing: "0.15em", textTransform: "uppercase",
+            }}>
+              Añadir día
+            </span>
+          </button>
         </div>
 
         {error && <p className="text-[#f0a0a0] text-xs text-center px-4">{error}</p>}
