@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Cormorant_Garamond, Barlow_Condensed } from "next/font/google";
 import SplashScreen from "@/components/SplashScreen";
 import "./globals.css";
 
@@ -7,7 +7,21 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
-  weight: ["300", "400", "500", "600"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["300", "400", "500"],
+});
+
+const barlow = Barlow_Condensed({
+  variable: "--font-barlow",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -36,7 +50,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={inter.variable}>
+    <html lang="es" className={`${inter.variable} ${cormorant.variable} ${barlow.variable}`}>
       <body style={{ background: "#000" }} className="min-h-screen">
         <div
           id="app"

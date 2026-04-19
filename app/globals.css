@@ -1,14 +1,123 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #000;
-  --glass: rgba(255,255,255,0.07);
-  --glass-border: rgba(255,255,255,0.13);
-  --glass-highlight: rgba(255,255,255,0.10);
-  --text: rgba(255,255,255,0.92);
-  --muted: rgba(255,255,255,0.45);
-  --subtle: rgba(255,255,255,0.20);
-  --accent: #2abfbf;
+  /* ── Font families ─────────────────────────────────────────── */
+  --font-ui:        var(--font-inter), -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  --font-serif:     var(--font-cormorant), Georgia, 'Times New Roman', serif;
+  --font-condensed: var(--font-barlow), 'Inter', sans-serif;
+  --font-mono:      ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ── Core palette ──────────────────────────────────────────── */
+  --bg:              #000000;
+  --bg-deep:         #080808;
+  --bg-card:         #0a0a0a;
+  --bg-card-raised:  #141414;
+  --bg-card-dim:     #1a1a1a;
+  --bg-chip:         #1e1e1e;
+
+  /* ── Accent (signature turquoise) ──────────────────────────── */
+  --accent:          #2abfbf;
+  --accent-strong:   #2abfbf;
+  --accent-12:       rgba(42,191,191,0.12);
+  --accent-20:       rgba(42,191,191,0.20);
+  --accent-25:       rgba(42,191,191,0.25);
+  --accent-30:       rgba(42,191,191,0.30);
+  --accent-45:       rgba(42,191,191,0.45);
+  --accent-60:       rgba(42,191,191,0.60);
+  --accent-glow:     rgba(42,191,191,0.28);
+  --accent-shadow:   0 4px 20px rgba(42,191,191,0.35);
+
+  /* Secondary ambient accent (indigo blob only) */
+  --ambient-indigo:  rgba(99,102,241,0.22);
+
+  /* ── Foreground tiers ──────────────────────────────────────── */
+  --fg:              rgba(255,255,255,0.92);
+  --fg-soft:         #f0f0f0;
+  --fg-2:            rgba(255,255,255,0.85);
+  --fg-3:            rgba(255,255,255,0.55);
+  --text:            rgba(255,255,255,0.92);
+  --muted:           rgba(255,255,255,0.45);
+  --muted-2:         rgba(255,255,255,0.35);
+  --muted-3:         rgba(255,255,255,0.30);
+  --subtle:          rgba(255,255,255,0.20);
+  --faint:           rgba(255,255,255,0.12);
+
+  /* Near-black tiers */
+  --ink-1: #555;
+  --ink-2: #444;
+  --ink-3: #333;
+  --ink-4: #2a2a2a;
+  --ink-5: #1a1a1a;
+
+  /* ── Glass surfaces ────────────────────────────────────────── */
+  --glass:            rgba(255,255,255,0.07);
+  --glass-sm:         rgba(255,255,255,0.03);
+  --glass-md:         rgba(255,255,255,0.04);
+  --glass-border:     rgba(255,255,255,0.13);
+  --glass-border-sm:  rgba(255,255,255,0.08);
+  --glass-border-md:  rgba(255,255,255,0.10);
+  --glass-border-xs:  rgba(255,255,255,0.15);
+  --glass-highlight:  rgba(255,255,255,0.10);
+  --glass-blur:       blur(24px) saturate(180%);
+  --glass-blur-sm:    blur(10px);
+  --glass-blur-nav:   blur(40px) saturate(180%);
+
+  /* ── Semantic status ───────────────────────────────────────── */
+  --danger:        rgba(255,100,100,0.70);
+  --danger-soft:   rgba(255,120,120,0.80);
+  --danger-bg:     rgba(255,80,80,0.07);
+  --danger-border: rgba(255,80,80,0.20);
+
+  /* ── Radii ─────────────────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 28px;
+  --radius-full: 9999px;
+
+  /* ── Borders ───────────────────────────────────────────────── */
+  --hair: 0.5px;
+
+  /* ── Shadows ───────────────────────────────────────────────── */
+  --shadow-glass:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 4px 24px rgba(0,0,0,0.4);
+  --shadow-cta: 0 4px 20px rgba(42,191,191,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.25);
+  --shadow-avatar: inset 0 1px 0 rgba(255,255,255,0.10);
+
+  /* ── Letter-spacing ────────────────────────────────────────── */
+  --track-tight:   -0.01em;
+  --track-normal:  0;
+  --track-1:       0.05em;
+  --track-2:       0.10em;
+  --track-3:       0.15em;
+  --track-4:       0.20em;
+  --track-5:       0.25em;
+  --track-6:       0.30em;
+  --track-7:       0.40em;
+
+  /* ── Font sizes ────────────────────────────────────────────── */
+  --fs-micro:   8px;
+  --fs-8:       8px;
+  --fs-9:       9px;
+  --fs-10:      10px;
+  --fs-11:      11px;
+  --fs-12:      12px;
+  --fs-13:      13px;
+  --fs-14:      14px;
+  --fs-sm:      14px;
+  --fs-base:    16px;
+  --fs-lg:      18px;
+  --fs-xl:      22px;
+  --fs-2xl:     26px;
+  --fs-3xl:     30px;
+  --fs-4xl:     32px;
+  --fs-5xl:     36px;
+  --fs-hero:    2rem;
 }
 
 /* ── Base ── */
@@ -18,9 +127,9 @@ html {
 }
 
 body {
-  background: #000;
-  color: var(--text);
-  font-family: var(--font-inter), -apple-system, 'SF Pro Text', Inter, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
@@ -57,3 +166,8 @@ button:not(.no-min-h),
 a:not(.no-min-h) {
   min-height: 44px;
 }
+
+/* ── Design system utility classes ── */
+.ds-pressable { transition: transform 0.1s ease; }
+.ds-pressable:active { transform: scale(0.98); }
+.ds-pressable:hover { opacity: 0.92; }
