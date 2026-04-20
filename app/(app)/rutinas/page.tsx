@@ -67,6 +67,7 @@ export default function RutinasPage() {
   const [activando, setActivando] = useState<string | null>(null);
   const [borrando, setBorrando] = useState<string | null>(null);
   const [historialOpen, setHistorialOpen] = useState(false);
+  const [misRutinasOpen, setMisRutinasOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     const supabase = getSupabase();
@@ -338,96 +339,115 @@ export default function RutinasPage() {
             )}
           </section>
 
-          {/* ── Mis rutinas ── */}
+          {/* ── Mis rutinas (colapsable) ── */}
           {todasRutinas.length > 0 && (
             <section>
-              <p className="text-[10px] tracking-[0.2em] uppercase mb-3 px-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-                Mis rutinas
-              </p>
-              <div className="space-y-2">
-                {todasRutinas.map((r) => (
-                  <div
-                    key={r.id}
-                    className="rounded-2xl px-4 py-3.5 flex items-center gap-3"
-                    style={GLASS}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-light truncate" style={{ color: "rgba(255,255,255,0.85)" }}>
-                          {r.nombre}
+              <button
+                type="button"
+                onClick={() => setMisRutinasOpen((v) => !v)}
+                className="w-full rounded-3xl px-4 py-4 flex items-center gap-3 transition-all active:scale-[0.99]"
+                style={LIQUID}
+              >
+                <div className="flex-1 text-left">
+                  <p className="text-[9px] tracking-[0.2em] uppercase mb-0.5" style={{ color: "#2abfbf" }}>
+                    Rutinas guardadas
+                  </p>
+                  <p className="text-sm font-light" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    Mis rutinas
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  {todasRutinas.length}
+                </span>
+                <Chevron open={misRutinasOpen} />
+              </button>
+
+              {misRutinasOpen && (
+                <div className="mt-3 space-y-2">
+                  {todasRutinas.map((r) => (
+                    <div
+                      key={r.id}
+                      className="rounded-2xl px-4 py-3.5 flex items-center gap-3"
+                      style={GLASS}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-light truncate" style={{ color: "rgba(255,255,255,0.85)" }}>
+                            {r.nombre}
+                          </p>
+                          {r.activa && (
+                            <span
+                              className="text-[8px] px-1.5 py-0.5 rounded-full shrink-0"
+                              style={{
+                                background: "rgba(42,191,191,0.12)",
+                                color: "#2abfbf",
+                                border: "0.5px solid rgba(42,191,191,0.25)",
+                              }}
+                            >
+                              activa
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                          {r.num_dias} {r.num_dias === 1 ? "día" : "días"}
                         </p>
-                        {r.activa && (
-                          <span
-                            className="text-[8px] px-1.5 py-0.5 rounded-full shrink-0"
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {!r.activa && (
+                          <button
+                            type="button"
+                            disabled={activando === r.id}
+                            onClick={() => activarRutina(r.id)}
+                            className="px-3 py-1.5 rounded-xl text-[10px] tracking-widest uppercase transition-all active:scale-[0.97] disabled:opacity-50"
                             style={{
-                              background: "rgba(42,191,191,0.12)",
-                              color: "#2abfbf",
+                              background: "rgba(42,191,191,0.1)",
                               border: "0.5px solid rgba(42,191,191,0.25)",
+                              color: "#2abfbf",
                             }}
                           >
-                            activa
-                          </span>
+                            {activando === r.id ? "…" : "Activar"}
+                          </button>
                         )}
-                      </div>
-                      <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
-                        {r.num_dias} {r.num_dias === 1 ? "día" : "días"}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {!r.activa && (
                         <button
                           type="button"
-                          disabled={activando === r.id}
-                          onClick={() => activarRutina(r.id)}
-                          className="px-3 py-1.5 rounded-xl text-[10px] tracking-widest uppercase transition-all active:scale-[0.97] disabled:opacity-50"
-                          style={{
-                            background: "rgba(42,191,191,0.1)",
-                            border: "0.5px solid rgba(42,191,191,0.25)",
-                            color: "#2abfbf",
-                          }}
+                          onClick={() => router.push(`/rutinas/${r.id}/editar`)}
+                          className="w-8 h-8 flex items-center justify-center rounded-xl transition-all active:scale-[0.97]"
+                          style={GLASS_SM}
+                          aria-label="Editar"
                         >
-                          {activando === r.id ? "…" : "Activar"}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => router.push(`/rutinas/${r.id}/editar`)}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl transition-all active:scale-[0.97]"
-                        style={GLASS_SM}
-                        aria-label="Editar"
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        disabled={borrando === r.id}
-                        onClick={() => borrarRutina(r)}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl transition-all active:scale-[0.97] disabled:opacity-50"
-                        style={{
-                          background: "rgba(255,80,80,0.07)",
-                          backdropFilter: "blur(10px)",
-                          WebkitBackdropFilter: "blur(10px)",
-                          border: "0.5px solid rgba(255,80,80,0.15)",
-                          borderRadius: 12,
-                        }}
-                        aria-label="Eliminar"
-                      >
-                        {borrando === r.id ? (
-                          <div className="w-3 h-3 rounded-full animate-spin" style={{ border: "1.5px solid rgba(255,100,100,0.2)", borderTopColor: "rgba(255,100,100,0.7)" }} />
-                        ) : (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="rgba(255,100,100,0.6)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
-                        )}
-                      </button>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={borrando === r.id}
+                          onClick={() => borrarRutina(r)}
+                          className="w-8 h-8 flex items-center justify-center rounded-xl transition-all active:scale-[0.97] disabled:opacity-50"
+                          style={{
+                            background: "rgba(255,80,80,0.07)",
+                            backdropFilter: "blur(10px)",
+                            WebkitBackdropFilter: "blur(10px)",
+                            border: "0.5px solid rgba(255,80,80,0.15)",
+                            borderRadius: 12,
+                          }}
+                          aria-label="Eliminar"
+                        >
+                          {borrando === r.id ? (
+                            <div className="w-3 h-3 rounded-full animate-spin" style={{ border: "1.5px solid rgba(255,100,100,0.2)", borderTopColor: "rgba(255,100,100,0.7)" }} />
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="rgba(255,100,100,0.6)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </section>
           )}
 
