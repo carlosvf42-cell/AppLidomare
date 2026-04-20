@@ -140,6 +140,8 @@ export default function RutinasPage() {
     const diasIds = (dias ?? []).map((d: any) => d.id);
 
     if (diasIds.length > 0) {
+      // Desvincular sesiones de los dias para preservar el historial
+      await supabase.from("sesiones").update({ dia_id: null }).in("dia_id", diasIds);
       await supabase.from("rutina_ejercicios").delete().in("dia_id", diasIds);
     }
     await supabase.from("rutina_dias").delete().eq("rutina_id", r.id);
