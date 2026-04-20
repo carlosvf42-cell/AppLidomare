@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
@@ -8,7 +8,7 @@ import PreestablecidaCard from "@/components/PreestablecidaCard";
 
 type RutinaDia = { id: string; nombre: string; orden: number };
 type RutinaActiva = { id: string; nombre: string; rutina_dias: RutinaDia[] };
-type SesionHistorial = { id: string; fecha: string; dia_nombre: string };
+type SesionHistorial = { id: string; fecha: string; dia_nombre: string; rutina_nombre: string };
 type RutinaResumen = { id: string; nombre: string; activa: boolean; num_dias: number };
 
 function getSupabase() {
@@ -40,6 +40,24 @@ const GLASS_SM: React.CSSProperties = {
   borderRadius: 12,
 };
 
+const LIQUID: React.CSSProperties = {
+  background: "rgba(255,255,255,0.04)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "0.5px solid rgba(255,255,255,0.08)",
+};
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16" height="16" viewBox="0 0 24 24" fill="none"
+      style={{ transition: "transform 0.3s ease", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+    >
+      <path d="M6 9l6 6 6-6" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function RutinasPage() {
   const router = useRouter();
   const [rutina, setRutina] = useState<RutinaActiva | null>(null);
@@ -48,51 +66,60 @@ export default function RutinasPage() {
   const [loading, setLoading] = useState(true);
   const [activando, setActivando] = useState<string | null>(null);
   const [borrando, setBorrando] = useState<string | null>(null);
+  const [historialOpen, setHistorialOpen] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     const supabase = getSupabase();
-    Promise.all([
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    const [rutinasRes, sesionesRes] = await Promise.all([
       supabase
         .from("rutinas")
         .select("id, nombre, activa, rutina_dias(id, nombre, orden)")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
       supabase
         .from("sesiones")
-        .select("id, fecha, rutina_dias(nombre)")
+        .select("id, fecha, dia_id, rutina_dias(nombre, rutinas(nombre))")
+        .eq("user_id", user.id)
         .order("fecha", { ascending: false })
         .limit(30),
-    ]).then(([rutinasRes, sesionesRes]) => {
-      const todas = (rutinasRes.data ?? []) as any[];
+    ]);
 
-      // Set active rutina
-      const activa = todas.find((r) => r.activa);
-      if (activa) {
-        activa.rutina_dias.sort((a: any, b: any) => a.orden - b.orden);
-        setRutina(activa);
-      }
+    const todas = (rutinasRes.data ?? []) as any[];
 
-      // Build summary list
-      setTodasRutinas(
-        todas.map((r) => ({
-          id: r.id,
-          nombre: r.nombre,
-          activa: r.activa,
-          num_dias: r.rutina_dias?.length ?? 0,
+    const activa = todas.find((r) => r.activa);
+    if (activa) {
+      activa.rutina_dias.sort((a: any, b: any) => a.orden - b.orden);
+      setRutina(activa);
+    } else {
+      setRutina(null);
+    }
+
+    setTodasRutinas(
+      todas.map((r) => ({
+        id: r.id,
+        nombre: r.nombre,
+        activa: r.activa,
+        num_dias: r.rutina_dias?.length ?? 0,
+      }))
+    );
+
+    if (sesionesRes.data) {
+      setHistorial(
+        (sesionesRes.data as any[]).map((s) => ({
+          id: s.id,
+          fecha: s.fecha,
+          dia_nombre: s.rutina_dias?.nombre ?? "—",
+          rutina_nombre: s.rutina_dias?.rutinas?.nombre ?? "",
         }))
       );
-
-      if (sesionesRes.data) {
-        setHistorial(
-          (sesionesRes.data as any[]).map((s) => ({
-            id: s.id,
-            fecha: s.fecha,
-            dia_nombre: s.rutina_dias?.nombre ?? "—",
-          }))
-        );
-      }
-      setLoading(false);
-    });
+    }
+    setLoading(false);
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   async function borrarRutina(r: RutinaResumen) {
     if (r.activa) {
@@ -106,25 +133,18 @@ export default function RutinasPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setBorrando(null); return; }
 
-    // 1. Obtener ids de los días
     const { data: dias } = await supabase
       .from("rutina_dias")
       .select("id")
       .eq("rutina_id", r.id);
     const diasIds = (dias ?? []).map((d: any) => d.id);
 
-    // 2. Borrar ejercicios de todos los días
     if (diasIds.length > 0) {
       await supabase.from("rutina_ejercicios").delete().in("dia_id", diasIds);
     }
-
-    // 3. Borrar los días
     await supabase.from("rutina_dias").delete().eq("rutina_id", r.id);
-
-    // 4. Borrar la rutina
     await supabase.from("rutinas").delete().eq("id", r.id).eq("user_id", user.id);
 
-    // Actualizar estado local
     setTodasRutinas((prev) => prev.filter((x) => x.id !== r.id));
     if (rutina?.id === r.id) setRutina(null);
     setBorrando(null);
@@ -132,14 +152,25 @@ export default function RutinasPage() {
 
   async function activarRutina(rutinaId: string) {
     setActivando(rutinaId);
-    const supabase = getSupabase();
-    await supabase.from("rutinas").update({ activa: false }).neq("id", rutinaId);
-    await supabase.from("rutinas").update({ activa: true }).eq("id", rutinaId);
 
-    // Refresh local state
+    // Optimistic update: mark new rutina as active, deactivate the rest
+    setTodasRutinas((prev) =>
+      prev.map((r) => ({ ...r, activa: r.id === rutinaId }))
+    );
+
+    const supabase = getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setActivando(null); return; }
+
+    // DB updates — scoped to this user
+    await supabase.from("rutinas").update({ activa: false }).eq("user_id", user.id).neq("id", rutinaId);
+    await supabase.from("rutinas").update({ activa: true }).eq("id", rutinaId).eq("user_id", user.id);
+
+    // Fetch fresh data to get the active rutina's dias
     const { data } = await supabase
       .from("rutinas")
       .select("id, nombre, activa, rutina_dias(id, nombre, orden)")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     const todas = (data ?? []) as any[];
@@ -197,7 +228,7 @@ export default function RutinasPage() {
         <div className="px-4 pb-6 space-y-5">
 
           {/* ── Rutinas preestablecidas (colapsable) ── */}
-          <PreestablecidaCard />
+          <PreestablecidaCard onActivated={loadData} />
 
           {/* ── Rutina activa ── */}
           <section>
@@ -398,30 +429,51 @@ export default function RutinasPage() {
             </section>
           )}
 
-          {/* ── Historial ── */}
+          {/* ── Historial (colapsable) ── */}
           {historial.length > 0 && (
             <section>
-              <p className="text-[10px] tracking-[0.2em] uppercase mb-3 px-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-                Historial
-              </p>
-              <div className="space-y-2">
-                {historial.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => router.push(`/rutinas/sesion/${s.id}`)}
-                    className="w-full text-left rounded-2xl px-4 py-3.5 flex items-center justify-between transition-all active:scale-[0.98]"
-                    style={GLASS}
-                  >
-                    <div>
-                      <p className="text-sm font-light" style={{ color: "rgba(255,255,255,0.85)" }}>{s.dia_nombre}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{formatFecha(s.fecha)}</p>
-                    </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 6l6 6-6 6" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                ))}
-              </div>
+              <button
+                type="button"
+                onClick={() => setHistorialOpen((v) => !v)}
+                className="w-full rounded-3xl px-4 py-4 flex items-center gap-3 transition-all active:scale-[0.99]"
+                style={LIQUID}
+              >
+                <div className="flex-1 text-left">
+                  <p className="text-[9px] tracking-[0.2em] uppercase mb-0.5" style={{ color: "#2abfbf" }}>
+                    Entrenamientos
+                  </p>
+                  <p className="text-sm font-light" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    Historial de entrenamientos
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  {historial.length}
+                </span>
+                <Chevron open={historialOpen} />
+              </button>
+
+              {historialOpen && (
+                <div className="mt-3 space-y-2">
+                  {historial.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => router.push(`/rutinas/sesion/${s.id}`)}
+                      className="w-full text-left rounded-2xl px-4 py-3.5 flex items-center justify-between transition-all active:scale-[0.98]"
+                      style={GLASS}
+                    >
+                      <div>
+                        <p className="text-sm font-light" style={{ color: "rgba(255,255,255,0.85)" }}>{s.dia_nombre}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                          {s.rutina_nombre ? `${s.rutina_nombre} · ` : ""}{formatFecha(s.fecha)}
+                        </p>
+                      </div>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 6l6 6-6 6" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              )}
             </section>
           )}
         </div>

@@ -132,7 +132,7 @@ function PlanDetail({
 }
 
 /* ── Main component ─────────────────────────────────────────── */
-export default function PreestablecidaCard() {
+export default function PreestablecidaCard({ onActivated }: { onActivated?: () => void } = {}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [nivelIdx, setNivelIdx] = useState(0);
@@ -212,9 +212,10 @@ export default function PreestablecidaCard() {
       }
       console.log("Ejercicios inserted for all dias");
 
-      // 5. Collapse and refresh
+      // 5. Collapse and reload parent data
       setOpen(false);
       setExpandedPlan(null);
+      if (onActivated) onActivated();
       router.refresh();
     } catch (err) {
       console.error("Unexpected error in activarRutinaPreestablecida:", err);
