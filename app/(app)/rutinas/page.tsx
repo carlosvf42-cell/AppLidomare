@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import PresetRoutines from "@/components/PresetRoutines";
+import PreestablecidaCard from "@/components/PreestablecidaCard";
 
 type RutinaDia = { id: string; nombre: string; orden: number };
 type RutinaActiva = { id: string; nombre: string; rutina_dias: RutinaDia[] };
@@ -195,6 +195,9 @@ export default function RutinasPage() {
         </div>
       ) : (
         <div className="px-4 pb-6 space-y-5">
+
+          {/* ── Rutinas preestablecidas (colapsable) ── */}
+          <PreestablecidaCard />
 
           {/* ── Rutina activa ── */}
           <section>
@@ -394,9 +397,6 @@ export default function RutinasPage() {
               </div>
             </section>
           )}
-
-          {/* ── Rutinas preestablecidas ── */}
-          <PresetRoutines />
 
           {/* ── Historial ── */}
           {historial.length > 0 && (
