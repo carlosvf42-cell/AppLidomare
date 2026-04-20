@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import {
   NIVELES,
   type PlanPreset,
   type EjercicioPreset,
-  type TipoMaterial,
+  type Material,
 } from "@/lib/rutinas-preestablecidas";
 
 /* ── Supabase client ────────────────────────────────────────── */
@@ -26,7 +26,7 @@ const LIQUID: React.CSSProperties = {
   border: "0.5px solid rgba(255,255,255,0.08)",
 };
 
-const PILL_COLORS: Record<TipoMaterial, { bg: string; color: string; label: string }> = {
+const PILL_COLORS: Record<Material, { bg: string; color: string; label: string }> = {
   maquina: { bg: "#E1F5EE", color: "#0F6E56", label: "Maquina" },
   polea:   { bg: "#EEEDFE", color: "#534AB7", label: "Polea" },
   libre:   { bg: "#FAEEDA", color: "#854F0B", label: "Peso libre" },
@@ -44,9 +44,23 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
+/* ── Group exercises by grupoMuscular for display ───────────── */
+function groupByGrupo(ejercicios: EjercicioPreset[]): { grupo: string; items: EjercicioPreset[] }[] {
+  const groups: { grupo: string; items: EjercicioPreset[] }[] = [];
+  for (const ej of ejercicios) {
+    const last = groups[groups.length - 1];
+    if (last && last.grupo === ej.grupoMuscular) {
+      last.items.push(ej);
+    } else {
+      groups.push({ grupo: ej.grupoMuscular, items: [ej] });
+    }
+  }
+  return groups;
+}
+
 /* ── Exercise row ───────────────────────────────────────────── */
 function ExRow({ e }: { e: EjercicioPreset }) {
-  const p = PILL_COLORS[e.tipo];
+  const p = PILL_COLORS[e.material];
   const seriesLabel = e.repeticiones === 0 ? `${e.series}` : `${e.series} x ${e.repeticiones}`;
   return (
     <div className="flex items-center gap-2 py-1.5" style={{ borderBottom: "0.5px solid rgba(255,255,255,0.04)" }}>
@@ -81,27 +95,24 @@ function PlanDetail({
         </p>
       )}
 
-      {plan.dias.map((dia, i) => (
-        <div key={i} className="rounded-2xl px-3 py-3" style={{ ...LIQUID }}>
-          <div className="flex items-center gap-2 mb-2">
-            <h5 className="text-[13px] font-light" style={{ color: "rgba(255,255,255,0.85)" }}>{dia.nombre}</h5>
-            <span
-              className="text-[8px] px-1.5 py-0.5 rounded-full uppercase tracking-wider"
-              style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)", border: "0.5px solid rgba(255,255,255,0.08)" }}
-            >
-              {dia.tag}
-            </span>
-          </div>
-          {dia.secciones.map((sec, j) => (
-            <div key={j} className="mb-2">
-              <p className="text-[9px] tracking-[0.12em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>
-                {sec.titulo}
-              </p>
-              {sec.ejercicios.map((e, k) => <ExRow key={k} e={e} />)}
+      {plan.dias.map((dia) => {
+        const groups = groupByGrupo(dia.ejercicios);
+        return (
+          <div key={dia.orden} className="rounded-2xl px-3 py-3" style={{ ...LIQUID }}>
+            <div className="flex items-center gap-2 mb-2">
+              <h5 className="text-[13px] font-light" style={{ color: "rgba(255,255,255,0.85)" }}>{dia.nombre}</h5>
             </div>
-          ))}
-        </div>
-      ))}
+            {groups.map((g, j) => (
+              <div key={j} className="mb-2">
+                <p className="text-[9px] tracking-[0.12em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+                  {g.grupo}
+                </p>
+                {g.items.map((e, k) => <ExRow key={k} e={e} />)}
+              </div>
+            ))}
+          </div>
+        );
+      })}
 
       <button
         type="button"
@@ -126,77 +137,90 @@ export default function PreestablecidaCard() {
   const [open, setOpen] = useState(false);
   const [nivelIdx, setNivelIdx] = useState(0);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [activando, setActivando] = useState(false);
 
   const nivel = NIVELES[nivelIdx];
 
   async function activarRutinaPreestablecida(plan: PlanPreset) {
-    startTransition(async () => {
+    setActivando(true);
+    try {
       const supabase = getSupabase();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/login"); return; }
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr) { console.error("Auth error:", userErr); return; }
+      if (!user) { console.error("No user session"); router.push("/login"); return; }
 
-      // 1. Deactivate all existing routines
-      await supabase.from("rutinas").update({ activa: false }).eq("user_id", user.id);
+      // 1. Deactivate all existing routines for this user
+      const { error: deactivateErr } = await supabase
+        .from("rutinas")
+        .update({ activa: false })
+        .eq("user_id", user.id);
+      if (deactivateErr) {
+        console.error("Error deactivating rutinas:", deactivateErr);
+        return;
+      }
 
-      // 2. Insert new routine
+      // 2. Insert new routine (only user_id, nombre, activa)
       const { data: rutina, error: rutinaErr } = await supabase
         .from("rutinas")
-        .insert({ nombre: plan.nombre, user_id: user.id, activa: true })
+        .insert({ user_id: user.id, nombre: plan.nombre, activa: true })
         .select("id")
         .single();
-
       if (rutinaErr || !rutina) {
-        console.error("Rutina insert error:", rutinaErr);
-        alert("No se pudo crear la rutina. Intenta de nuevo.");
+        console.error("Error inserting rutina:", rutinaErr);
         return;
       }
+      console.log("Rutina created:", rutina.id);
 
-      // 3. Insert days
-      const diasRows = plan.dias.map((d, orden) => ({
-        rutina_id: rutina.id,
-        nombre: d.nombre,
-        orden,
-      }));
-
-      const { data: diasData, error: diasErr } = await supabase
-        .from("rutina_dias")
-        .insert(diasRows)
-        .select("id");
-
-      if (diasErr || !diasData) {
-        console.error("Dias insert error:", diasErr);
-        alert("Error guardando los dias.");
-        return;
-      }
-
-      // 4. Insert exercises
-      const ejerciciosRows = plan.dias.flatMap((d, diaIdx) =>
-        d.secciones.flatMap((sec) =>
-          sec.ejercicios.map((ej, orden) => ({
-            dia_id: diasData[diaIdx].id,
-            nombre: ej.nombre,
-            series: ej.series,
-            repeticiones: ej.repeticiones || 1,
-            orden,
-          }))
-        )
-      );
-
-      if (ejerciciosRows.length > 0) {
-        const { error: ejErr } = await supabase.from("rutina_ejercicios").insert(ejerciciosRows);
-        if (ejErr) {
-          console.error("Ejercicios insert error:", ejErr);
-          alert("Rutina creada pero hubo un error con los ejercicios.");
+      // 3. Insert days one by one to get each dia_id in order
+      const diaIds: string[] = [];
+      for (const dia of plan.dias) {
+        const { data: diaData, error: diaErr } = await supabase
+          .from("rutina_dias")
+          .insert({ rutina_id: rutina.id, nombre: dia.nombre, orden: dia.orden })
+          .select("id")
+          .single();
+        if (diaErr || !diaData) {
+          console.error(`Error inserting dia "${dia.nombre}":`, diaErr);
           return;
         }
+        diaIds.push(diaData.id);
       }
+      console.log("Dias created:", diaIds);
+
+      // 4. Insert exercises for each day
+      for (let i = 0; i < plan.dias.length; i++) {
+        const dia = plan.dias[i];
+        const diaId = diaIds[i];
+
+        const ejerciciosRows = dia.ejercicios.map((ej, orden) => ({
+          dia_id: diaId,
+          nombre: ej.nombre,
+          series: ej.series,
+          repeticiones: ej.repeticiones || 1,
+          orden,
+        }));
+
+        if (ejerciciosRows.length > 0) {
+          const { error: ejErr } = await supabase
+            .from("rutina_ejercicios")
+            .insert(ejerciciosRows);
+          if (ejErr) {
+            console.error(`Error inserting ejercicios for dia "${dia.nombre}":`, ejErr);
+            return;
+          }
+        }
+      }
+      console.log("Ejercicios inserted for all dias");
 
       // 5. Collapse and refresh
       setOpen(false);
       setExpandedPlan(null);
       router.refresh();
-    });
+    } catch (err) {
+      console.error("Unexpected error in activarRutinaPreestablecida:", err);
+    } finally {
+      setActivando(false);
+    }
   }
 
   return (
@@ -312,7 +336,7 @@ export default function PreestablecidaCard() {
                     <PlanDetail
                       plan={plan}
                       onActivar={activarRutinaPreestablecida}
-                      activando={isPending}
+                      activando={activando}
                     />
                   )}
                 </div>

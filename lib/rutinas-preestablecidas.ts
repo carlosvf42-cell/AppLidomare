@@ -1,21 +1,17 @@
-export type TipoMaterial = "maquina" | "polea" | "libre";
+export type Material = "maquina" | "polea" | "libre";
 
 export type EjercicioPreset = {
   nombre: string;
-  tipo: TipoMaterial;
   series: number;
   repeticiones: number;
-};
-
-export type SeccionPreset = {
-  titulo: string;
-  ejercicios: EjercicioPreset[];
+  grupoMuscular: string;
+  material: Material;
 };
 
 export type DiaPreset = {
   nombre: string;
-  tag: string;
-  secciones: SeccionPreset[];
+  orden: number;
+  ejercicios: EjercicioPreset[];
 };
 
 export type PlanPreset = {
@@ -36,8 +32,8 @@ export type NivelPreset = {
   planes: PlanPreset[];
 };
 
-function ej(nombre: string, tipo: TipoMaterial, series: number, reps: number): EjercicioPreset {
-  return { nombre, tipo, series, repeticiones: reps };
+function ej(nombre: string, material: Material, grupoMuscular: string, series: number, reps: number): EjercicioPreset {
+  return { nombre, series, repeticiones: reps, grupoMuscular, material };
 }
 
 export const NIVELES: NivelPreset[] = [
@@ -55,38 +51,22 @@ export const NIVELES: NivelPreset[] = [
         intensidad: "100% maquina",
         dias: [
           {
-            nombre: "Dia 1", tag: "Fullbody",
-            secciones: [
-              { titulo: "Pierna dominante rodilla", ejercicios: [
-                ej("Prensa horizontal", "maquina", 3, 10),
-                ej("Extension de cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Pierna dominante cadera", ejercicios: [
-                ej("Curl femoral tumbado", "maquina", 3, 12),
-              ]},
-              { titulo: "Traccion", ejercicios: [
-                ej("Remo en polea baja", "polea", 3, 10),
-              ]},
-              { titulo: "Empuje", ejercicios: [
-                ej("Press de hombros en maquina", "maquina", 3, 10),
-              ]},
+            nombre: "Dia 1", orden: 0,
+            ejercicios: [
+              ej("Prensa horizontal", "maquina", "Pierna dominante rodilla", 3, 10),
+              ej("Extension de cuadriceps", "maquina", "Pierna dominante rodilla", 3, 12),
+              ej("Curl femoral tumbado", "maquina", "Pierna dominante cadera", 3, 12),
+              ej("Remo en polea baja", "polea", "Traccion", 3, 10),
+              ej("Press de hombros en maquina", "maquina", "Empuje", 3, 10),
             ],
           },
           {
-            nombre: "Dia 2", tag: "Fullbody",
-            secciones: [
-              { titulo: "Pierna dominante rodilla", ejercicios: [
-                ej("Extension de cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Pierna dominante cadera", ejercicios: [
-                ej("Curl femoral tumbado", "maquina", 3, 12),
-              ]},
-              { titulo: "Traccion", ejercicios: [
-                ej("Jalon al pecho agarre ancho", "polea", 3, 10),
-              ]},
-              { titulo: "Empuje", ejercicios: [
-                ej("Press de pecho en maquina", "maquina", 3, 10),
-              ]},
+            nombre: "Dia 2", orden: 1,
+            ejercicios: [
+              ej("Extension de cuadriceps", "maquina", "Pierna dominante rodilla", 3, 12),
+              ej("Curl femoral tumbado", "maquina", "Pierna dominante cadera", 3, 12),
+              ej("Jalon al pecho agarre ancho", "polea", "Traccion", 3, 10),
+              ej("Press de pecho en maquina", "maquina", "Empuje", 3, 10),
             ],
           },
         ],
@@ -100,57 +80,33 @@ export const NIVELES: NivelPreset[] = [
         intensidad: "100% maquina",
         dias: [
           {
-            nombre: "Dia 1", tag: "Fullbody",
-            secciones: [
-              { titulo: "Pierna dominante rodilla", ejercicios: [
-                ej("Prensa horizontal", "maquina", 3, 10),
-                ej("Extension de cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Pierna dominante cadera", ejercicios: [
-                ej("Curl femoral tumbado", "maquina", 3, 12),
-              ]},
-              { titulo: "Traccion", ejercicios: [
-                ej("Remo en polea baja", "polea", 3, 10),
-              ]},
-              { titulo: "Empuje", ejercicios: [
-                ej("Press de hombros en maquina", "maquina", 3, 10),
-              ]},
+            nombre: "Dia 1", orden: 0,
+            ejercicios: [
+              ej("Prensa horizontal", "maquina", "Pierna dominante rodilla", 3, 10),
+              ej("Extension de cuadriceps", "maquina", "Pierna dominante rodilla", 3, 12),
+              ej("Curl femoral tumbado", "maquina", "Pierna dominante cadera", 3, 12),
+              ej("Remo en polea baja", "polea", "Traccion", 3, 10),
+              ej("Press de hombros en maquina", "maquina", "Empuje", 3, 10),
             ],
           },
           {
-            nombre: "Dia 2", tag: "Fullbody",
-            secciones: [
-              { titulo: "Pierna dominante rodilla", ejercicios: [
-                ej("Extension de cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Pierna dominante cadera", ejercicios: [
-                ej("Curl femoral tumbado", "maquina", 3, 12),
-              ]},
-              { titulo: "Traccion", ejercicios: [
-                ej("Jalon al pecho agarre ancho", "polea", 3, 10),
-              ]},
-              { titulo: "Empuje", ejercicios: [
-                ej("Press de pecho en maquina", "maquina", 3, 10),
-              ]},
+            nombre: "Dia 2", orden: 1,
+            ejercicios: [
+              ej("Extension de cuadriceps", "maquina", "Pierna dominante rodilla", 3, 12),
+              ej("Curl femoral tumbado", "maquina", "Pierna dominante cadera", 3, 12),
+              ej("Jalon al pecho agarre ancho", "polea", "Traccion", 3, 10),
+              ej("Press de pecho en maquina", "maquina", "Empuje", 3, 10),
             ],
           },
           {
-            nombre: "Dia 3", tag: "Fullbody variante",
-            secciones: [
-              { titulo: "Pierna dominante rodilla", ejercicios: [
-                ej("Prensa horizontal", "maquina", 3, 10),
-                ej("Extension de cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Pierna dominante cadera", ejercicios: [
-                ej("Curl femoral tumbado", "maquina", 3, 12),
-              ]},
-              { titulo: "Traccion", ejercicios: [
-                ej("Jalon al pecho agarre ancho", "polea", 3, 10),
-              ]},
-              { titulo: "Empuje", ejercicios: [
-                ej("Press de pecho en maquina", "maquina", 3, 10),
-                ej("Press de hombros en maquina", "maquina", 3, 10),
-              ]},
+            nombre: "Dia 3", orden: 2,
+            ejercicios: [
+              ej("Prensa horizontal", "maquina", "Pierna dominante rodilla", 3, 10),
+              ej("Extension de cuadriceps", "maquina", "Pierna dominante rodilla", 3, 12),
+              ej("Curl femoral tumbado", "maquina", "Pierna dominante cadera", 3, 12),
+              ej("Jalon al pecho agarre ancho", "polea", "Traccion", 3, 10),
+              ej("Press de pecho en maquina", "maquina", "Empuje", 3, 10),
+              ej("Press de hombros en maquina", "maquina", "Empuje", 3, 10),
             ],
           },
         ],
@@ -171,51 +127,31 @@ export const NIVELES: NivelPreset[] = [
         intensidad: "~50% peso libre",
         dias: [
           {
-            nombre: "Dia 1", tag: "Fullbody",
-            secciones: [
-              { titulo: "Pierna dominante rodilla", ejercicios: [
-                ej("Sentadilla goblet / con barra", "libre", 4, 8),
-                ej("Extension de cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Pierna dominante cadera", ejercicios: [
-                ej("Peso muerto rumano con mancuernas", "libre", 4, 8),
-                ej("Curl femoral tumbado", "maquina", 3, 12),
-              ]},
-              { titulo: "Traccion", ejercicios: [
-                ej("Remo con mancuerna", "libre", 4, 8),
-                ej("Jalon al pecho agarre neutro", "polea", 3, 10),
-              ]},
-              { titulo: "Empuje", ejercicios: [
-                ej("Press banca con mancuernas", "libre", 4, 8),
-                ej("Press de hombros en maquina", "maquina", 3, 10),
-              ]},
-              { titulo: "Brazos", ejercicios: [
-                ej("Curl biceps con mancuerna", "libre", 3, 12),
-                ej("Extension triceps en polea", "polea", 3, 12),
-              ]},
+            nombre: "Dia 1", orden: 0,
+            ejercicios: [
+              ej("Sentadilla goblet / con barra", "libre", "Pierna dominante rodilla", 4, 8),
+              ej("Extension de cuadriceps", "maquina", "Pierna dominante rodilla", 3, 12),
+              ej("Peso muerto rumano con mancuernas", "libre", "Pierna dominante cadera", 4, 8),
+              ej("Curl femoral tumbado", "maquina", "Pierna dominante cadera", 3, 12),
+              ej("Remo con mancuerna", "libre", "Traccion", 4, 8),
+              ej("Jalon al pecho agarre neutro", "polea", "Traccion", 3, 10),
+              ej("Press banca con mancuernas", "libre", "Empuje", 4, 8),
+              ej("Press de hombros en maquina", "maquina", "Empuje", 3, 10),
+              ej("Curl biceps con mancuerna", "libre", "Brazos", 3, 12),
+              ej("Extension triceps en polea", "polea", "Brazos", 3, 12),
             ],
           },
           {
-            nombre: "Dia 2", tag: "Fullbody variante",
-            secciones: [
-              { titulo: "Pierna dominante rodilla", ejercicios: [
-                ej("Extension de cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Pierna dominante cadera", ejercicios: [
-                ej("Peso muerto rumano con mancuernas", "libre", 4, 8),
-                ej("Curl femoral tumbado", "maquina", 3, 12),
-              ]},
-              { titulo: "Traccion", ejercicios: [
-                ej("Jalon al pecho agarre neutro", "polea", 3, 10),
-                ej("Remo gironda", "maquina", 3, 12),
-              ]},
-              { titulo: "Empuje", ejercicios: [
-                ej("Press plano en maquina", "maquina", 3, 10),
-              ]},
-              { titulo: "Brazos", ejercicios: [
-                ej("Curl biceps con mancuerna", "libre", 3, 12),
-                ej("Extension triceps en polea", "polea", 3, 12),
-              ]},
+            nombre: "Dia 2", orden: 1,
+            ejercicios: [
+              ej("Extension de cuadriceps", "maquina", "Pierna dominante rodilla", 3, 12),
+              ej("Peso muerto rumano con mancuernas", "libre", "Pierna dominante cadera", 4, 8),
+              ej("Curl femoral tumbado", "maquina", "Pierna dominante cadera", 3, 12),
+              ej("Jalon al pecho agarre neutro", "polea", "Traccion", 3, 10),
+              ej("Remo gironda", "maquina", "Traccion", 3, 12),
+              ej("Press plano en maquina", "maquina", "Empuje", 3, 10),
+              ej("Curl biceps con mancuerna", "libre", "Brazos", 3, 12),
+              ej("Extension triceps en polea", "polea", "Brazos", 3, 12),
             ],
           },
         ],
@@ -230,51 +166,31 @@ export const NIVELES: NivelPreset[] = [
         nota: "Lunes y jueves: Dia 1 / Martes y viernes: Dia 2",
         dias: [
           {
-            nombre: "Dia 1", tag: "Fullbody",
-            secciones: [
-              { titulo: "Pierna dominante rodilla", ejercicios: [
-                ej("Sentadilla goblet / con barra", "libre", 4, 8),
-                ej("Extension de cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Pierna dominante cadera", ejercicios: [
-                ej("Peso muerto rumano con mancuernas", "libre", 4, 8),
-                ej("Curl femoral tumbado", "maquina", 3, 12),
-              ]},
-              { titulo: "Traccion", ejercicios: [
-                ej("Remo con mancuerna", "libre", 4, 8),
-                ej("Jalon al pecho agarre neutro", "polea", 3, 10),
-              ]},
-              { titulo: "Empuje", ejercicios: [
-                ej("Press banca con mancuernas", "libre", 4, 8),
-                ej("Press de hombros en maquina", "maquina", 3, 10),
-              ]},
-              { titulo: "Brazos", ejercicios: [
-                ej("Curl biceps con mancuerna", "libre", 3, 12),
-                ej("Extension triceps en polea", "polea", 3, 12),
-              ]},
+            nombre: "Dia 1", orden: 0,
+            ejercicios: [
+              ej("Sentadilla goblet / con barra", "libre", "Pierna dominante rodilla", 4, 8),
+              ej("Extension de cuadriceps", "maquina", "Pierna dominante rodilla", 3, 12),
+              ej("Peso muerto rumano con mancuernas", "libre", "Pierna dominante cadera", 4, 8),
+              ej("Curl femoral tumbado", "maquina", "Pierna dominante cadera", 3, 12),
+              ej("Remo con mancuerna", "libre", "Traccion", 4, 8),
+              ej("Jalon al pecho agarre neutro", "polea", "Traccion", 3, 10),
+              ej("Press banca con mancuernas", "libre", "Empuje", 4, 8),
+              ej("Press de hombros en maquina", "maquina", "Empuje", 3, 10),
+              ej("Curl biceps con mancuerna", "libre", "Brazos", 3, 12),
+              ej("Extension triceps en polea", "polea", "Brazos", 3, 12),
             ],
           },
           {
-            nombre: "Dia 2", tag: "Fullbody variante",
-            secciones: [
-              { titulo: "Pierna dominante rodilla", ejercicios: [
-                ej("Extension de cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Pierna dominante cadera", ejercicios: [
-                ej("Peso muerto rumano con mancuernas", "libre", 4, 8),
-                ej("Curl femoral tumbado", "maquina", 3, 12),
-              ]},
-              { titulo: "Traccion", ejercicios: [
-                ej("Jalon al pecho agarre neutro", "polea", 3, 10),
-                ej("Remo gironda", "maquina", 3, 12),
-              ]},
-              { titulo: "Empuje", ejercicios: [
-                ej("Press plano en maquina", "maquina", 3, 10),
-              ]},
-              { titulo: "Brazos", ejercicios: [
-                ej("Curl biceps con mancuerna", "libre", 3, 12),
-                ej("Extension triceps en polea", "polea", 3, 12),
-              ]},
+            nombre: "Dia 2", orden: 1,
+            ejercicios: [
+              ej("Extension de cuadriceps", "maquina", "Pierna dominante rodilla", 3, 12),
+              ej("Peso muerto rumano con mancuernas", "libre", "Pierna dominante cadera", 4, 8),
+              ej("Curl femoral tumbado", "maquina", "Pierna dominante cadera", 3, 12),
+              ej("Jalon al pecho agarre neutro", "polea", "Traccion", 3, 10),
+              ej("Remo gironda", "maquina", "Traccion", 3, 12),
+              ej("Press plano en maquina", "maquina", "Empuje", 3, 10),
+              ej("Curl biceps con mancuerna", "libre", "Brazos", 3, 12),
+              ej("Extension triceps en polea", "polea", "Brazos", 3, 12),
             ],
           },
         ],
@@ -295,74 +211,62 @@ export const NIVELES: NivelPreset[] = [
         intensidad: "~90% peso libre",
         dias: [
           {
-            nombre: "Lunes — Pecho / Hombro / Triceps", tag: "Push A",
-            secciones: [
-              { titulo: "Empuje", ejercicios: [
-                ej("Press banca", "libre", 3, 8),
-                ej("Press inclinado (mancuernas)", "libre", 3, 8),
-                ej("Polea alta", "polea", 3, 12),
-                ej("Elevaciones laterales en polea", "polea", 3, 12),
-                ej("Fondos", "libre", 3, 12),
-                ej("Extension de triceps", "polea", 3, 12),
-              ]},
+            nombre: "Lunes — Pecho / Hombro / Triceps", orden: 0,
+            ejercicios: [
+              ej("Press banca", "libre", "Empuje", 3, 8),
+              ej("Press inclinado (mancuernas)", "libre", "Empuje", 3, 8),
+              ej("Polea alta", "polea", "Empuje", 3, 12),
+              ej("Elevaciones laterales en polea", "polea", "Empuje", 3, 12),
+              ej("Fondos", "libre", "Empuje", 3, 12),
+              ej("Extension de triceps", "polea", "Empuje", 3, 12),
             ],
           },
           {
-            nombre: "Martes — Espalda / Biceps", tag: "Pull A",
-            secciones: [
-              { titulo: "Traccion", ejercicios: [
-                ej("Dominadas (calentamiento)", "libre", 1, 0),
-                ej("Remo en barra", "libre", 3, 8),
-                ej("Jalon al pecho", "polea", 3, 8),
-                ej("Remo gironda", "maquina", 3, 10),
-                ej("Face pull", "polea", 4, 12),
-                ej("Curl biceps barra Z", "libre", 3, 8),
-                ej("Curl sentado", "libre", 3, 10),
-              ]},
+            nombre: "Martes — Espalda / Biceps", orden: 1,
+            ejercicios: [
+              ej("Dominadas (calentamiento)", "libre", "Traccion", 1, 0),
+              ej("Remo en barra", "libre", "Traccion", 3, 8),
+              ej("Jalon al pecho", "polea", "Traccion", 3, 8),
+              ej("Remo gironda", "maquina", "Traccion", 3, 10),
+              ej("Face pull", "polea", "Traccion", 4, 12),
+              ej("Curl biceps barra Z", "libre", "Brazos", 3, 8),
+              ej("Curl sentado", "libre", "Brazos", 3, 10),
             ],
           },
           {
-            nombre: "Miercoles — Pierna", tag: "Legs",
-            secciones: [
-              { titulo: "Dominante rodilla", ejercicios: [
-                ej("Sentadilla", "libre", 4, 8),
-                ej("Prensa", "maquina", 4, 10),
-                ej("Extension cuadriceps", "maquina", 3, 12),
-              ]},
-              { titulo: "Dominante cadera", ejercicios: [
-                ej("Hip thrust", "libre", 3, 8),
-                ej("Curl femoral", "maquina", 3, 12),
-                ej("Aductores / abductores", "maquina", 4, 12),
-                ej("Extension de gemelos", "maquina", 3, 10),
-              ]},
+            nombre: "Miercoles — Pierna", orden: 2,
+            ejercicios: [
+              ej("Sentadilla", "libre", "Dominante rodilla", 4, 8),
+              ej("Prensa", "maquina", "Dominante rodilla", 4, 10),
+              ej("Extension cuadriceps", "maquina", "Dominante rodilla", 3, 12),
+              ej("Hip thrust", "libre", "Dominante cadera", 3, 8),
+              ej("Curl femoral", "maquina", "Dominante cadera", 3, 12),
+              ej("Aductores / abductores", "maquina", "Dominante cadera", 4, 12),
+              ej("Extension de gemelos", "maquina", "Dominante cadera", 3, 10),
             ],
           },
           {
-            nombre: "Jueves — Pecho / Hombro / Triceps", tag: "Push B",
-            secciones: [
-              { titulo: "Empuje", ejercicios: [
-                ej("Press banca", "libre", 3, 8),
-                ej("Press inclinado (mancuernas)", "libre", 3, 8),
-                ej("Polea alta", "polea", 3, 12),
-                ej("Elevaciones laterales (mancuerna)", "libre", 3, 8),
-                ej("Elevaciones laterales en polea", "polea", 3, 12),
-                ej("Fondos", "libre", 3, 12),
-                ej("Extension de triceps", "polea", 3, 12),
-              ]},
+            nombre: "Jueves — Pecho / Hombro / Triceps", orden: 3,
+            ejercicios: [
+              ej("Press banca", "libre", "Empuje", 3, 8),
+              ej("Press inclinado (mancuernas)", "libre", "Empuje", 3, 8),
+              ej("Polea alta", "polea", "Empuje", 3, 12),
+              ej("Elevaciones laterales (mancuerna)", "libre", "Empuje", 3, 8),
+              ej("Elevaciones laterales en polea", "polea", "Empuje", 3, 12),
+              ej("Fondos", "libre", "Empuje", 3, 12),
+              ej("Extension de triceps", "polea", "Empuje", 3, 12),
             ],
           },
           {
-            nombre: "Viernes — Espalda / Biceps", tag: "Pull B",
-            secciones: [
-              { titulo: "Traccion", ejercicios: [
-                ej("Dominadas (calentamiento)", "libre", 1, 0),
-                ej("Peso muerto", "libre", 4, 6),
-                ej("Jalon al pecho", "polea", 3, 8),
-                ej("Remo gironda", "maquina", 3, 10),
-                ej("Face pull", "polea", 4, 12),
-                ej("Curl biceps barra Z", "libre", 3, 8),
-                ej("Curl sentado", "libre", 3, 10),
-              ]},
+            nombre: "Viernes — Espalda / Biceps", orden: 4,
+            ejercicios: [
+              ej("Dominadas (calentamiento)", "libre", "Traccion", 1, 0),
+              ej("Peso muerto", "libre", "Traccion", 4, 6),
+              ej("Jalon al pecho", "polea", "Traccion", 3, 8),
+              ej("Remo gironda", "maquina", "Traccion", 3, 10),
+              ej("Face pull", "polea", "Traccion", 4, 12),
+              ej("Curl biceps barra Z", "libre", "Brazos", 3, 8),
+              ej("Curl sentado", "libre", "Brazos", 3, 10),
             ],
           },
         ],
