@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import PresetRoutines from "@/components/PresetRoutines";
 
 type RutinaDia = { id: string; nombre: string; orden: number };
 type RutinaActiva = { id: string; nombre: string; rutina_dias: RutinaDia[] };
@@ -393,6 +394,9 @@ export default function RutinasPage() {
               </div>
             </section>
           )}
+
+          {/* ── Rutinas preestablecidas ── */}
+          <PresetRoutines />
 
           {/* ── Historial ── */}
           {historial.length > 0 && (
