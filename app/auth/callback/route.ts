@@ -26,6 +26,11 @@ export async function GET(request: NextRequest) {
       }
       return NextResponse.redirect(new URL("/", requestUrl.origin));
     }
+
+    // Token expired or invalid — redirect with explanatory message
+    if (type === "invite" || type === "recovery") {
+      return NextResponse.redirect(new URL("/login?expired=1", requestUrl.origin));
+    }
   }
 
   if (code) {
