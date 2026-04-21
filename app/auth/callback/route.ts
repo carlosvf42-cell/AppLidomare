@@ -29,10 +29,15 @@ export async function GET(request: NextRequest) {
   }
 
   if (code) {
-    // Flujo con code (OAuth y otros)
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    // Flujo con code (PKCE — OAuth, recovery, etc.)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      if (type === "recovery") {
+      // PKCE recovery: type param may be missing from URL, check session AMR
+      const amr = (data.session as any)?.amr as { method: string }[] | undefined;
+      const isRecovery =
+        type === "recovery" ||
+        amr?.some((a) => a.method === "recovery");
+      if (isRecovery) {
         return NextResponse.redirect(new URL("/auth/update-password", requestUrl.origin));
       }
       return NextResponse.redirect(new URL("/", requestUrl.origin));
