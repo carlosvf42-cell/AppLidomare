@@ -85,9 +85,11 @@ function EntrenarInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const diaParam = searchParams.get("dia");
+  const modoLibre = searchParams.get("modo") === "libre";
   const [rutina, setRutina] = useState<Rutina | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDia, setSelectedDia] = useState<RutinaDia | null>(null);
+  const [isDiaLibre, setIsDiaLibre] = useState(false);
   const [ejercicios, setEjercicios] = useState<EjercicioSession[]>([]);
   const [isSaving, startSave] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -99,6 +101,22 @@ function EntrenarInner() {
   const [addingExtra, setAddingExtra] = useState(false);
 
   useEffect(() => {
+    // Free day mode — no routine needed
+    if (modoLibre) {
+      const draft = loadDraft();
+      if (draft && draft.diaId === "__libre__" && draft.fecha === todayISO()) {
+        setHoraInicio(new Date(draft.horaInicio));
+        setEjercicios(draft.ejercicios);
+      } else {
+        setHoraInicio(new Date());
+        setEjercicios([]);
+      }
+      setIsDiaLibre(true);
+      setSelectedDia({ id: "__libre__", nombre: "Día libre", orden: 0, rutina_ejercicios: [] } as RutinaDia);
+      setLoading(false);
+      return;
+    }
+
     const supabase = getSupabase();
     const draft = loadDraft();
 
@@ -120,7 +138,7 @@ function EntrenarInner() {
           if (diaParam) {
             const diaToSelect = r.rutina_dias.find((d) => d.id === diaParam);
             if (diaToSelect) selectDia(diaToSelect);
-          } else if (draft) {
+          } else if (draft && draft.diaId !== "__libre__") {
             const diaToRestore = r.rutina_dias.find((d) => d.id === draft.diaId);
             if (diaToRestore) selectDia(diaToRestore, draft);
           }
@@ -181,6 +199,39 @@ function EntrenarInner() {
   async function handleAddExtra() {
     if (!extraName.trim() || !selectedDia) return;
     setAddingExtra(true);
+
+    if (isDiaLibre) {
+      // Día libre: only local state, no DB insert for rutina_ejercicios
+      const localEj: RutinaEjercicio = {
+        id: `libre-${Date.now()}`,
+        nombre: extraName.trim(),
+        series: 3,
+        repeticiones: 10,
+        orden: ejercicios.length + 1,
+        ejercicio_id: extraEjId,
+      };
+      setEjercicios((prev) => {
+        const next = [
+          ...prev,
+          {
+            ...localEj,
+            seriesData: Array.from({ length: localEj.series }, () => ({
+              repeticiones: String(localEj.repeticiones),
+              peso: "",
+              completada: false,
+            })),
+          },
+        ];
+        if (horaInicio) saveDraft("__libre__", horaInicio, next);
+        return next;
+      });
+      setExtraName("");
+      setExtraEjId(null);
+      setShowAddExtra(false);
+      setAddingExtra(false);
+      return;
+    }
+
     const supabase = getSupabase();
     const orden = ejercicios.length + 1;
     const { data: nuevoEj } = await supabase
@@ -235,7 +286,11 @@ function EntrenarInner() {
 
       const { data: sesion, error: sesionErr } = await supabase
         .from("sesiones")
-        .insert({ user_id: user.id, dia_id: selectedDia.id, fecha: todayISO() })
+        .insert({
+          user_id: user.id,
+          dia_id: isDiaLibre ? null : selectedDia.id,
+          fecha: todayISO(),
+        })
         .select("id")
         .single();
 
@@ -248,7 +303,7 @@ function EntrenarInner() {
       const seriesRows = ejercicios.flatMap((ej) =>
         ej.seriesData.map((s, sIdx) => ({
           sesion_id: sesion.id,
-          ejercicio_id: ej.id,
+          ejercicio_id: isDiaLibre ? null : ej.id,
           ejercicio_catalogo_id: ej.ejercicio_id ?? null,
           numero_serie: sIdx + 1,
           repeticiones: s.repeticiones ? parseInt(s.repeticiones) : null,
@@ -256,6 +311,18 @@ function EntrenarInner() {
           completada: s.completada,
         }))
       );
+
+      if (seriesRows.length === 0) {
+        // Día libre with no exercises — just mark session complete
+        await supabase
+          .from("sesiones")
+          .update({ completada: true, duracion_minutos })
+          .eq("id", sesion.id);
+        clearDraft();
+        setSaved(true);
+        setTimeout(() => router.push("/rutinas"), 1200);
+        return;
+      }
 
       const { error: seriesErr } = await supabase.from("series_realizadas").insert(seriesRows);
       if (seriesErr) {
@@ -284,8 +351,8 @@ function EntrenarInner() {
     );
   }
 
-  /* ── No active routine ── */
-  if (!rutina) {
+  /* ── No active routine (skip for día libre) ── */
+  if (!rutina && !isDiaLibre) {
     return (
       <div className="min-h-screen">
         <div className="px-5 pt-14 pb-4 flex items-center gap-3">
@@ -321,13 +388,13 @@ function EntrenarInner() {
             </svg>
           </Link>
           <div>
-            <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>{rutina.nombre}</p>
+            <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>{rutina?.nombre}</p>
             <h1 className="text-xl font-light" style={{ color: "rgba(255,255,255,0.9)" }}>¿Qué día entrenas hoy?</h1>
           </div>
         </div>
 
         <div className="px-4 space-y-2">
-          {rutina.rutina_dias.map((dia) => (
+          {rutina?.rutina_dias.map((dia) => (
             <button
               key={dia.id}
               onClick={() => selectDia(dia)}
@@ -364,14 +431,22 @@ function EntrenarInner() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="px-5 pt-14 pb-4 flex items-center gap-3">
-        <button onClick={() => { clearDraft(); setSelectedDia(null); }} className="shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <button
+          onClick={() => { clearDraft(); isDiaLibre ? router.push("/rutinas") : setSelectedDia(null); }}
+          className="shrink-0"
+          style={{ color: "rgba(255,255,255,0.4)" }}
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
         <div className="min-w-0">
-          <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>registro de hoy</p>
-          <h1 className="text-xl font-light truncate" style={{ color: "rgba(255,255,255,0.9)" }}>{selectedDia.nombre}</h1>
+          <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: isDiaLibre ? "#2abfbf" : "rgba(255,255,255,0.3)" }}>
+            {isDiaLibre ? "día libre" : "registro de hoy"}
+          </p>
+          <h1 className="text-xl font-light truncate" style={{ color: "rgba(255,255,255,0.9)" }}>
+            {isDiaLibre ? "Entrenamiento libre" : selectedDia.nombre}
+          </h1>
         </div>
       </div>
 
@@ -394,6 +469,34 @@ function EntrenarInner() {
             />
           </div>
         </div>
+
+        {/* Empty state for día libre */}
+        {isDiaLibre && ejercicios.length === 0 && !showAddExtra && !saved && (
+          <button
+            type="button"
+            onClick={() => setShowAddExtra(true)}
+            className="w-full rounded-2xl px-6 py-10 flex flex-col items-center gap-3 transition-all active:scale-[0.98]"
+            style={{
+              background: "rgba(42,191,191,0.06)",
+              border: "1px dashed rgba(42,191,191,0.3)",
+            }}
+          >
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(42,191,191,0.12)", border: "0.5px solid rgba(42,191,191,0.25)" }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="#2abfbf" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium" style={{ color: "#2abfbf" }}>Añadir ejercicio</p>
+              <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                Registra ejercicios libremente
+              </p>
+            </div>
+          </button>
+        )}
 
         {/* Exercises */}
         {ejercicios.map((ej, ejIdx) => (

@@ -68,6 +68,7 @@ export default function RutinasPage() {
   const [borrando, setBorrando] = useState<string | null>(null);
   const [historialOpen, setHistorialOpen] = useState(false);
   const [misRutinasOpen, setMisRutinasOpen] = useState(false);
+  const [showDiaPicker, setShowDiaPicker] = useState(false);
 
   const loadData = useCallback(async () => {
     const supabase = getSupabase();
@@ -112,7 +113,7 @@ export default function RutinasPage() {
         (sesionesRes.data as any[]).map((s) => ({
           id: s.id,
           fecha: s.fecha,
-          dia_nombre: s.rutina_dias?.nombre ?? "—",
+          dia_nombre: s.rutina_dias?.nombre ?? "Día libre",
           rutina_nombre: s.rutina_dias?.rutinas?.nombre ?? "",
         }))
       );
@@ -272,8 +273,9 @@ export default function RutinasPage() {
                 </div>
 
                 {/* Primary CTA */}
-                <Link
-                  href="/rutinas/entrenar"
+                <button
+                  type="button"
+                  onClick={() => setShowDiaPicker((v) => !v)}
                   className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all active:scale-[0.98]"
                   style={{
                     background: "#2abfbf",
@@ -285,7 +287,60 @@ export default function RutinasPage() {
                     <path d="M5 3l14 9-14 9V3z" fill="currentColor"/>
                   </svg>
                   Entrenar hoy
-                </Link>
+                </button>
+
+                {/* Day picker */}
+                {showDiaPicker && (
+                  <div className="space-y-2">
+                    <p className="text-[9px] tracking-[0.15em] uppercase px-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      ¿Qué día entrenas hoy?
+                    </p>
+                    {rutina.rutina_dias.map((dia) => (
+                      <button
+                        key={dia.id}
+                        type="button"
+                        onClick={() => router.push(`/rutinas/entrenar?dia=${dia.id}`)}
+                        className="w-full text-left rounded-xl px-4 py-3 flex items-center justify-between gap-3 transition-all active:scale-[0.98]"
+                        style={GLASS_SM}
+                      >
+                        <span className="text-sm font-light" style={{ color: "rgba(255,255,255,0.85)" }}>
+                          {dia.nombre}
+                        </span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                          <path d="M9 6l6 6-6 6" stroke="#2abfbf" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    ))}
+
+                    {/* Día libre */}
+                    <button
+                      type="button"
+                      onClick={() => router.push("/rutinas/entrenar?modo=libre")}
+                      className="w-full text-left rounded-xl px-4 py-3 flex items-center justify-between gap-3 transition-all active:scale-[0.98]"
+                      style={{
+                        ...GLASS_SM,
+                        border: "0.5px dashed rgba(42,191,191,0.3)",
+                      }}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+                          style={{ background: "rgba(42,191,191,0.12)", border: "0.5px solid rgba(42,191,191,0.25)" }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5v14M5 12h14" stroke="#2abfbf" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                        <span className="text-sm font-light" style={{ color: "#2abfbf" }}>
+                          Día libre
+                        </span>
+                      </div>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                        <path d="M9 6l6 6-6 6" stroke="rgba(42,191,191,0.5)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
 
                 {/* Secondary actions */}
                 <div className="flex gap-2">
