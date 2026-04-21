@@ -24,6 +24,55 @@ function todayISO() {
   return new Date().toISOString().split("T")[0];
 }
 
+/* ── Draft persistence (localStorage) ──────────────────────── */
+const DRAFT_KEY = "lidomare-entreno-draft";
+
+type Draft = {
+  diaId: string;
+  fecha: string;
+  horaInicio: string;
+  ejercicios: { id: string; nombre: string; series: number; repeticiones: number; orden: number; ejercicio_id?: string | null; seriesData: SerieForm[] }[];
+};
+
+function saveDraft(diaId: string, horaInicio: Date, ejercicios: EjercicioSession[]) {
+  try {
+    const draft: Draft = {
+      diaId,
+      fecha: todayISO(),
+      horaInicio: horaInicio.toISOString(),
+      ejercicios: ejercicios.map((ej) => ({
+        id: ej.id,
+        nombre: ej.nombre,
+        series: ej.series,
+        repeticiones: ej.repeticiones,
+        orden: ej.orden,
+        ejercicio_id: ej.ejercicio_id,
+        seriesData: ej.seriesData,
+      })),
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch { /* quota exceeded or private browsing — silently ignore */ }
+}
+
+function loadDraft(): Draft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const draft: Draft = JSON.parse(raw);
+    if (draft.fecha !== todayISO()) {
+      localStorage.removeItem(DRAFT_KEY);
+      return null;
+    }
+    return draft;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+}
+
 const GLASS: React.CSSProperties = {
   background: "rgba(255,255,255,0.07)",
   backdropFilter: "blur(24px) saturate(180%)",
@@ -51,6 +100,8 @@ function EntrenarInner() {
 
   useEffect(() => {
     const supabase = getSupabase();
+    const draft = loadDraft();
+
     supabase
       .from("rutinas")
       .select("id, nombre, rutina_dias(id, nombre, orden, rutina_ejercicios(id, nombre, series, repeticiones, orden, ejercicio_id))")
@@ -64,48 +115,67 @@ function EntrenarInner() {
           r.rutina_dias.sort((a, b) => a.orden - b.orden);
           r.rutina_dias.forEach((d) => d.rutina_ejercicios.sort((a, b) => a.orden - b.orden));
           setRutina(r);
+
+          // Priority: URL param > draft > nothing
           if (diaParam) {
             const diaToSelect = r.rutina_dias.find((d) => d.id === diaParam);
             if (diaToSelect) selectDia(diaToSelect);
+          } else if (draft) {
+            const diaToRestore = r.rutina_dias.find((d) => d.id === draft.diaId);
+            if (diaToRestore) selectDia(diaToRestore, draft);
           }
         }
         setLoading(false);
       });
   }, []);
 
-  function selectDia(dia: RutinaDia) {
+  function selectDia(dia: RutinaDia, fromDraft?: Draft) {
     setSelectedDia(dia);
-    setHoraInicio(new Date());
-    setEjercicios(
-      dia.rutina_ejercicios.map((ej) => ({
-        ...ej,
-        seriesData: Array.from({ length: ej.series }, () => ({
-          repeticiones: String(ej.repeticiones),
-          peso: "",
-          completada: false,
-        })),
-      }))
-    );
+
+    if (fromDraft && fromDraft.diaId === dia.id) {
+      // Restore from draft
+      setHoraInicio(new Date(fromDraft.horaInicio));
+      setEjercicios(fromDraft.ejercicios);
+      return;
+    }
+
+    // Fresh start
+    const inicio = new Date();
+    setHoraInicio(inicio);
+    const ejs = dia.rutina_ejercicios.map((ej) => ({
+      ...ej,
+      seriesData: Array.from({ length: ej.series }, () => ({
+        repeticiones: String(ej.repeticiones),
+        peso: "",
+        completada: false,
+      })),
+    }));
+    setEjercicios(ejs);
+    saveDraft(dia.id, inicio, ejs);
   }
 
   function updateSerie(ejIdx: number, sIdx: number, key: keyof SerieForm, value: string | boolean) {
-    setEjercicios((prev) =>
-      prev.map((ej, i) =>
+    setEjercicios((prev) => {
+      const next = prev.map((ej, i) =>
         i === ejIdx
           ? { ...ej, seriesData: ej.seriesData.map((s, j) => (j === sIdx ? { ...s, [key]: value } : s)) }
           : ej
-      )
-    );
+      );
+      if (selectedDia && horaInicio) saveDraft(selectedDia.id, horaInicio, next);
+      return next;
+    });
   }
 
   function toggleSerie(ejIdx: number, sIdx: number) {
-    setEjercicios((prev) =>
-      prev.map((ej, i) =>
+    setEjercicios((prev) => {
+      const next = prev.map((ej, i) =>
         i === ejIdx
           ? { ...ej, seriesData: ej.seriesData.map((s, j) => (j === sIdx ? { ...s, completada: !s.completada } : s)) }
           : ej
-      )
-    );
+      );
+      if (selectedDia && horaInicio) saveDraft(selectedDia.id, horaInicio, next);
+      return next;
+    });
   }
 
   async function handleAddExtra() {
@@ -128,17 +198,21 @@ function EntrenarInner() {
 
     if (nuevoEj) {
       const ej = nuevoEj as RutinaEjercicio;
-      setEjercicios((prev) => [
-        ...prev,
-        {
-          ...ej,
-          seriesData: Array.from({ length: ej.series }, () => ({
-            repeticiones: String(ej.repeticiones),
-            peso: "",
-            completada: false,
-          })),
-        },
-      ]);
+      setEjercicios((prev) => {
+        const next = [
+          ...prev,
+          {
+            ...ej,
+            seriesData: Array.from({ length: ej.series }, () => ({
+              repeticiones: String(ej.repeticiones),
+              peso: "",
+              completada: false,
+            })),
+          },
+        ];
+        if (selectedDia && horaInicio) saveDraft(selectedDia.id, horaInicio, next);
+        return next;
+      });
     }
     setExtraName("");
     setExtraEjId(null);
@@ -195,6 +269,7 @@ function EntrenarInner() {
         .update({ completada: true, duracion_minutos })
         .eq("id", sesion.id);
 
+      clearDraft();
       setSaved(true);
       setTimeout(() => router.push("/rutinas"), 1200);
     });
@@ -289,7 +364,7 @@ function EntrenarInner() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="px-5 pt-14 pb-4 flex items-center gap-3">
-        <button onClick={() => setSelectedDia(null)} className="shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <button onClick={() => { clearDraft(); setSelectedDia(null); }} className="shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
