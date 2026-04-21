@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
@@ -16,24 +16,24 @@ export default function SetPasswordPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [saving, setSaving] = useState(false);
 
   // Verify there is an active session before showing the form.
   // If the user lands here directly without going through the invite
-  // flow, redirect them to login.
+  // flow, redirect them to login with an explanatory message.
   useEffect(() => {
     getSupabase()
       .auth.getSession()
       .then(({ data: { session } }) => {
         if (!session) {
-          router.replace("/login");
+          router.replace("/login?expired=1");
         } else {
           setReady(true);
         }
       });
   }, [router]);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form     = e.currentTarget;
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
@@ -45,17 +45,24 @@ export default function SetPasswordPage() {
     }
 
     setError(null);
-    startTransition(async () => {
-      const { error } = await getSupabase().auth.updateUser({ password });
+    setSaving(true);
+    try {
+      const supabase = getSupabase();
+      const { error: updateErr } = await supabase.auth.updateUser({ password });
 
-      if (error) {
+      if (updateErr) {
         setError("No se pudo guardar la contraseña. Inténtalo de nuevo.");
         return;
       }
 
-      router.push("/");
-      router.refresh();
-    });
+      await supabase.auth.signOut();
+      router.push("/login?reset=success");
+    } catch (err) {
+      console.error("Error setting password:", err);
+      setError("Error inesperado. Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   // Spinner while verifying session
@@ -113,10 +120,10 @@ export default function SetPasswordPage() {
 
             <button
               type="submit"
-              disabled={isPending}
+              disabled={saving}
               className="w-full bg-[#2abfbf] text-[#080808] font-semibold text-sm tracking-widest uppercase py-4 rounded-lg mt-2 hover:bg-[#25aaaa] active:bg-[#20959e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPending ? "Guardando..." : "Establecer contraseña"}
+              {saving ? "Guardando..." : "Establecer contraseña"}
             </button>
           </form>
 

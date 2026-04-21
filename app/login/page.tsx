@@ -8,6 +8,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const resetSuccess = searchParams.get("reset") === "success";
+  const linkExpired = searchParams.get("expired") === "1";
   const [phase, setPhase] = useState<"checking" | "form">("checking");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -117,6 +118,13 @@ function LoginForm() {
         {resetSuccess && (
           <div style={{ color: "#2abfbf", fontSize: 11, letterSpacing: "0.1em", textAlign: "center" }}>
             Contraseña actualizada. Ya puedes iniciar sesión.
+          </div>
+        )}
+
+        {/* ── Expired link ── */}
+        {linkExpired && (
+          <div style={{ color: "rgba(255,160,120,0.9)", fontSize: 11, letterSpacing: "0.1em", textAlign: "center" }}>
+            El enlace ha expirado. Solicita uno nuevo a tu administrador.
           </div>
         )}
 
