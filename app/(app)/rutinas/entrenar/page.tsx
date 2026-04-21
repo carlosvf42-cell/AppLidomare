@@ -134,10 +134,13 @@ function EntrenarInner() {
           r.rutina_dias.forEach((d) => d.rutina_ejercicios.sort((a, b) => a.orden - b.orden));
           setRutina(r);
 
-          // Priority: URL param > draft > nothing
+          // Priority: URL param (with draft if matching) > draft > nothing
           if (diaParam) {
             const diaToSelect = r.rutina_dias.find((d) => d.id === diaParam);
-            if (diaToSelect) selectDia(diaToSelect);
+            if (diaToSelect) {
+              const matchingDraft = draft && draft.diaId === diaParam ? draft : undefined;
+              selectDia(diaToSelect, matchingDraft);
+            }
           } else if (draft && draft.diaId !== "__libre__") {
             const diaToRestore = r.rutina_dias.find((d) => d.id === draft.diaId);
             if (diaToRestore) selectDia(diaToRestore, draft);
