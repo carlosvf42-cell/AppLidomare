@@ -514,9 +514,6 @@ export default function ProgresoSection() {
         <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
       </div>
 
-      {/* ── Carga de entrenamiento ── */}
-      <WorkloadChart />
-
       {/* ── 1. Métricas 2×2 ── */}
       <div>
         <SectionLabel>Resumen</SectionLabel>
@@ -535,6 +532,9 @@ export default function ProgresoSection() {
           </div>
         )}
       </div>
+
+      {/* ── Carga de entrenamiento ── */}
+      <WorkloadChart />
 
       {/* ── 2. Volumen semanal ── */}
       <div>
