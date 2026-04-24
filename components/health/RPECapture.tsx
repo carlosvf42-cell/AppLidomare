@@ -23,24 +23,16 @@ const RPE_LABELS: Record<number, { label: string; color: string }> = {
 
 interface RPECaptureProps {
   rpe: number | null;
-  duracion: string;
   onRpeChange: (v: number) => void;
-  onDuracionChange: (v: string) => void;
 }
 
-export default function RPECapture({ rpe, duracion, onRpeChange, onDuracionChange }: RPECaptureProps) {
+export default function RPECapture({ rpe, onRpeChange }: RPECaptureProps) {
   const info = rpe ? RPE_LABELS[rpe] : null;
   return (
     <div className="rounded-2xl px-4 py-4 space-y-4" style={GLASS}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(42,191,191,0.6)", fontFamily: "Barlow Condensed, sans-serif" }}>Carga del entreno</p>
-          {info && <p className="text-xs mt-0.5" style={{ color: info.color, fontFamily: "Barlow Condensed, sans-serif" }}>{info.label}</p>}
-        </div>
-        <div className="flex items-center gap-2">
-          <input type="number" inputMode="numeric" min={1} max={240} value={duracion} onChange={(e) => onDuracionChange(e.target.value)} placeholder="—" className="w-16 px-2 py-1.5 rounded-xl text-sm text-center outline-none" style={{ background: "rgba(255,255,255,0.06)", border: "0.5px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif" }} />
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif" }}>min</span>
-        </div>
+      <div>
+        <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(42,191,191,0.6)", fontFamily: "Barlow Condensed, sans-serif" }}>Carga del entreno</p>
+        {info && <p className="text-xs mt-0.5" style={{ color: info.color, fontFamily: "Barlow Condensed, sans-serif" }}>{info.label}</p>}
       </div>
       <div>
         <div className="flex items-end justify-between mb-2">

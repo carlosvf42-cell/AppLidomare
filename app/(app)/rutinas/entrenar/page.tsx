@@ -7,6 +7,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import EjercicioSelector from "@/components/EjercicioSelector";
 import WellnessCheckIn from "@/components/health/WellnessCheckIn";
 import RPECapture from "@/components/health/RPECapture";
+import DuracionCapture from "@/components/health/DuracionCapture";
 
 type RutinaEjercicio = { id: string; nombre: string; series: number; repeticiones: number; orden: number; ejercicio_id?: string | null };
 type RutinaDia = { id: string; nombre: string; orden: number; rutina_ejercicios: RutinaEjercicio[] };
@@ -677,7 +678,8 @@ function EntrenarInner() {
           )
         )}
 
-        <RPECapture rpe={rpe} duracion={duracionManual} onRpeChange={setRpe} onDuracionChange={setDuracionManual} />
+        <DuracionCapture duracion={duracionManual} onDuracionChange={setDuracionManual} />
+        <RPECapture rpe={rpe} onRpeChange={setRpe} />
 
         {saveError && <p className="text-xs text-center px-4" style={{ color: "rgba(255,120,120,0.9)" }}>{saveError}</p>}
       </div>
