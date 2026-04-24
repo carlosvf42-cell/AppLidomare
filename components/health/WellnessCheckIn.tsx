@@ -32,9 +32,10 @@ interface WellnessCheckInProps {
   sesionId?: string;
   onComplete: () => void;
   onSkip: () => void;
+  ctaLabel?: string;
 }
 
-export default function WellnessCheckIn({ sesionId, onComplete, onSkip }: WellnessCheckInProps) {
+export default function WellnessCheckIn({ sesionId, onComplete, onSkip, ctaLabel = "Iniciar entrenamiento" }: WellnessCheckInProps) {
   const [answers, setAnswers] = useState<WellnessAnswers>({});
   const [isSaving, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -82,8 +83,13 @@ export default function WellnessCheckIn({ sesionId, onComplete, onSkip }: Wellne
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "rgba(8,8,8,0.97)", backdropFilter: "blur(20px)" }}>
       <div className="max-w-[430px] w-full mx-auto flex flex-col h-full px-4 pt-14 pb-8">
         <div className="mb-6">
-          <p className="text-[10px] tracking-[0.25em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>Check-in pre-entreno</p>
-          <h1 className="text-2xl font-light" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "Cormorant Garamond, serif" }}>¿Cómo estás hoy?</h1>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="mb-1" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>Check-in pre-entreno</p>
+              <h1 style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "Cormorant Garamond, serif" }}>¿Cómo estás hoy?</h1>
+            </div>
+            <button type="button" onClick={handleOmitir} className="shrink-0 mt-1 text-[10px] tracking-[0.2em] uppercase transition-colors" style={{ color: "rgba(255,255,255,0.35)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Barlow Condensed, sans-serif" }}>Omitir hoy</button>
+          </div>
           <div className="mt-4 h-0.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
             <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(totalAnswered / PREGUNTAS.length) * 100}%`, background: "#2abfbf", boxShadow: "0 0 8px rgba(42,191,191,0.5)" }} />
           </div>
@@ -91,8 +97,8 @@ export default function WellnessCheckIn({ sesionId, onComplete, onSkip }: Wellne
         <div className="flex-1 overflow-y-auto space-y-3 pb-4">
           {PREGUNTAS.map((q) => (
             <div key={q.key} className="rounded-2xl p-4" style={GLASS}>
-              <p className="text-[10px] tracking-[0.15em] uppercase mb-0.5" style={{ color: "rgba(42,191,191,0.6)", fontFamily: "Barlow Condensed, sans-serif" }}>{q.label}</p>
-              <p className="text-sm mb-3" style={{ color: "rgba(255,255,255,0.7)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>{q.pregunta}</p>
+              <p className="mb-0.5" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(42,191,191,0.6)", fontFamily: "Barlow Condensed, sans-serif" }}>{q.label}</p>
+              <p className="mb-3" style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.03em", lineHeight: 1.4 }}>{q.pregunta}</p>
               <div className="flex gap-1.5">
                 {q.opciones.map((opcion, idx) => {
                   const valor = idx + 1;
@@ -119,10 +125,7 @@ export default function WellnessCheckIn({ sesionId, onComplete, onSkip }: Wellne
           </div>
         )}
         {error && <p className="text-xs text-center mb-2" style={{ color: "#ff8080" }}>{error}</p>}
-        <div className="space-y-2">
-          <button type="button" onClick={handleGuardar} disabled={!allDone || isSaving} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30" style={{ background: "#2abfbf", color: "#000", fontFamily: "Barlow Condensed, sans-serif", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>{isSaving ? "Guardando…" : "Iniciar entrenamiento"}</button>
-          <button type="button" onClick={handleOmitir} className="w-full py-3 rounded-2xl text-xs tracking-widest uppercase transition-all" style={{ background: "transparent", color: "rgba(255,255,255,0.2)", fontFamily: "Barlow Condensed, sans-serif", border: "none" }}>Omitir hoy</button>
-        </div>
+        <button type="button" onClick={handleGuardar} disabled={!allDone || isSaving} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30" style={{ background: "#2abfbf", color: "#000", fontFamily: "Barlow Condensed, sans-serif", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>{isSaving ? "Guardando…" : ctaLabel}</button>
       </div>
     </div>
   );

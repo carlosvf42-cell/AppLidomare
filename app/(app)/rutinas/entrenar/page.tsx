@@ -156,6 +156,25 @@ function EntrenarInner() {
       });
   }, []);
 
+  async function maybeShowWellness() {
+    if (wellnessDone) return;
+    const supabase = getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setShowWellness(true); return; }
+    const today = todayISO();
+    const { data } = await supabase
+      .from("wellness_entries")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("fecha", today)
+      .maybeSingle();
+    if (data) {
+      setWellnessDone(true);
+    } else {
+      setShowWellness(true);
+    }
+  }
+
   function selectDia(dia: RutinaDia, fromDraft?: Draft) {
     setSelectedDia(dia);
 
@@ -179,7 +198,7 @@ function EntrenarInner() {
     }));
     setEjercicios(ejs);
     saveDraft(dia.id, inicio, ejs);
-    if (!wellnessDone) setShowWellness(true);
+    maybeShowWellness();
   }
 
   function updateSerie(ejIdx: number, sIdx: number, key: keyof SerieForm, value: string | boolean) {
@@ -464,7 +483,7 @@ function EntrenarInner() {
         </div>
       </div>
 
-      <div className="px-4 pb-[calc(148px+env(safe-area-inset-bottom))] space-y-3">
+      <div className="px-4 pb-[calc(96px+env(safe-area-inset-bottom))] space-y-3">
 
         {/* Progress */}
         <div className="rounded-2xl px-4 py-3 flex items-center gap-4" style={GLASS}>
@@ -658,15 +677,16 @@ function EntrenarInner() {
           )
         )}
 
+        <RPECapture rpe={rpe} duracion={duracionManual} onRpeChange={setRpe} onDuracionChange={setDuracionManual} />
+
         {saveError && <p className="text-xs text-center px-4" style={{ color: "rgba(255,120,120,0.9)" }}>{saveError}</p>}
       </div>
 
       {/* Finish button */}
       <div
-        className="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 px-4 pb-[calc(56px+env(safe-area-inset-bottom)+8px)] pt-4 space-y-3"
+        className="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 px-4 pb-[calc(56px+env(safe-area-inset-bottom)+8px)] pt-4"
         style={{ background: "linear-gradient(to top, rgba(0,0,0,0.9) 60%, transparent)" }}
       >
-        <RPECapture rpe={rpe} duracion={duracionManual} onRpeChange={setRpe} onDuracionChange={setDuracionManual} />
         <button
           onClick={handleFinish}
           disabled={isSaving || saved}

@@ -9,16 +9,16 @@ const GLASS: React.CSSProperties = {
 };
 
 const RPE_LABELS: Record<number, { label: string; color: string }> = {
-  1: { label: "Muy suave", color: "#2abfbf" },
-  2: { label: "Suave", color: "#2abfbf" },
-  3: { label: "Moderado", color: "#2abfbf" },
-  4: { label: "Algo duro", color: "#7ed4d4" },
-  5: { label: "Duro", color: "#a8e6a8" },
-  6: { label: "Duro+", color: "#c8d870" },
-  7: { label: "Muy duro", color: "#ffb040" },
-  8: { label: "Muy duro+", color: "#ff8060" },
-  9: { label: "Casi al límite", color: "#ff6040" },
-  10: { label: "Al límite", color: "#ff4040" },
+  1: { label: "Ligero", color: "#2abfbf" },
+  2: { label: "Ligero", color: "#2abfbf" },
+  3: { label: "Ligero", color: "#2abfbf" },
+  4: { label: "Moderado", color: "#a8e6a8" },
+  5: { label: "Moderado", color: "#a8e6a8" },
+  6: { label: "Moderado", color: "#a8e6a8" },
+  7: { label: "Intenso", color: "#ffb040" },
+  8: { label: "Intenso", color: "#ffb040" },
+  9: { label: "Máximo", color: "#ff4040" },
+  10: { label: "Máximo", color: "#ff4040" },
 };
 
 interface RPECaptureProps {

@@ -4,6 +4,7 @@ import GlassCard from "@/components/design/GlassCard";
 import Eyebrow from "@/components/design/Eyebrow";
 import PrimaryBtn from "@/components/design/PrimaryBtn";
 import { IconFlame, IconCheck, IconPlay } from "@/components/design/icons";
+import WellnessHomeCard from "@/components/health/WellnessHomeCard";
 
 const HERO_BG = "/images/hero-home.jpg";
 
@@ -319,6 +320,9 @@ export default async function HomePage() {
             </div>
           </div>
         </GlassCard>
+
+        {/* ── Wellness de hoy ── */}
+        {user && <WellnessHomeCard />}
 
         {/* ── Próximo entrenamiento ── */}
         {rutina ? (

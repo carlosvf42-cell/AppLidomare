@@ -37,7 +37,6 @@ const PERSONAL_FIELDS = [
 const SEXO_OPTIONS = [
   { value: "masculino", label: "Masculino" },
   { value: "femenino", label: "Femenino" },
-  { value: "otro", label: "Prefiero no decirlo" },
 ];
 
 const PARQ_A = [
@@ -150,8 +149,8 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
       <div className="max-w-[430px] mx-auto px-4 pt-14 pb-12">
         {step !== "resultado" && (
           <div className="mb-8">
-            <p className="text-[10px] tracking-[0.25em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>Perfil de salud</p>
-            <h1 className="text-2xl font-light mb-4" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "Cormorant Garamond, serif" }}>
+            <p className="mb-2" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>Perfil de salud</p>
+            <h1 className="mb-4" style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "Cormorant Garamond, serif" }}>
               {step === "personal" && "Datos personales"}
               {step === "parq_a" && "Cuestionario PAR-Q"}
               {step === "parq_b" && "Cuestionario PAR-Q"}
@@ -174,7 +173,7 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
             ))}
             <div>
               <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>Sexo biológico</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {SEXO_OPTIONS.map((o) => (
                   <button key={o.value} type="button" onClick={() => setSexo(o.value)} className="py-3 rounded-2xl text-xs transition-all" style={sexo === o.value ? GLASS_ACTIVE : GLASS}>
                     <span style={{ color: sexo === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "Barlow Condensed, sans-serif" }}>{o.label}</span>
@@ -188,10 +187,10 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
 
         {step === "parq_a" && (
           <div className="space-y-3">
-            <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.6 }}>Responde con honestidad. El sentido común es la mejor guía.</p>
+            <p className="mb-4" style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.6, letterSpacing: "0.02em" }}>Responde con honestidad. El sentido común es la mejor guía.</p>
             {PARQ_A.map((q, i) => (
               <div key={q.key} className="rounded-2xl p-4" style={GLASS}>
-                <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.7)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.6, letterSpacing: "0.02em" }}>
+                <p className="mb-3" style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.5, letterSpacing: "0.03em" }}>
                   <span style={{ color: "rgba(42,191,191,0.5)", marginRight: 8 }}>{i + 1}.</span>{q.text}
                 </p>
                 <div className="flex gap-2">
@@ -209,10 +208,10 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
 
         {step === "parq_b" && (
           <div className="space-y-3">
-            <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.6 }}>Últimas preguntas del cuestionario PAR-Q.</p>
+            <p className="mb-4" style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.6, letterSpacing: "0.02em" }}>Últimas preguntas del cuestionario PAR-Q.</p>
             {PARQ_B.map((q, i) => (
               <div key={q.key} className="rounded-2xl p-4" style={GLASS}>
-                <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.7)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.6, letterSpacing: "0.02em" }}>
+                <p className="mb-3" style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.5, letterSpacing: "0.03em" }}>
                   <span style={{ color: "rgba(42,191,191,0.5)", marginRight: 8 }}>{PARQ_A.length + i + 1}.</span>{q.text}
                 </p>
                 <div className="flex gap-2">
@@ -302,8 +301,8 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
               {estado === "danger" && <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#ff8080" strokeWidth="1.5"/><path d="M12 8v5M12 16h.01" stroke="#ff8080" strokeWidth="1.5" strokeLinecap="round"/></svg>}
             </div>
             <div>
-              <p className="text-[10px] tracking-[0.25em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif" }}>Perfil de salud completado</p>
-              <h2 className="text-2xl font-light mb-3" style={{ fontFamily: "Cormorant Garamond, serif", color: estado === "danger" ? "#ff8080" : estado === "caution" ? "#ffb040" : "#2abfbf" }}>
+              <p className="mb-2" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>Perfil de salud completado</p>
+              <h2 className="mb-3" style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.15, fontFamily: "Cormorant Garamond, serif", color: estado === "danger" ? "#ff8080" : estado === "caution" ? "#ffb040" : "#2abfbf" }}>
                 {estado === "ok" && "Todo en orden"}
                 {estado === "caution" && "Recomendamos valoración"}
                 {estado === "danger" && "Consulta con un profesional"}
