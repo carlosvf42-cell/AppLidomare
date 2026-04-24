@@ -13,16 +13,31 @@ import ProgresoSection from "@/components/ProgresoSection";
 
 const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
+type HealthEstado = "ok" | "caution" | "danger";
+
 export default function PerfilPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [healthEstado, setHealthEstado] = useState<HealthEstado | null>(null);
+  const [healthLoaded, setHealthLoaded] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       setUser(data.user);
       setLoading(false);
+      if (data.user) {
+        const { data: triage } = await supabase
+          .from("health_assessments")
+          .select("estado")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+        setHealthEstado((triage?.estado as HealthEstado | undefined) ?? null);
+        setHealthLoaded(true);
+      } else {
+        setHealthLoaded(true);
+      }
     });
   }, []);
 
@@ -86,6 +101,74 @@ export default function PerfilPage() {
           </div>
         </GlassCard>
       </div>
+
+      {/* Health status */}
+      {healthLoaded && (
+        <div className="mx-4 mb-3">
+          {healthEstado === null ? (
+            <Link href="/perfil/salud" className="block ds-pressable" style={{ textDecoration: "none" }}>
+              <GlassCard variant="light" style={{ borderRadius: 16, padding: "16px 20px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1, gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                    <span
+                      className="animate-pulse shrink-0"
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: "#ffb040",
+                        boxShadow: "0 0 8px rgba(255,176,64,0.6)",
+                      }}
+                    />
+                    <div style={{ minWidth: 0 }}>
+                      <MetaLabel style={{ marginBottom: 4 }}>Salud</MetaLabel>
+                      <p className="text-sm font-light" style={{ color: "var(--fg-2)" }}>Completa tu perfil de salud</p>
+                    </div>
+                  </div>
+                  <IconArrow c="rgba(255,255,255,0.3)" />
+                </div>
+              </GlassCard>
+            </Link>
+          ) : (
+            <GlassCard variant="light" style={{ borderRadius: 16, padding: "16px 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1, gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                  <span
+                    className="shrink-0"
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background:
+                        healthEstado === "ok" ? "#2abfbf" :
+                        healthEstado === "caution" ? "#ffb040" : "#ff6b6b",
+                      boxShadow:
+                        healthEstado === "ok" ? "0 0 8px rgba(42,191,191,0.6)" :
+                        healthEstado === "caution" ? "0 0 8px rgba(255,176,64,0.6)" :
+                        "0 0 8px rgba(255,107,107,0.6)",
+                    }}
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <MetaLabel style={{ marginBottom: 4 }}>Salud</MetaLabel>
+                    <p className="text-sm font-light" style={{ color: "var(--fg-2)" }}>
+                      {healthEstado === "ok" && "Apto para entrenar"}
+                      {healthEstado === "caution" && "Valoración recomendada"}
+                      {healthEstado === "danger" && "Consulta con un profesional"}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/perfil/salud"
+                  className="text-[10px] tracking-[0.15em] uppercase shrink-0"
+                  style={{ color: "var(--accent)", textDecoration: "none" }}
+                >
+                  Actualizar
+                </Link>
+              </div>
+            </GlassCard>
+          )}
+        </div>
+      )}
 
       {/* Admin link */}
       {email === ADMIN_EMAIL && (

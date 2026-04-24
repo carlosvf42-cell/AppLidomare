@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import EjercicioSelector from "@/components/EjercicioSelector";
+import WellnessCheckIn from "@/components/health/WellnessCheckIn";
+import RPECapture from "@/components/health/RPECapture";
 
 type RutinaEjercicio = { id: string; nombre: string; series: number; repeticiones: number; orden: number; ejercicio_id?: string | null };
 type RutinaDia = { id: string; nombre: string; orden: number; rutina_ejercicios: RutinaEjercicio[] };
@@ -99,6 +101,10 @@ function EntrenarInner() {
   const [extraName, setExtraName] = useState("");
   const [extraEjId, setExtraEjId] = useState<string | null>(null);
   const [addingExtra, setAddingExtra] = useState(false);
+  const [showWellness, setShowWellness] = useState(false);
+  const [wellnessDone, setWellnessDone] = useState(false);
+  const [rpe, setRpe] = useState<number | null>(null);
+  const [duracionManual, setDuracionManual] = useState("");
 
   useEffect(() => {
     // Free day mode — no routine needed
@@ -173,6 +179,7 @@ function EntrenarInner() {
     }));
     setEjercicios(ejs);
     saveDraft(dia.id, inicio, ejs);
+    if (!wellnessDone) setShowWellness(true);
   }
 
   function updateSerie(ejIdx: number, sIdx: number, key: keyof SerieForm, value: string | boolean) {
@@ -277,15 +284,10 @@ function EntrenarInner() {
   function handleFinish() {
     if (!selectedDia) return;
     setSaveError(null);
-    const finAt = new Date();
     startSave(async () => {
       const supabase = getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
-
-      const duracion_minutos = horaInicio
-        ? Math.max(1, Math.round((finAt.getTime() - horaInicio.getTime()) / 60_000))
-        : null;
 
       const { data: sesion, error: sesionErr } = await supabase
         .from("sesiones")
@@ -319,7 +321,7 @@ function EntrenarInner() {
         // Día libre with no exercises — just mark session complete
         await supabase
           .from("sesiones")
-          .update({ completada: true, duracion_minutos })
+          .update({ completada: true, duracion_minutos: duracionManual ? parseInt(duracionManual) : null, rpe: rpe ?? null })
           .eq("id", sesion.id);
         clearDraft();
         setSaved(true);
@@ -336,7 +338,7 @@ function EntrenarInner() {
 
       await supabase
         .from("sesiones")
-        .update({ completada: true, duracion_minutos })
+        .update({ completada: true, duracion_minutos: duracionManual ? parseInt(duracionManual) : null, rpe: rpe ?? null })
         .eq("id", sesion.id);
 
       clearDraft();
@@ -429,6 +431,15 @@ function EntrenarInner() {
   /* ── Phase 2: Log session ── */
   const totalCompletadas = ejercicios.reduce((s, ej) => s + ej.seriesData.filter((sr) => sr.completada).length, 0);
   const totalSeries = ejercicios.reduce((s, ej) => s + ej.seriesData.length, 0);
+
+  if (showWellness) {
+    return (
+      <WellnessCheckIn
+        onComplete={() => { setShowWellness(false); setWellnessDone(true); }}
+        onSkip={() => { setShowWellness(false); setWellnessDone(true); }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -652,9 +663,10 @@ function EntrenarInner() {
 
       {/* Finish button */}
       <div
-        className="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 px-4 pb-[calc(56px+env(safe-area-inset-bottom)+8px)] pt-4"
+        className="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 px-4 pb-[calc(56px+env(safe-area-inset-bottom)+8px)] pt-4 space-y-3"
         style={{ background: "linear-gradient(to top, rgba(0,0,0,0.9) 60%, transparent)" }}
       >
+        <RPECapture rpe={rpe} duracion={duracionManual} onRpeChange={setRpe} onDuracionChange={setDuracionManual} />
         <button
           onClick={handleFinish}
           disabled={isSaving || saved}
