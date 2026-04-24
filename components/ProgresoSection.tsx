@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import WorkloadChart from "@/components/health/WorkloadChart";
 
 // ─── Row types from Supabase ──────────────────────────────────────────────────
 
@@ -512,6 +513,9 @@ export default function ProgresoSection() {
         <p className="text-[9px] tracking-[0.25em] uppercase" style={{ color: "var(--accent)" }}>Mi Progreso</p>
         <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
       </div>
+
+      {/* ── Carga de entrenamiento ── */}
+      <WorkloadChart />
 
       {/* ── 1. Métricas 2×2 ── */}
       <div>

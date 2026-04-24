@@ -6,14 +6,25 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import GlassCard from "@/components/design/GlassCard";
-import Eyebrow from "@/components/design/Eyebrow";
-import MetaLabel from "@/components/design/MetaLabel";
 import { IconArrow } from "@/components/design/icons";
 import ProgresoSection from "@/components/ProgresoSection";
 
 const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
 type HealthEstado = "ok" | "caution" | "danger";
+
+const ESTADO_COLOR: Record<HealthEstado | "pending", string> = {
+  ok: "#22c55e",
+  caution: "#ffb040",
+  danger: "#ff6b6b",
+  pending: "#ff9040",
+};
+const ESTADO_GLOW: Record<HealthEstado | "pending", string> = {
+  ok: "0 0 8px rgba(34,197,94,0.6)",
+  caution: "0 0 8px rgba(255,176,64,0.6)",
+  danger: "0 0 8px rgba(255,107,107,0.6)",
+  pending: "0 0 8px rgba(255,144,64,0.6)",
+};
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -34,10 +45,8 @@ export default function PerfilPage() {
           .eq("user_id", data.user.id)
           .maybeSingle();
         setHealthEstado((triage?.estado as HealthEstado | undefined) ?? null);
-        setHealthLoaded(true);
-      } else {
-        setHealthLoaded(true);
       }
+      setHealthLoaded(true);
     });
   }, []);
 
@@ -58,117 +67,96 @@ export default function PerfilPage() {
 
   const email = user?.email ?? "";
   const initials = email.slice(0, 2).toUpperCase();
+  const estadoKey: HealthEstado | "pending" = healthEstado ?? "pending";
+  const estadoLabel =
+    healthEstado === "ok" ? "Apto para entrenar" :
+    healthEstado === "caution" ? "Valoración recomendada" :
+    healthEstado === "danger" ? "Consulta con un profesional" :
+    "Completa tu perfil de salud";
 
   return (
     <div className="min-h-screen pt-14 pb-[calc(80px+env(safe-area-inset-bottom))]">
 
-      {/* Header */}
-      <Eyebrow className="px-6 mb-8">Perfil</Eyebrow>
-
-      {/* Avatar + email */}
-      <div className="flex items-center gap-4 mb-6 px-5">
-        <div
-          className="shrink-0"
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: "50%",
-            background: "rgba(42,191,191,0.12)",
-            border: "2px solid rgba(42,191,191,0.35)",
-            boxShadow: "0 0 0 4px rgba(42,191,191,0.06), inset 0 1px 0 rgba(255,255,255,0.1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 18,
-            fontWeight: 300,
-            color: "var(--accent)",
-          }}
-        >
-          {initials}
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-light truncate" style={{ color: "var(--fg-2)" }}>{email}</p>
-          <MetaLabel className="mt-0.5">Miembro activo</MetaLabel>
-        </div>
-      </div>
-
-      {/* Email field */}
+      {/* Mi perfil card — clickable → /perfil/salud */}
       <div className="mx-4 mb-3">
-        <GlassCard variant="light" style={{ borderRadius: 16, padding: "16px 20px" }}>
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <MetaLabel style={{ marginBottom: 4 }}>Email</MetaLabel>
-            <p className="text-sm font-light break-all" style={{ color: "var(--fg-2)" }}>{email}</p>
-          </div>
-        </GlassCard>
-      </div>
-
-      {/* Health status */}
-      {healthLoaded && (
-        <div className="mx-4 mb-3">
-          {healthEstado === null ? (
-            <Link href="/perfil/salud" className="block ds-pressable" style={{ textDecoration: "none" }}>
-              <GlassCard variant="light" style={{ borderRadius: 16, padding: "16px 20px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1, gap: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-                    <span
-                      className="animate-pulse shrink-0"
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: "#ffb040",
-                        boxShadow: "0 0 8px rgba(255,176,64,0.6)",
-                      }}
-                    />
-                    <div style={{ minWidth: 0 }}>
-                      <MetaLabel style={{ marginBottom: 4 }}>Salud</MetaLabel>
-                      <p className="text-sm font-light" style={{ color: "var(--fg-2)" }}>Completa tu perfil de salud</p>
-                    </div>
-                  </div>
-                  <IconArrow c="rgba(255,255,255,0.3)" />
+        <Link href="/perfil/salud" className="block ds-pressable active:scale-[0.98] transition-transform" style={{ textDecoration: "none" }}>
+          <GlassCard variant="light" style={{ borderRadius: 20, padding: 0, cursor: "pointer" }}>
+            <div style={{ position: "relative", zIndex: 1 }}>
+              {/* Top row: avatar + name + email */}
+              <div className="flex items-center gap-4 px-5 pt-5 pb-4">
+                <div
+                  className="shrink-0"
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: "50%",
+                    background: "rgba(42,191,191,0.12)",
+                    border: "2px solid rgba(42,191,191,0.35)",
+                    boxShadow: "0 0 0 4px rgba(42,191,191,0.06), inset 0 1px 0 rgba(255,255,255,0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                    fontWeight: 300,
+                    color: "var(--accent)",
+                  }}
+                >
+                  {initials}
                 </div>
-              </GlassCard>
-            </Link>
-          ) : (
-            <GlassCard variant="light" style={{ borderRadius: 16, padding: "16px 20px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1, gap: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                <div className="min-w-0 flex-1">
+                  <h2
+                    className="font-light truncate"
+                    style={{
+                      fontFamily: "Cormorant Garamond, serif",
+                      fontSize: "1.5rem",
+                      lineHeight: 1.15,
+                      color: "rgba(255,255,255,0.95)",
+                    }}
+                  >
+                    Mi perfil
+                  </h2>
+                  <p
+                    className="text-xs truncate mt-0.5"
+                    style={{
+                      fontFamily: "Barlow Condensed, sans-serif",
+                      color: "rgba(255,255,255,0.4)",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    {email}
+                  </p>
+                </div>
+              </div>
+
+              {/* Separator */}
+              <div style={{ height: "0.5px", background: "rgba(255,255,255,0.06)" }} />
+
+              {/* Bottom row: health estado */}
+              <div className="flex items-center justify-between gap-3 px-5 py-4">
+                <div className="flex items-center gap-3 min-w-0">
                   <span
-                    className="shrink-0"
+                    className={`shrink-0 ${healthEstado === null ? "animate-pulse" : ""}`}
                     style={{
                       width: 8,
                       height: 8,
                       borderRadius: "50%",
-                      background:
-                        healthEstado === "ok" ? "#2abfbf" :
-                        healthEstado === "caution" ? "#ffb040" : "#ff6b6b",
-                      boxShadow:
-                        healthEstado === "ok" ? "0 0 8px rgba(42,191,191,0.6)" :
-                        healthEstado === "caution" ? "0 0 8px rgba(255,176,64,0.6)" :
-                        "0 0 8px rgba(255,107,107,0.6)",
+                      background: ESTADO_COLOR[estadoKey],
+                      boxShadow: ESTADO_GLOW[estadoKey],
                     }}
                   />
-                  <div style={{ minWidth: 0 }}>
-                    <MetaLabel style={{ marginBottom: 4 }}>Salud</MetaLabel>
-                    <p className="text-sm font-light" style={{ color: "var(--fg-2)" }}>
-                      {healthEstado === "ok" && "Apto para entrenar"}
-                      {healthEstado === "caution" && "Valoración recomendada"}
-                      {healthEstado === "danger" && "Consulta con un profesional"}
-                    </p>
-                  </div>
+                  <span
+                    className="text-sm font-light truncate"
+                    style={{ color: healthLoaded ? "var(--fg-2)" : "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif" }}
+                  >
+                    {healthLoaded ? estadoLabel : "Cargando estado…"}
+                  </span>
                 </div>
-                <Link
-                  href="/perfil/salud"
-                  className="text-[10px] tracking-[0.15em] uppercase shrink-0"
-                  style={{ color: "var(--accent)", textDecoration: "none" }}
-                >
-                  Actualizar
-                </Link>
+                <IconArrow c="rgba(255,255,255,0.3)" />
               </div>
-            </GlassCard>
-          )}
-        </div>
-      )}
+            </div>
+          </GlassCard>
+        </Link>
+      </div>
 
       {/* Admin link */}
       {email === ADMIN_EMAIL && (
