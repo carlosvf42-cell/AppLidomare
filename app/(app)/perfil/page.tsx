@@ -14,13 +14,13 @@ const ADMIN_EMAIL = "carlosvf42@gmail.com";
 type HealthEstado = "ok" | "caution" | "danger";
 
 const ESTADO_COLOR: Record<HealthEstado | "pending", string> = {
-  ok: "#22c55e",
+  ok: "#2abfbf",
   caution: "#ffb040",
   danger: "#ff6b6b",
   pending: "#ff9040",
 };
 const ESTADO_GLOW: Record<HealthEstado | "pending", string> = {
-  ok: "0 0 8px rgba(34,197,94,0.6)",
+  ok: "0 0 8px rgba(42,191,191,0.6)",
   caution: "0 0 8px rgba(255,176,64,0.6)",
   danger: "0 0 8px rgba(255,107,107,0.6)",
   pending: "0 0 8px rgba(255,144,64,0.6)",
@@ -146,7 +146,14 @@ export default function PerfilPage() {
                   />
                   <span
                     className="text-sm font-light truncate"
-                    style={{ color: healthLoaded ? "var(--fg-2)" : "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif" }}
+                    style={{
+                      color: !healthLoaded
+                        ? "rgba(255,255,255,0.3)"
+                        : healthEstado === "ok"
+                        ? "#2abfbf"
+                        : "var(--fg-2)",
+                      fontFamily: "Barlow Condensed, sans-serif",
+                    }}
                   >
                     {healthLoaded ? estadoLabel : "Cargando estado…"}
                   </span>
