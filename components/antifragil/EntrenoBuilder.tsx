@@ -726,29 +726,31 @@ function DuracionField({
   seconds: number | null;
   onChange: (v: number | null) => void;
 }) {
-  // Default unit: if total seconds < 60 prefer SEGUNDOS; else MINUTOS
   const initialUnit: "min" | "seg" = seconds != null && seconds > 0 && seconds < 60 ? "seg" : "min";
   const [unit, setUnit] = useState<"min" | "seg">(initialUnit);
 
-  // Decompose for MIN mode
-  const mm = seconds == null ? "" : Math.floor(seconds / 60);
-  const ss = seconds == null ? "" : seconds % 60;
+  // Local string state — keeps inputs truly clearable (no forced 0)
+  const [mmStr, setMmStr] = useState<string>(
+    seconds == null ? "" : String(Math.floor(seconds / 60))
+  );
+  const [ssStr, setSsStr] = useState<string>(
+    seconds == null ? "" : String(seconds % 60)
+  );
+  const [secStr, setSecStr] = useState<string>(seconds == null ? "" : String(seconds));
 
-  function setMM(v: string) {
-    const m = v === "" ? 0 : Math.max(0, Math.min(99, Number(v)));
-    const s = ss === "" ? 0 : Number(ss);
-    if (v === "" && (ss === "" || ss === 0)) onChange(null);
-    else onChange(m * 60 + s);
+  function emitMin(nextMm: string, nextSs: string) {
+    if (nextMm === "" && nextSs === "") {
+      onChange(null);
+      return;
+    }
+    const m = nextMm === "" ? 0 : Number(nextMm);
+    const s = nextSs === "" ? 0 : Number(nextSs);
+    onChange(m * 60 + s);
   }
-  function setSS_minMode(v: string) {
-    const s = v === "" ? 0 : Math.max(0, Math.min(59, Number(v)));
-    const m = mm === "" ? 0 : Number(mm);
-    if (v === "" && (mm === "" || mm === 0)) onChange(null);
-    else onChange(m * 60 + s);
-  }
-  function setSS_secMode(v: string) {
-    if (v === "") onChange(null);
-    else onChange(Math.max(0, Number(v)));
+
+  function emitSec(next: string) {
+    if (next === "") onChange(null);
+    else onChange(Number(next));
   }
 
   return (
@@ -781,8 +783,13 @@ function DuracionField({
             type="number"
             min={0}
             max={99}
-            value={mm}
-            onChange={(e) => setMM(e.target.value)}
+            value={mmStr}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v !== "" && (Number(v) < 0 || Number(v) > 99)) return;
+              setMmStr(v);
+              emitMin(v, ssStr);
+            }}
             placeholder="mm"
             className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
           />
@@ -791,8 +798,13 @@ function DuracionField({
             type="number"
             min={0}
             max={59}
-            value={ss}
-            onChange={(e) => setSS_minMode(e.target.value)}
+            value={ssStr}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v !== "" && (Number(v) < 0 || Number(v) > 59)) return;
+              setSsStr(v);
+              emitMin(mmStr, v);
+            }}
             placeholder="ss"
             className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
           />
@@ -801,8 +813,13 @@ function DuracionField({
         <input
           type="number"
           min={0}
-          value={seconds == null ? "" : seconds}
-          onChange={(e) => setSS_secMode(e.target.value)}
+          value={secStr}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v !== "" && Number(v) < 0) return;
+            setSecStr(v);
+            emitSec(v);
+          }}
           placeholder="ss"
           className="w-24 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
         />

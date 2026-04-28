@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import WellnessCheckIn from "@/components/health/WellnessCheckIn";
 import RPECapture from "@/components/health/RPECapture";
+import EjercicioSelector from "@/components/EjercicioSelector";
 import { type Block, type CardioBlock, type FuncionalBlock, type FuerzaBlock, fromApiBlocks, makeCardio, makeFuerza, makeFuncional, tipoResumen, toApiBlocks } from "./types";
 import { AddBlockSheet, BlockCard } from "./EntrenoBuilder";
 
@@ -86,18 +87,15 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
 
   function applyLoadedBlocks(loaded: Block[]) {
     setBlocks(loaded);
+    // Initialize empty arrays only for new ejercicios/blocks. Don't pre-fill —
+    // user adds rows via "+ Serie" / "+ Ronda" as they train.
     setSeriesByEjercicio((prev) => {
       const next = { ...prev };
       for (const b of loaded) {
         if (b.kind !== "fuerza") continue;
         for (const ej of b.ejercicios) {
           if (!ej.id || next[ej.id]) continue;
-          next[ej.id] = Array.from({ length: Math.max(1, ej.series_objetivo) }, (_, i) => ({
-            numero_serie: i + 1,
-            repeticiones: null,
-            peso: null,
-            completada: false,
-          }));
+          next[ej.id] = [];
         }
       }
       return next;
@@ -107,15 +105,21 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
       for (const b of loaded) {
         if (b.kind !== "cardio" || !b.id || next[b.id]) continue;
         const isInterval = b.modo === "intervalos_tiempo" || b.modo === "intervalos_calorias";
-        const n = isInterval ? Math.max(1, b.rondas ?? 1) : 1;
-        next[b.id] = Array.from({ length: n }, (_, i) => ({
-          numero_ronda: i + 1,
-          watts: null,
-          calorias_real: null,
-          distancia_metros_real: null,
-          calorias_total_real: null,
-          completada: false,
-        }));
+        // Total modes: single fixed row. Interval modes: empty, user adds rondas.
+        if (isInterval) {
+          next[b.id] = [];
+        } else {
+          next[b.id] = [
+            {
+              numero_ronda: 1,
+              watts: null,
+              calorias_real: null,
+              distancia_metros_real: null,
+              calorias_total_real: null,
+              completada: false,
+            },
+          ];
+        }
       }
       return next;
     });
@@ -132,6 +136,62 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
       }
       return next;
     });
+  }
+
+  function addSerie(ejercicioId: string) {
+    setSeriesByEjercicio((prev) => {
+      const arr = prev[ejercicioId] ?? [];
+      const next: FuerzaSerie = {
+        numero_serie: arr.length + 1,
+        repeticiones: null,
+        peso: null,
+        completada: true,
+      };
+      return { ...prev, [ejercicioId]: [...arr, next] };
+    });
+  }
+  function removeSerie(ejercicioId: string, idx: number) {
+    setSeriesByEjercicio((prev) => {
+      const arr = (prev[ejercicioId] ?? []).filter((_, i) => i !== idx).map((s, i) => ({ ...s, numero_serie: i + 1 }));
+      return { ...prev, [ejercicioId]: arr };
+    });
+  }
+  function addRonda(bloqueId: string) {
+    setRondasByBlock((prev) => {
+      const arr = prev[bloqueId] ?? [];
+      const next: CardioRonda = {
+        numero_ronda: arr.length + 1,
+        watts: null,
+        calorias_real: null,
+        distancia_metros_real: null,
+        calorias_total_real: null,
+        completada: true,
+      };
+      return { ...prev, [bloqueId]: [...arr, next] };
+    });
+  }
+  function removeRonda(bloqueId: string, idx: number) {
+    setRondasByBlock((prev) => {
+      const arr = (prev[bloqueId] ?? []).filter((_, i) => i !== idx).map((r, i) => ({ ...r, numero_ronda: i + 1 }));
+      return { ...prev, [bloqueId]: arr };
+    });
+  }
+
+  async function addEjercicioFuerza(bloqueId: string, payload: { ejercicio_id: string | null; nombre_ejercicio: string; series_objetivo: number; reps_objetivo: number }) {
+    const res = await fetch(
+      `/api/admin/antifragil/${userId}/entrenos/${entrenoId}/bloques/${bloqueId}/ejercicios-fuerza`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      }
+    );
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setError(j.error ?? "No se pudo añadir el ejercicio");
+      return;
+    }
+    await reloadBlocks();
   }
 
   async function reloadBlocks() {
@@ -234,7 +294,10 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
   }, [duracionOverride, startedAt, phase]);
 
   async function handleFinalize() {
-    if (!sesionId) return;
+    if (!sesionId) {
+      setError("La sesión no se inicializó. Vuelve atrás y reinicia el entreno.");
+      return;
+    }
     setFinalizing(true);
     setError(null);
 
@@ -301,8 +364,30 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
 
   if (phase === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#080808" }}>
-        <div className="w-5 h-5 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: "#080808" }}>
+        {error ? (
+          <div className="rounded-2xl px-5 py-6 max-w-sm text-center space-y-3" style={GLASS}>
+            <p style={{ ...EYEBROW, color: "rgba(255,128,128,0.7)" }}>Error al cargar</p>
+            <p className="text-xs" style={{ color: "rgba(255,128,128,0.85)", fontFamily: FONT_TEXT, lineHeight: 1.5 }}>
+              {error}
+            </p>
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="w-full py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "0.5px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.7)",
+                fontFamily: FONT_TEXT,
+              }}
+            >
+              Volver
+            </button>
+          </div>
+        ) : (
+          <div className="w-5 h-5 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
+        )}
       </div>
     );
   }
@@ -398,6 +483,8 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
                   return { ...prev, [ejId]: arr };
                 });
               }}
+              onAddSerie={addSerie}
+              onRemoveSerie={removeSerie}
               onCardioUpdate={(i, patch) => {
                 if (!b.id) return;
                 setRondasByBlock((prev) => {
@@ -406,6 +493,8 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
                   return { ...prev, [b.id!]: arr };
                 });
               }}
+              onAddRonda={addRonda}
+              onRemoveRonda={removeRonda}
               onFuncionalUpdate={(ejId, patch) => {
                 if (!b.id) return;
                 setRegistrosByBlock((prev) => {
@@ -414,6 +503,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
                   return { ...prev, [b.id!]: blockRegs };
                 });
               }}
+              onAddEjercicioFuerza={addEjercicioFuerza}
             />
           ))}
 
@@ -630,8 +720,13 @@ function BlockTrainer({
   cardioRondas,
   funcionalRegs,
   onFuerzaUpdate,
+  onAddSerie,
+  onRemoveSerie,
   onCardioUpdate,
+  onAddRonda,
+  onRemoveRonda,
   onFuncionalUpdate,
+  onAddEjercicioFuerza,
 }: {
   block: Block;
   index: number;
@@ -639,8 +734,16 @@ function BlockTrainer({
   cardioRondas?: CardioRonda[];
   funcionalRegs?: Record<string, FuncionalReg>;
   onFuerzaUpdate: (ejercicioId: string, i: number, patch: Partial<FuerzaSerie>) => void;
+  onAddSerie: (ejercicioId: string) => void;
+  onRemoveSerie: (ejercicioId: string, idx: number) => void;
   onCardioUpdate: (i: number, patch: Partial<CardioRonda>) => void;
+  onAddRonda: (bloqueId: string) => void;
+  onRemoveRonda: (bloqueId: string, idx: number) => void;
   onFuncionalUpdate: (ejId: string, patch: Partial<FuncionalReg>) => void;
+  onAddEjercicioFuerza: (
+    bloqueId: string,
+    payload: { ejercicio_id: string | null; nombre_ejercicio: string; series_objetivo: number; reps_objetivo: number }
+  ) => Promise<void>;
 }) {
   const meta = BLOCK_META[block.kind];
   return (
@@ -662,10 +765,23 @@ function BlockTrainer({
       <NotaAdminBlock nota={block.nota_admin} />
 
       {block.kind === "fuerza" && (
-        <FuerzaTrainer block={block as FuerzaBlock} seriesByEjercicio={seriesByEjercicio} onUpdate={onFuerzaUpdate} />
+        <FuerzaTrainer
+          block={block as FuerzaBlock}
+          seriesByEjercicio={seriesByEjercicio}
+          onUpdate={onFuerzaUpdate}
+          onAddSerie={onAddSerie}
+          onRemoveSerie={onRemoveSerie}
+          onAddEjercicio={onAddEjercicioFuerza}
+        />
       )}
       {block.kind === "cardio" && (
-        <CardioTrainer block={block as CardioBlock} rondas={cardioRondas ?? []} onUpdate={onCardioUpdate} />
+        <CardioTrainer
+          block={block as CardioBlock}
+          rondas={cardioRondas ?? []}
+          onUpdate={onCardioUpdate}
+          onAddRonda={onAddRonda}
+          onRemoveRonda={onRemoveRonda}
+        />
       )}
       {block.kind === "funcional" && (
         <FuncionalTrainer block={block as FuncionalBlock} regs={funcionalRegs ?? {}} onUpdate={onFuncionalUpdate} />
@@ -678,14 +794,21 @@ function FuerzaTrainer({
   block,
   seriesByEjercicio,
   onUpdate,
+  onAddSerie,
+  onRemoveSerie,
+  onAddEjercicio,
 }: {
   block: FuerzaBlock;
   seriesByEjercicio: Record<string, FuerzaSerie[]>;
   onUpdate: (ejercicioId: string, i: number, patch: Partial<FuerzaSerie>) => void;
+  onAddSerie: (ejercicioId: string) => void;
+  onRemoveSerie: (ejercicioId: string, idx: number) => void;
+  onAddEjercicio: (
+    bloqueId: string,
+    payload: { ejercicio_id: string | null; nombre_ejercicio: string; series_objetivo: number; reps_objetivo: number }
+  ) => Promise<void>;
 }) {
-  if (block.ejercicios.length === 0) {
-    return <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT }}>Sin ejercicios</p>;
-  }
+  const [showAddEj, setShowAddEj] = useState(false);
   return (
     <div className="space-y-3">
       {block.ejercicios.map((ej, ejIdx) => {
@@ -700,8 +823,8 @@ function FuerzaTrainer({
               <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.85)", fontFamily: FONT_TEXT }}>
                 <span style={{ color: "rgba(255,128,96,0.7)" }}>{ejIdx + 1}.</span> {ej.nombre_ejercicio || "—"}
               </p>
-              <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT }}>
-                {ej.series_objetivo} × {ej.reps_objetivo}
+              <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT, letterSpacing: "0.02em" }}>
+                Objetivo: {ej.series_objetivo} × {ej.reps_objetivo}
               </span>
             </div>
             <div className="space-y-1.5">
@@ -712,7 +835,7 @@ function FuerzaTrainer({
                   </span>
                   <input
                     type="number"
-                    placeholder={`${ej.reps_objetivo} reps`}
+                    placeholder="reps"
                     value={s.repeticiones ?? ""}
                     onChange={(e) => ej.id && onUpdate(ej.id, i, { repeticiones: e.target.value === "" ? null : Number(e.target.value) })}
                     className="flex-1 min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
@@ -727,25 +850,146 @@ function FuerzaTrainer({
                   />
                   <button
                     type="button"
-                    onClick={() => ej.id && onUpdate(ej.id, i, { completada: !s.completada })}
-                    aria-label="Marcar completada"
+                    onClick={() => ej.id && onRemoveSerie(ej.id, i)}
+                    aria-label="Eliminar serie"
                     className="w-9 h-9 rounded-lg flex items-center justify-center"
                     style={{
-                      background: s.completada ? "rgba(42,191,191,0.18)" : "rgba(255,255,255,0.04)",
-                      border: `0.5px solid ${s.completada ? "rgba(42,191,191,0.5)" : "rgba(255,255,255,0.1)"}`,
-                      color: s.completada ? "#2abfbf" : "rgba(255,255,255,0.4)",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "0.5px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,128,128,0.7)",
                     }}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path d="M5 12l5 5L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                     </svg>
                   </button>
                 </div>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={() => ej.id && onAddSerie(ej.id)}
+              disabled={!ej.id}
+              className="w-full py-1.5 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold"
+              style={{
+                background: "rgba(255,128,96,0.08)",
+                border: "0.5px dashed rgba(255,128,96,0.3)",
+                color: "rgba(255,128,96,0.85)",
+                fontFamily: FONT_TEXT,
+              }}
+            >
+              + Serie
+            </button>
           </div>
         );
       })}
+
+      {showAddEj ? (
+        <AddEjercicioInline
+          onCancel={() => setShowAddEj(false)}
+          onSave={async (payload) => {
+            if (!block.id) return;
+            await onAddEjercicio(block.id, payload);
+            setShowAddEj(false);
+          }}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowAddEj(true)}
+          disabled={!block.id}
+          className="w-full py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold disabled:opacity-30"
+          style={{
+            background: "rgba(255,128,96,0.06)",
+            border: "0.5px dashed rgba(255,128,96,0.3)",
+            color: "rgba(255,128,96,0.85)",
+            fontFamily: FONT_TEXT,
+          }}
+        >
+          + Ejercicio
+        </button>
+      )}
+    </div>
+  );
+}
+
+function AddEjercicioInline({
+  onCancel,
+  onSave,
+}: {
+  onCancel: () => void;
+  onSave: (payload: { ejercicio_id: string | null; nombre_ejercicio: string; series_objetivo: number; reps_objetivo: number }) => Promise<void>;
+}) {
+  const [nombre, setNombre] = useState("");
+  const [ejercicioId, setEjercicioId] = useState<string | null>(null);
+  const [series, setSeries] = useState(3);
+  const [reps, setReps] = useState(10);
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <div
+      className="rounded-xl px-3 py-3 space-y-2"
+      style={{ background: "rgba(255,128,96,0.04)", border: "0.5px dashed rgba(255,128,96,0.3)" }}
+    >
+      <p className="text-[9px] tracking-[0.18em] uppercase font-semibold" style={{ color: "rgba(255,128,96,0.85)", fontFamily: FONT_TEXT }}>
+        Nuevo ejercicio
+      </p>
+      <div className="flex">
+        <EjercicioSelector
+          value={nombre}
+          ejercicioId={ejercicioId}
+          onChange={(n, id) => {
+            setNombre(n);
+            setEjercicioId(id);
+          }}
+        />
+      </div>
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <p style={{ ...LABEL, marginBottom: 4 }}>Series</p>
+          <input
+            type="number"
+            min={1}
+            value={series}
+            onChange={(e) => setSeries(e.target.value === "" ? 0 : Number(e.target.value))}
+            className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+          />
+        </div>
+        <div className="flex-1">
+          <p style={{ ...LABEL, marginBottom: 4 }}>Reps</p>
+          <input
+            type="number"
+            min={1}
+            value={reps}
+            onChange={(e) => setReps(e.target.value === "" ? 0 : Number(e.target.value))}
+            className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold"
+          style={{ background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", fontFamily: FONT_TEXT }}
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
+            if (!nombre.trim()) return;
+            setSaving(true);
+            await onSave({ ejercicio_id: ejercicioId, nombre_ejercicio: nombre.trim(), series_objetivo: series, reps_objetivo: reps });
+            setSaving(false);
+          }}
+          disabled={saving || !nombre.trim()}
+          className="flex-1 py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold disabled:opacity-40"
+          style={{ background: "#2abfbf", color: "#000", fontFamily: FONT_TEXT }}
+        >
+          {saving ? "Guardando…" : "Añadir"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -754,10 +998,14 @@ function CardioTrainer({
   block,
   rondas,
   onUpdate,
+  onAddRonda,
+  onRemoveRonda,
 }: {
   block: CardioBlock;
   rondas: CardioRonda[];
   onUpdate: (i: number, patch: Partial<CardioRonda>) => void;
+  onAddRonda: (bloqueId: string) => void;
+  onRemoveRonda: (bloqueId: string, idx: number) => void;
 }) {
   const isInterval = block.modo === "intervalos_tiempo" || block.modo === "intervalos_calorias";
 
@@ -798,43 +1046,60 @@ function CardioTrainer({
         </div>
       )}
 
-      {isInterval &&
-        rondas.map((r, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className="w-8 text-[10px] tracking-wider" style={{ color: "rgba(255,255,255,0.35)", fontFamily: FONT_TEXT }}>
-              R{r.numero_ronda}
-            </span>
-            <input
-              type="number"
-              placeholder="cal"
-              value={r.calorias_real ?? ""}
-              onChange={(e) => onUpdate(i, { calorias_real: e.target.value === "" ? null : Number(e.target.value) })}
-              className="flex-1 min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-            />
-            <input
-              type="number"
-              placeholder="W"
-              value={r.watts ?? ""}
-              onChange={(e) => onUpdate(i, { watts: e.target.value === "" ? null : Number(e.target.value) })}
-              className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-            />
-            <button
-              type="button"
-              onClick={() => onUpdate(i, { completada: !r.completada })}
-              aria-label="Marcar completada"
-              className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{
-                background: r.completada ? "rgba(42,191,191,0.18)" : "rgba(255,255,255,0.04)",
-                border: `0.5px solid ${r.completada ? "rgba(42,191,191,0.5)" : "rgba(255,255,255,0.1)"}`,
-                color: r.completada ? "#2abfbf" : "rgba(255,255,255,0.4)",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12l5 5L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
-        ))}
+      {isInterval && (
+        <>
+          {rondas.map((r, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="w-8 text-[10px] tracking-wider" style={{ color: "rgba(255,255,255,0.35)", fontFamily: FONT_TEXT }}>
+                R{r.numero_ronda}
+              </span>
+              <input
+                type="number"
+                placeholder="cal"
+                value={r.calorias_real ?? ""}
+                onChange={(e) => onUpdate(i, { calorias_real: e.target.value === "" ? null : Number(e.target.value) })}
+                className="flex-1 min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+              />
+              <input
+                type="number"
+                placeholder="W"
+                value={r.watts ?? ""}
+                onChange={(e) => onUpdate(i, { watts: e.target.value === "" ? null : Number(e.target.value) })}
+                className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+              />
+              <button
+                type="button"
+                onClick={() => block.id && onRemoveRonda(block.id, i)}
+                aria-label="Eliminar ronda"
+                className="w-9 h-9 rounded-lg flex items-center justify-center"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "0.5px solid rgba(255,255,255,0.1)",
+                  color: "rgba(255,128,128,0.7)",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => block.id && onAddRonda(block.id)}
+            disabled={!block.id}
+            className="w-full py-1.5 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold mt-1"
+            style={{
+              background: "rgba(255,176,64,0.08)",
+              border: "0.5px dashed rgba(255,176,64,0.3)",
+              color: "rgba(255,176,64,0.85)",
+              fontFamily: FONT_TEXT,
+            }}
+          >
+            + Ronda
+          </button>
+        </>
+      )}
     </div>
   );
 }
