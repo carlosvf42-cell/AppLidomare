@@ -59,7 +59,7 @@ export async function POST(
     const [fuerzaRes, cardioRes, funcionalRes] = await Promise.all([
       supabase
         .from("bloques_fuerza")
-        .select("orden, nombre, ejercicio_id, nombre_ejercicio, series_objetivo, reps_objetivo, nota_admin")
+        .select("id, orden, nombre, nota_admin")
         .eq("entreno_id", source.id),
       supabase
         .from("bloques_cardio")
@@ -71,10 +71,41 @@ export async function POST(
         .eq("entreno_id", source.id),
     ]);
 
-    if ((fuerzaRes.data ?? []).length > 0) {
-      await supabase
+    const sourceFuerzaBlocks = fuerzaRes.data ?? [];
+    if (sourceFuerzaBlocks.length > 0) {
+      const { data: insertedFuerza, error: fuErr } = await supabase
         .from("bloques_fuerza")
-        .insert((fuerzaRes.data ?? []).map((b) => ({ ...b, entreno_id: nuevo.id })));
+        .insert(
+          sourceFuerzaBlocks.map((b: any) => ({
+            entreno_id: nuevo.id,
+            orden: b.orden,
+            nombre: b.nombre,
+            nota_admin: b.nota_admin,
+          }))
+        )
+        .select("id, orden");
+      if (fuErr || !insertedFuerza) {
+        return NextResponse.json({ error: fuErr?.message ?? "No se pudieron duplicar bloques fuerza" }, { status: 500 });
+      }
+
+      const newFuerzaIdByOrden = new Map<number, string>();
+      for (const row of insertedFuerza) newFuerzaIdByOrden.set(row.orden, row.id);
+      const oldFuerzaToNew = new Map<string, string>();
+      for (const old of sourceFuerzaBlocks) {
+        const newId = newFuerzaIdByOrden.get(old.orden);
+        if (newId) oldFuerzaToNew.set(old.id, newId);
+      }
+
+      const { data: srcEjFuerza } = await supabase
+        .from("ejercicios_fuerza")
+        .select("bloque_id, orden, ejercicio_id, nombre_ejercicio, series_objetivo, reps_objetivo")
+        .in("bloque_id", sourceFuerzaBlocks.map((b: any) => b.id));
+      const ejFuerzaRows = (srcEjFuerza ?? [])
+        .map((e: any) => ({ ...e, bloque_id: oldFuerzaToNew.get(e.bloque_id) }))
+        .filter((e: any) => !!e.bloque_id);
+      if (ejFuerzaRows.length > 0) {
+        await supabase.from("ejercicios_fuerza").insert(ejFuerzaRows);
+      }
     }
     if ((cardioRes.data ?? []).length > 0) {
       await supabase

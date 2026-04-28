@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import WellnessCheckIn from "@/components/health/WellnessCheckIn";
 import RPECapture from "@/components/health/RPECapture";
-import { type Block, type CardioBlock, type FuncionalBlock, type FuerzaBlock, fromApiBlocks, tipoResumen } from "./types";
+import { type Block, type CardioBlock, type FuncionalBlock, type FuerzaBlock, fromApiBlocks, makeCardio, makeFuerza, makeFuncional, tipoResumen, toApiBlocks } from "./types";
+import { AddBlockSheet, BlockCard } from "./EntrenoBuilder";
 
 const GLASS: React.CSSProperties = {
   background: "rgba(255,255,255,0.04)",
@@ -39,7 +40,7 @@ const BLOCK_META: Record<Block["kind"], { label: string; color: string; bg: stri
   funcional: { label: "Funcional", color: "#2abfbf", bg: "rgba(42,191,191,0.12)", border: "rgba(42,191,191,0.4)" },
 };
 
-type Phase = "loading" | "wellness" | "training" | "finalize";
+type Phase = "loading" | "wellness-gate" | "wellness-form" | "training" | "finalize";
 
 type FuerzaSerie = { numero_serie: number; repeticiones: number | null; peso: number | null; completada: boolean };
 type CardioRonda = {
@@ -70,14 +71,103 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [seriesByBlock, setSeriesByBlock] = useState<Record<string, FuerzaSerie[]>>({});
+  const [seriesByEjercicio, setSeriesByEjercicio] = useState<Record<string, FuerzaSerie[]>>({});
   const [rondasByBlock, setRondasByBlock] = useState<Record<string, CardioRonda[]>>({});
   const [registrosByBlock, setRegistrosByBlock] = useState<Record<string, Record<string, FuncionalReg>>>({});
+
+  const [showAddSheet, setShowAddSheet] = useState(false);
+  const [draftBlock, setDraftBlock] = useState<Block | null>(null);
+  const [savingDraft, setSavingDraft] = useState(false);
 
   const [rpe, setRpe] = useState<number | null>(null);
   const [comentario, setComentario] = useState("");
   const [duracionOverride, setDuracionOverride] = useState<number | null>(null);
   const [finalizing, setFinalizing] = useState(false);
+
+  function applyLoadedBlocks(loaded: Block[]) {
+    setBlocks(loaded);
+    setSeriesByEjercicio((prev) => {
+      const next = { ...prev };
+      for (const b of loaded) {
+        if (b.kind !== "fuerza") continue;
+        for (const ej of b.ejercicios) {
+          if (!ej.id || next[ej.id]) continue;
+          next[ej.id] = Array.from({ length: Math.max(1, ej.series_objetivo) }, (_, i) => ({
+            numero_serie: i + 1,
+            repeticiones: null,
+            peso: null,
+            completada: false,
+          }));
+        }
+      }
+      return next;
+    });
+    setRondasByBlock((prev) => {
+      const next = { ...prev };
+      for (const b of loaded) {
+        if (b.kind !== "cardio" || !b.id || next[b.id]) continue;
+        const isInterval = b.modo === "intervalos_tiempo" || b.modo === "intervalos_calorias";
+        const n = isInterval ? Math.max(1, b.rondas ?? 1) : 1;
+        next[b.id] = Array.from({ length: n }, (_, i) => ({
+          numero_ronda: i + 1,
+          watts: null,
+          calorias_real: null,
+          distancia_metros_real: null,
+          calorias_total_real: null,
+          completada: false,
+        }));
+      }
+      return next;
+    });
+    setRegistrosByBlock((prev) => {
+      const next = { ...prev };
+      for (const b of loaded) {
+        if (b.kind !== "funcional" || !b.id || next[b.id]) continue;
+        const map: Record<string, FuncionalReg> = {};
+        for (const ej of b.ejercicios) {
+          if (!ej.id) continue;
+          map[ej.id] = { kg: null, reps_real: null, calorias_real: null, metros_real: null };
+        }
+        next[b.id] = map;
+      }
+      return next;
+    });
+  }
+
+  async function reloadBlocks() {
+    const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const json = await res.json();
+    if (res.ok) applyLoadedBlocks(fromApiBlocks(json.bloques ?? []));
+  }
+
+  function startAddingBlock(kind: Block["kind"]) {
+    const orden = blocks.length;
+    if (kind === "fuerza") setDraftBlock(makeFuerza(orden));
+    if (kind === "cardio") setDraftBlock(makeCardio(orden));
+    if (kind === "funcional") setDraftBlock(makeFuncional(orden));
+    setShowAddSheet(false);
+  }
+
+  async function saveDraftBlock() {
+    if (!draftBlock) return;
+    setSavingDraft(true);
+    const [apiBlock] = toApiBlocks([draftBlock]);
+    const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}/bloques`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ bloque: apiBlock }),
+    });
+    setSavingDraft(false);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setError(j.error ?? "No se pudo guardar el bloque");
+      return;
+    }
+    setDraftBlock(null);
+    await reloadBlocks();
+  }
 
   // Load entreno (with DB block ids) and initialize live state
   useEffect(() => {
@@ -93,46 +183,8 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
         return;
       }
       const loaded = fromApiBlocks(json.bloques ?? []);
-      setBlocks(loaded);
-
-      const sb: Record<string, FuerzaSerie[]> = {};
-      const rb: Record<string, CardioRonda[]> = {};
-      const fb: Record<string, Record<string, FuncionalReg>> = {};
-      for (const b of loaded) {
-        if (!b.id) continue;
-        if (b.kind === "fuerza") {
-          sb[b.id] = Array.from({ length: Math.max(1, b.series_objetivo) }, (_, i) => ({
-            numero_serie: i + 1,
-            repeticiones: null,
-            peso: null,
-            completada: false,
-          }));
-        }
-        if (b.kind === "cardio") {
-          const isInterval = b.modo === "intervalos_tiempo" || b.modo === "intervalos_calorias";
-          const n = isInterval ? Math.max(1, b.rondas ?? 1) : 1;
-          rb[b.id] = Array.from({ length: n }, (_, i) => ({
-            numero_ronda: i + 1,
-            watts: null,
-            calorias_real: null,
-            distancia_metros_real: null,
-            calorias_total_real: null,
-            completada: false,
-          }));
-        }
-        if (b.kind === "funcional") {
-          const map: Record<string, FuncionalReg> = {};
-          for (const ej of b.ejercicios) {
-            if (!ej.id) continue;
-            map[ej.id] = { kg: null, reps_real: null, calorias_real: null, metros_real: null };
-          }
-          fb[b.id] = map;
-        }
-      }
-      setSeriesByBlock(sb);
-      setRondasByBlock(rb);
-      setRegistrosByBlock(fb);
-      setPhase("wellness");
+      applyLoadedBlocks(loaded);
+      setPhase("wellness-gate");
     })();
     return () => {
       cancelled = true;
@@ -186,9 +238,17 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
     setFinalizing(true);
     setError(null);
 
-    const seriesFuerza = Object.entries(seriesByBlock).flatMap(([bloqueId, arr]) =>
+    const ejercicioToBloque = new Map<string, string>();
+    for (const b of blocks) {
+      if (b.kind !== "fuerza" || !b.id) continue;
+      for (const ej of b.ejercicios) {
+        if (ej.id) ejercicioToBloque.set(ej.id, b.id);
+      }
+    }
+    const seriesFuerza = Object.entries(seriesByEjercicio).flatMap(([ejercicioId, arr]) =>
       arr.map((s) => ({
-        bloque_id: bloqueId,
+        bloque_id: ejercicioToBloque.get(ejercicioId) ?? null,
+        ejercicio_fuerza_id: ejercicioId,
         numero_serie: s.numero_serie,
         repeticiones: s.repeticiones,
         peso: s.peso,
@@ -247,7 +307,58 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
     );
   }
 
-  if (phase === "wellness") {
+  if (phase === "wellness-gate") {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ background: "#080808" }}>
+        <div className="px-5 pt-14 pb-6">
+          <p style={EYEBROW}>Antes de empezar</p>
+          <h1 className="mt-0.5" style={{ fontFamily: FONT_TITLE, fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}>
+            ¿Registrar wellness?
+          </h1>
+          <p className="mt-3" style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: FONT_TEXT, lineHeight: 1.5, letterSpacing: "0.02em" }}>
+            Captura sueño, fatiga, estrés, ánimo y dolor antes de la sesión. Es opcional.
+          </p>
+        </div>
+
+        <div className="px-4 space-y-3 mt-2">
+          <button
+            type="button"
+            onClick={() => setPhase("wellness-form")}
+            className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase active:scale-[0.98]"
+            style={{
+              background: "#2abfbf",
+              color: "#000",
+              fontFamily: FONT_TEXT,
+              boxShadow: "0 4px 24px rgba(42,191,191,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
+            }}
+          >
+            Rellenar wellness
+          </button>
+          <button
+            type="button"
+            onClick={() => startSession(null)}
+            className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase active:scale-[0.98]"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "0.5px solid rgba(255,255,255,0.15)",
+              color: "rgba(255,255,255,0.85)",
+              fontFamily: FONT_TEXT,
+            }}
+          >
+            Saltar
+          </button>
+        </div>
+
+        {error && (
+          <p className="px-4 mt-4 text-xs text-center" style={{ color: "#ff8080", fontFamily: FONT_TEXT }}>
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (phase === "wellness-form") {
     return (
       <WellnessCheckIn
         onComplete={handleWellnessComplete}
@@ -277,15 +388,14 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
               key={b.uid}
               block={b}
               index={idx}
-              fuerzaSeries={b.kind === "fuerza" && b.id ? seriesByBlock[b.id] : undefined}
+              seriesByEjercicio={seriesByEjercicio}
               cardioRondas={b.kind === "cardio" && b.id ? rondasByBlock[b.id] : undefined}
               funcionalRegs={b.kind === "funcional" && b.id ? registrosByBlock[b.id] : undefined}
-              onFuerzaUpdate={(i, patch) => {
-                if (!b.id) return;
-                setSeriesByBlock((prev) => {
-                  const arr = [...(prev[b.id!] ?? [])];
+              onFuerzaUpdate={(ejId, i, patch) => {
+                setSeriesByEjercicio((prev) => {
+                  const arr = [...(prev[ejId] ?? [])];
                   arr[i] = { ...arr[i], ...patch };
-                  return { ...prev, [b.id!]: arr };
+                  return { ...prev, [ejId]: arr };
                 });
               }}
               onCardioUpdate={(i, patch) => {
@@ -306,7 +416,68 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
               }}
             />
           ))}
+
+          {draftBlock && (
+            <div className="space-y-3">
+              <div
+                className="rounded-xl px-3 py-2 text-[10px] tracking-[0.18em] uppercase font-semibold text-center"
+                style={{
+                  background: "rgba(42,191,191,0.06)",
+                  border: "0.5px dashed rgba(42,191,191,0.3)",
+                  color: "rgba(42,191,191,0.85)",
+                  fontFamily: FONT_TEXT,
+                }}
+              >
+                Configurando bloque nuevo
+              </div>
+              <BlockCard
+                block={draftBlock}
+                index={blocks.length}
+                total={blocks.length + 1}
+                onChange={(patch) => setDraftBlock((prev) => (prev ? ({ ...prev, ...patch } as Block) : prev))}
+                onRemove={() => setDraftBlock(null)}
+                onMove={() => {}}
+              />
+              <button
+                type="button"
+                onClick={saveDraftBlock}
+                disabled={savingDraft}
+                className="w-full py-3 rounded-2xl text-[11px] font-semibold tracking-widest uppercase active:scale-[0.98] disabled:opacity-40"
+                style={{
+                  background: "#2abfbf",
+                  color: "#000",
+                  fontFamily: FONT_TEXT,
+                  boxShadow: "0 4px 24px rgba(42,191,191,0.3)",
+                }}
+              >
+                {savingDraft ? "Guardando…" : "Guardar bloque y registrar"}
+              </button>
+            </div>
+          )}
+
+          {!draftBlock && (
+            <button
+              type="button"
+              onClick={() => setShowAddSheet(true)}
+              className="w-full py-3 rounded-2xl text-[11px] font-semibold tracking-widest uppercase active:scale-[0.98]"
+              style={{
+                background: "rgba(42,191,191,0.06)",
+                border: "0.5px dashed rgba(42,191,191,0.3)",
+                color: "rgba(42,191,191,0.85)",
+                fontFamily: FONT_TEXT,
+              }}
+            >
+              + Añadir bloque
+            </button>
+          )}
         </div>
+
+        {showAddSheet && (
+          <AddBlockSheet
+            onPick={(k) => startAddingBlock(k)}
+            onClose={() => setShowAddSheet(false)}
+          />
+        )}
 
         {error && (
           <p className="px-4 mt-4 text-xs text-center" style={{ color: "#ff8080", fontFamily: FONT_TEXT }}>
@@ -455,7 +626,7 @@ function NotaAdminBlock({ nota }: { nota: string | null }) {
 function BlockTrainer({
   block,
   index,
-  fuerzaSeries,
+  seriesByEjercicio,
   cardioRondas,
   funcionalRegs,
   onFuerzaUpdate,
@@ -464,10 +635,10 @@ function BlockTrainer({
 }: {
   block: Block;
   index: number;
-  fuerzaSeries?: FuerzaSerie[];
+  seriesByEjercicio: Record<string, FuerzaSerie[]>;
   cardioRondas?: CardioRonda[];
   funcionalRegs?: Record<string, FuncionalReg>;
-  onFuerzaUpdate: (i: number, patch: Partial<FuerzaSerie>) => void;
+  onFuerzaUpdate: (ejercicioId: string, i: number, patch: Partial<FuerzaSerie>) => void;
   onCardioUpdate: (i: number, patch: Partial<CardioRonda>) => void;
   onFuncionalUpdate: (ejId: string, patch: Partial<FuncionalReg>) => void;
 }) {
@@ -491,7 +662,7 @@ function BlockTrainer({
       <NotaAdminBlock nota={block.nota_admin} />
 
       {block.kind === "fuerza" && (
-        <FuerzaTrainer block={block as FuerzaBlock} series={fuerzaSeries ?? []} onUpdate={onFuerzaUpdate} />
+        <FuerzaTrainer block={block as FuerzaBlock} seriesByEjercicio={seriesByEjercicio} onUpdate={onFuerzaUpdate} />
       )}
       {block.kind === "cardio" && (
         <CardioTrainer block={block as CardioBlock} rondas={cardioRondas ?? []} onUpdate={onCardioUpdate} />
@@ -505,61 +676,76 @@ function BlockTrainer({
 
 function FuerzaTrainer({
   block,
-  series,
+  seriesByEjercicio,
   onUpdate,
 }: {
   block: FuerzaBlock;
-  series: FuerzaSerie[];
-  onUpdate: (i: number, patch: Partial<FuerzaSerie>) => void;
+  seriesByEjercicio: Record<string, FuerzaSerie[]>;
+  onUpdate: (ejercicioId: string, i: number, patch: Partial<FuerzaSerie>) => void;
 }) {
+  if (block.ejercicios.length === 0) {
+    return <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT }}>Sin ejercicios</p>;
+  }
   return (
-    <div className="space-y-2">
-      <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: FONT_TEXT }}>
-        {block.nombre_ejercicio || "—"}
-        <span style={{ color: "rgba(255,255,255,0.4)" }}>
-          {"  ·  "}
-          {block.series_objetivo} × {block.reps_objetivo}
-        </span>
-      </p>
-      <div className="space-y-1.5">
-        {series.map((s, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className="w-6 text-[10px] tracking-wider" style={{ color: "rgba(255,255,255,0.35)", fontFamily: FONT_TEXT }}>
-              {s.numero_serie}.
-            </span>
-            <input
-              type="number"
-              placeholder={`${block.reps_objetivo} reps`}
-              value={s.repeticiones ?? ""}
-              onChange={(e) => onUpdate(i, { repeticiones: e.target.value === "" ? null : Number(e.target.value) })}
-              className="flex-1 min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-            />
-            <input
-              type="number"
-              step="0.5"
-              placeholder="kg"
-              value={s.peso ?? ""}
-              onChange={(e) => onUpdate(i, { peso: e.target.value === "" ? null : Number(e.target.value) })}
-              className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-            />
-            <button
-              type="button"
-              onClick={() => onUpdate(i, { completada: !s.completada })}
-              aria-label="Marcar completada"
-              className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{
-                background: s.completada ? "rgba(42,191,191,0.18)" : "rgba(255,255,255,0.04)",
-                border: `0.5px solid ${s.completada ? "rgba(42,191,191,0.5)" : "rgba(255,255,255,0.1)"}`,
-                color: s.completada ? "#2abfbf" : "rgba(255,255,255,0.4)",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12l5 5L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+    <div className="space-y-3">
+      {block.ejercicios.map((ej, ejIdx) => {
+        const series = ej.id ? seriesByEjercicio[ej.id] ?? [] : [];
+        return (
+          <div
+            key={ej.uid}
+            className="rounded-xl px-3 py-3 space-y-2"
+            style={{ background: "rgba(255,255,255,0.025)", border: "0.5px solid rgba(255,255,255,0.06)" }}
+          >
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.85)", fontFamily: FONT_TEXT }}>
+                <span style={{ color: "rgba(255,128,96,0.7)" }}>{ejIdx + 1}.</span> {ej.nombre_ejercicio || "—"}
+              </p>
+              <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT }}>
+                {ej.series_objetivo} × {ej.reps_objetivo}
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {series.map((s, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="w-6 text-[10px] tracking-wider" style={{ color: "rgba(255,255,255,0.35)", fontFamily: FONT_TEXT }}>
+                    {s.numero_serie}.
+                  </span>
+                  <input
+                    type="number"
+                    placeholder={`${ej.reps_objetivo} reps`}
+                    value={s.repeticiones ?? ""}
+                    onChange={(e) => ej.id && onUpdate(ej.id, i, { repeticiones: e.target.value === "" ? null : Number(e.target.value) })}
+                    className="flex-1 min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                  />
+                  <input
+                    type="number"
+                    step="0.5"
+                    placeholder="kg"
+                    value={s.peso ?? ""}
+                    onChange={(e) => ej.id && onUpdate(ej.id, i, { peso: e.target.value === "" ? null : Number(e.target.value) })}
+                    className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => ej.id && onUpdate(ej.id, i, { completada: !s.completada })}
+                    aria-label="Marcar completada"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center"
+                    style={{
+                      background: s.completada ? "rgba(42,191,191,0.18)" : "rgba(255,255,255,0.04)",
+                      border: `0.5px solid ${s.completada ? "rgba(42,191,191,0.5)" : "rgba(255,255,255,0.1)"}`,
+                      color: s.completada ? "#2abfbf" : "rgba(255,255,255,0.4)",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12l5 5L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

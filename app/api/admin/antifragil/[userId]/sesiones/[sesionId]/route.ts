@@ -19,7 +19,7 @@ async function verifyAdmin(request: NextRequest): Promise<boolean> {
   return data.user?.email === ADMIN_EMAIL;
 }
 
-type SerieFuerza = { bloque_id: string; numero_serie: number; repeticiones: number | null; peso: number | null; completada: boolean };
+type SerieFuerza = { bloque_id: string | null; ejercicio_fuerza_id: string; numero_serie: number; repeticiones: number | null; peso: number | null; completada: boolean };
 type SerieCardio = { bloque_id: string; numero_ronda: number; watts: number | null; calorias_real: number | null; distancia_metros_real: number | null; calorias_total_real: number | null; completada: boolean };
 type RegistroFuncional = { ejercicio_funcional_id: string; kg: number | null; reps_real: number | null; calorias_real: number | null; metros_real: number | null };
 

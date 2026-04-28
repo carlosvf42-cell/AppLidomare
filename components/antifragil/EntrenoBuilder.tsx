@@ -9,12 +9,14 @@ import {
   type CardioBlock,
   type CardioModo,
   type FuerzaBlock,
+  type FuerzaEjercicio,
   type FuncionalBlock,
   type FuncionalEjercicio,
   type FuncionalFormato,
   type Maquina,
   makeCardio,
   makeFuerza,
+  makeFuerzaEjercicio,
   makeFuncional,
   makeFuncionalEjercicio,
   toApiBlocks,
@@ -149,7 +151,7 @@ export default function EntrenoBuilder({ userId, entrenoId, initialNombre, initi
 
   async function handleGuardar() {
     if (blocks.length === 0) {
-      setError("Añade al menos un bloque");
+      setError("Añade al menos un bloque para guardarlo como siguiente");
       return;
     }
     setSaving("siguiente");
@@ -159,10 +161,6 @@ export default function EntrenoBuilder({ userId, entrenoId, initialNombre, initi
   }
 
   async function handleEntrenarAhora() {
-    if (blocks.length === 0) {
-      setError("Añade al menos un bloque");
-      return;
-    }
     setSaving("ahora");
     const id = await persist("programado");
     setSaving(null);
@@ -295,7 +293,7 @@ export default function EntrenoBuilder({ userId, entrenoId, initialNombre, initi
   );
 }
 
-function AddBlockSheet({ onPick, onClose }: { onPick: (k: Block["kind"]) => void; onClose: () => void }) {
+export function AddBlockSheet({ onPick, onClose }: { onPick: (k: Block["kind"]) => void; onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
@@ -349,7 +347,7 @@ function AddBlockSheet({ onPick, onClose }: { onPick: (k: Block["kind"]) => void
   );
 }
 
-function BlockCard({
+export function BlockCard({
   block,
   index,
   total,
@@ -507,23 +505,87 @@ function NumField({
 /* ============ FUERZA ============ */
 
 function FuerzaForm({ block, onChange }: { block: FuerzaBlock; onChange: (patch: Partial<FuerzaBlock>) => void }) {
+  function addEj() {
+    onChange({ ejercicios: [...block.ejercicios, makeFuerzaEjercicio(block.ejercicios.length)] });
+  }
+  function updateEj(uid: string, patch: Partial<FuerzaEjercicio>) {
+    onChange({ ejercicios: block.ejercicios.map((e) => (e.uid === uid ? { ...e, ...patch } : e)) });
+  }
+  function removeEj(uid: string) {
+    onChange({
+      ejercicios: block.ejercicios.filter((e) => e.uid !== uid).map((e, i) => ({ ...e, orden: i })),
+    });
+  }
+  function moveEj(uid: string, dir: -1 | 1) {
+    const idx = block.ejercicios.findIndex((e) => e.uid === uid);
+    const target = idx + dir;
+    if (idx < 0 || target < 0 || target >= block.ejercicios.length) return;
+    const arr = block.ejercicios.slice();
+    [arr[idx], arr[target]] = [arr[target], arr[idx]];
+    onChange({ ejercicios: arr.map((e, i) => ({ ...e, orden: i })) });
+  }
+
   return (
     <div className="space-y-3">
       <div>
-        <p style={{ ...LABEL, marginBottom: 4 }}>Ejercicio</p>
-        <div className="flex">
-          <EjercicioSelector
-            value={block.nombre_ejercicio}
-            ejercicioId={block.ejercicio_id}
-            onChange={(nombre, ejercicioId) =>
-              onChange({ nombre_ejercicio: nombre, ejercicio_id: ejercicioId })
-            }
-          />
+        <p style={{ ...LABEL, marginBottom: 6 }}>Ejercicios del bloque</p>
+        <div className="space-y-2">
+          {block.ejercicios.map((ej, idx) => (
+            <div
+              key={ej.uid}
+              className="rounded-xl px-3 py-3 space-y-2"
+              style={{ background: "rgba(255,255,255,0.025)", border: "0.5px solid rgba(255,255,255,0.06)" }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] tracking-[0.18em] uppercase font-semibold" style={{ color: "rgba(255,128,96,0.85)", fontFamily: FONT_TEXT }}>
+                  Ejercicio {idx + 1}
+                </span>
+                <div className="flex items-center gap-1">
+                  <IconBtn disabled={idx === 0} onClick={() => moveEj(ej.uid, -1)} label="Subir">
+                    <path d="M6 15l6-6 6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </IconBtn>
+                  <IconBtn disabled={idx === block.ejercicios.length - 1} onClick={() => moveEj(ej.uid, 1)} label="Bajar">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </IconBtn>
+                  <IconBtn
+                    onClick={() => removeEj(ej.uid)}
+                    label="Eliminar"
+                    danger
+                    disabled={block.ejercicios.length <= 1}
+                  >
+                    <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </IconBtn>
+                </div>
+              </div>
+              <div className="flex">
+                <EjercicioSelector
+                  value={ej.nombre_ejercicio}
+                  ejercicioId={ej.ejercicio_id}
+                  onChange={(nombre, ejercicioId) =>
+                    updateEj(ej.uid, { nombre_ejercicio: nombre, ejercicio_id: ejercicioId })
+                  }
+                />
+              </div>
+              <div className="flex gap-2">
+                <NumField label="Series" value={ej.series_objetivo} onChange={(v) => updateEj(ej.uid, { series_objetivo: v ?? 0 })} />
+                <NumField label="Reps" value={ej.reps_objetivo} onChange={(v) => updateEj(ej.uid, { reps_objetivo: v ?? 0 })} />
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-      <div className="flex gap-3">
-        <NumField label="Series" value={block.series_objetivo} onChange={(v) => onChange({ series_objetivo: v ?? 0 })} />
-        <NumField label="Reps" value={block.reps_objetivo} onChange={(v) => onChange({ reps_objetivo: v ?? 0 })} />
+        <button
+          type="button"
+          onClick={addEj}
+          className="w-full mt-2 py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold"
+          style={{
+            background: "rgba(255,128,96,0.06)",
+            border: "0.5px dashed rgba(255,128,96,0.3)",
+            color: "rgba(255,128,96,0.85)",
+            fontFamily: FONT_TEXT,
+          }}
+        >
+          + Añadir ejercicio
+        </button>
       </div>
     </div>
   );
@@ -630,12 +692,12 @@ function CardioForm({ block, onChange }: { block: CardioBlock; onChange: (patch:
               <NumField label="Watts (opc.)" value={block.watts_objetivo} onChange={(v) => onChange({ watts_objetivo: v })} suffix="W" />
             )}
           </div>
-          <MinSegField
+          <DuracionField
             label="Acción"
             seconds={block.duracion_accion_seg}
             onChange={(v) => onChange({ duracion_accion_seg: v })}
           />
-          <MinSegField
+          <DuracionField
             label="Descanso"
             seconds={block.duracion_descanso_seg}
             onChange={(v) => onChange({ duracion_descanso_seg: v })}
@@ -655,7 +717,7 @@ function CardioForm({ block, onChange }: { block: CardioBlock; onChange: (patch:
   );
 }
 
-function MinSegField({
+function DuracionField({
   label,
   seconds,
   onChange,
@@ -664,37 +726,87 @@ function MinSegField({
   seconds: number | null;
   onChange: (v: number | null) => void;
 }) {
-  const min = seconds == null ? "" : Math.floor(seconds / 60);
-  const sec = seconds == null ? "" : seconds % 60;
-  function update(m: string | number, s: string | number) {
-    const mNum = m === "" ? 0 : Number(m);
-    const sNum = s === "" ? 0 : Number(s);
-    if (m === "" && s === "") onChange(null);
-    else onChange(mNum * 60 + sNum);
+  // Default unit: if total seconds < 60 prefer SEGUNDOS; else MINUTOS
+  const initialUnit: "min" | "seg" = seconds != null && seconds > 0 && seconds < 60 ? "seg" : "min";
+  const [unit, setUnit] = useState<"min" | "seg">(initialUnit);
+
+  // Decompose for MIN mode
+  const mm = seconds == null ? "" : Math.floor(seconds / 60);
+  const ss = seconds == null ? "" : seconds % 60;
+
+  function setMM(v: string) {
+    const m = v === "" ? 0 : Math.max(0, Math.min(99, Number(v)));
+    const s = ss === "" ? 0 : Number(ss);
+    if (v === "" && (ss === "" || ss === 0)) onChange(null);
+    else onChange(m * 60 + s);
   }
+  function setSS_minMode(v: string) {
+    const s = v === "" ? 0 : Math.max(0, Math.min(59, Number(v)));
+    const m = mm === "" ? 0 : Number(mm);
+    if (v === "" && (mm === "" || mm === 0)) onChange(null);
+    else onChange(m * 60 + s);
+  }
+  function setSS_secMode(v: string) {
+    if (v === "") onChange(null);
+    else onChange(Math.max(0, Number(v)));
+  }
+
   return (
     <div>
-      <p style={{ ...LABEL, marginBottom: 4 }}>{label} (min:seg)</p>
-      <div className="flex items-center gap-2">
-        <input
-          type="number"
-          min={0}
-          value={min}
-          onChange={(e) => update(e.target.value, sec)}
-          placeholder="min"
-          className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-        />
-        <span style={{ color: "rgba(255,255,255,0.35)" }}>:</span>
-        <input
-          type="number"
-          min={0}
-          max={59}
-          value={sec}
-          onChange={(e) => update(min, e.target.value)}
-          placeholder="seg"
-          className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-        />
+      <p style={{ ...LABEL, marginBottom: 6 }}>{label}</p>
+      <div className="flex gap-1.5 mb-2">
+        {(["min", "seg"] as const).map((u) => {
+          const sel = unit === u;
+          return (
+            <button
+              key={u}
+              type="button"
+              onClick={() => setUnit(u)}
+              className="px-3 py-1.5 rounded-md text-[10px] tracking-[0.15em] uppercase font-semibold"
+              style={{
+                background: sel ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.04)",
+                border: `0.5px solid ${sel ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.08)"}`,
+                color: sel ? "#2abfbf" : "rgba(255,255,255,0.5)",
+                fontFamily: FONT_TEXT,
+              }}
+            >
+              {u === "min" ? "Minutos" : "Segundos"}
+            </button>
+          );
+        })}
       </div>
+      {unit === "min" ? (
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min={0}
+            max={99}
+            value={mm}
+            onChange={(e) => setMM(e.target.value)}
+            placeholder="mm"
+            className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+          />
+          <span style={{ color: "rgba(255,255,255,0.35)" }}>:</span>
+          <input
+            type="number"
+            min={0}
+            max={59}
+            value={ss}
+            onChange={(e) => setSS_minMode(e.target.value)}
+            placeholder="ss"
+            className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+          />
+        </div>
+      ) : (
+        <input
+          type="number"
+          min={0}
+          value={seconds == null ? "" : seconds}
+          onChange={(e) => setSS_secMode(e.target.value)}
+          placeholder="ss"
+          className="w-24 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+        />
+      )}
     </div>
   );
 }

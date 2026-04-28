@@ -20,15 +20,20 @@ async function verifyAdmin(request: NextRequest): Promise<{ ok: boolean; adminId
   return { ok: true, adminId: data.user.id };
 }
 
-type FuerzaBlockBody = {
-  kind: "fuerza";
+type FuerzaEjercicioBody = {
   orden: number;
-  nombre: string | null;
   ejercicio_id: string | null;
   nombre_ejercicio: string | null;
   series_objetivo: number | null;
   reps_objetivo: number | null;
+};
+
+type FuerzaBlockBody = {
+  kind: "fuerza";
+  orden: number;
+  nombre: string | null;
   nota_admin: string | null;
+  ejercicios: FuerzaEjercicioBody[];
 };
 
 type CardioBlockBody = {
@@ -129,19 +134,41 @@ export async function insertBlocks(
   const funcional = bloques.filter((b): b is FuncionalBlockBody => b.kind === "funcional");
 
   if (fuerza.length > 0) {
-    const { error } = await supabase.from("bloques_fuerza").insert(
-      fuerza.map((b) => ({
-        entreno_id: entrenoId,
-        orden: b.orden,
-        nombre: b.nombre,
-        ejercicio_id: b.ejercicio_id,
-        nombre_ejercicio: b.nombre_ejercicio,
-        series_objetivo: b.series_objetivo,
-        reps_objetivo: b.reps_objetivo,
-        nota_admin: b.nota_admin,
-      }))
-    );
-    if (error) return { error: `bloques_fuerza: ${error.message}` };
+    const { data: insertedFuerza, error } = await supabase
+      .from("bloques_fuerza")
+      .insert(
+        fuerza.map((b) => ({
+          entreno_id: entrenoId,
+          orden: b.orden,
+          nombre: b.nombre,
+          nota_admin: b.nota_admin,
+        }))
+      )
+      .select("id, orden");
+    if (error || !insertedFuerza) return { error: `bloques_fuerza: ${error?.message ?? "insert vacío"}` };
+
+    const fuerzaIdByOrden = new Map<number, string>();
+    for (const row of insertedFuerza) fuerzaIdByOrden.set(row.orden, row.id);
+
+    const ejFuerzaRows: any[] = [];
+    for (const block of fuerza) {
+      const bloqueId = fuerzaIdByOrden.get(block.orden);
+      if (!bloqueId) return { error: `bloques_fuerza: id no resuelto para orden ${block.orden}` };
+      for (const ej of block.ejercicios) {
+        ejFuerzaRows.push({
+          bloque_id: bloqueId,
+          orden: ej.orden,
+          ejercicio_id: ej.ejercicio_id,
+          nombre_ejercicio: ej.nombre_ejercicio,
+          series_objetivo: ej.series_objetivo,
+          reps_objetivo: ej.reps_objetivo,
+        });
+      }
+    }
+    if (ejFuerzaRows.length > 0) {
+      const { error: ejErr } = await supabase.from("ejercicios_fuerza").insert(ejFuerzaRows);
+      if (ejErr) return { error: `ejercicios_fuerza: ${ejErr.message}` };
+    }
   }
 
   if (cardio.length > 0) {

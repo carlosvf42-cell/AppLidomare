@@ -42,7 +42,7 @@ export async function GET(
     const [fuerzaRes, cardioRes, funcionalRes] = await Promise.all([
       supabase
         .from("bloques_fuerza")
-        .select("id, orden, nombre, ejercicio_id, nombre_ejercicio, series_objetivo, reps_objetivo, nota_admin")
+        .select("id, orden, nombre, nota_admin")
         .eq("entreno_id", entrenoId)
         .order("orden"),
       supabase
@@ -57,6 +57,17 @@ export async function GET(
         .order("orden"),
     ]);
 
+    const fuerzaIds = (fuerzaRes.data ?? []).map((b: any) => b.id);
+    let ejerciciosFuerza: any[] = [];
+    if (fuerzaIds.length > 0) {
+      const { data } = await supabase
+        .from("ejercicios_fuerza")
+        .select("id, bloque_id, orden, ejercicio_id, nombre_ejercicio, series_objetivo, reps_objetivo")
+        .in("bloque_id", fuerzaIds)
+        .order("orden");
+      ejerciciosFuerza = data ?? [];
+    }
+
     const funcIds = (funcionalRes.data ?? []).map((b: any) => b.id);
     let ejerciciosFunc: any[] = [];
     if (funcIds.length > 0) {
@@ -69,7 +80,11 @@ export async function GET(
     }
 
     const bloques = [
-      ...(fuerzaRes.data ?? []).map((b: any) => ({ ...b, kind: "fuerza" as const })),
+      ...(fuerzaRes.data ?? []).map((b: any) => ({
+        ...b,
+        kind: "fuerza" as const,
+        ejercicios: ejerciciosFuerza.filter((e) => e.bloque_id === b.id),
+      })),
       ...(cardioRes.data ?? []).map((b: any) => ({ ...b, kind: "cardio" as const })),
       ...(funcionalRes.data ?? []).map((b: any) => ({
         ...b,

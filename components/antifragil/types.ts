@@ -7,17 +7,24 @@ export type CardioModo =
   | "intervalos_calorias";
 export type FuncionalFormato = "for_time" | "amrap" | "emom" | "tabata";
 
+export interface FuerzaEjercicio {
+  uid: string;
+  id?: string;
+  orden: number;
+  ejercicio_id: string | null;
+  nombre_ejercicio: string;
+  series_objetivo: number;
+  reps_objetivo: number;
+}
+
 export interface FuerzaBlock {
   kind: "fuerza";
   uid: string;
   id?: string;
   orden: number;
   nombre: string | null;
-  ejercicio_id: string | null;
-  nombre_ejercicio: string;
-  series_objetivo: number;
-  reps_objetivo: number;
   nota_admin: string | null;
+  ejercicios: FuerzaEjercicio[];
 }
 
 export interface CardioBlock {
@@ -71,17 +78,25 @@ export function newUid(): string {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
 }
 
+export function makeFuerzaEjercicio(orden: number): FuerzaEjercicio {
+  return {
+    uid: newUid(),
+    orden,
+    ejercicio_id: null,
+    nombre_ejercicio: "",
+    series_objetivo: 3,
+    reps_objetivo: 10,
+  };
+}
+
 export function makeFuerza(orden: number): FuerzaBlock {
   return {
     kind: "fuerza",
     uid: newUid(),
     orden,
     nombre: null,
-    ejercicio_id: null,
-    nombre_ejercicio: "",
-    series_objetivo: 3,
-    reps_objetivo: 10,
     nota_admin: null,
+    ejercicios: [makeFuerzaEjercicio(0)],
   };
 }
 
@@ -147,11 +162,14 @@ export function toApiBlocks(blocks: Block[]): any[] {
         kind: "fuerza",
         orden: b.orden,
         nombre: b.nombre,
-        ejercicio_id: b.ejercicio_id,
-        nombre_ejercicio: b.nombre_ejercicio || null,
-        series_objetivo: b.series_objetivo,
-        reps_objetivo: b.reps_objetivo,
         nota_admin: b.nota_admin,
+        ejercicios: b.ejercicios.map((e) => ({
+          orden: e.orden,
+          ejercicio_id: e.ejercicio_id,
+          nombre_ejercicio: e.nombre_ejercicio || null,
+          series_objetivo: e.series_objetivo,
+          reps_objetivo: e.reps_objetivo,
+        })),
       };
     }
     if (b.kind === "cardio") {
@@ -204,11 +222,16 @@ export function fromApiBlocks(rows: any[]): Block[] {
           id: r.id,
           orden: r.orden,
           nombre: r.nombre ?? null,
-          ejercicio_id: r.ejercicio_id ?? null,
-          nombre_ejercicio: r.nombre_ejercicio ?? "",
-          series_objetivo: r.series_objetivo ?? 3,
-          reps_objetivo: r.reps_objetivo ?? 10,
           nota_admin: r.nota_admin ?? null,
+          ejercicios: (r.ejercicios ?? []).map((e: any) => ({
+            uid: newUid(),
+            id: e.id,
+            orden: e.orden ?? 0,
+            ejercicio_id: e.ejercicio_id ?? null,
+            nombre_ejercicio: e.nombre_ejercicio ?? "",
+            series_objetivo: e.series_objetivo ?? 3,
+            reps_objetivo: e.reps_objetivo ?? 10,
+          })),
         };
         return b;
       }
