@@ -43,13 +43,13 @@ export async function GET(
         .maybeSingle(),
       supabase
         .from("entrenos_antifragil")
-        .select("id, tipo, nombre, estado, created_at")
+        .select("id, nombre, estado, created_at")
         .eq("user_id", userId)
         .eq("estado", "programado")
         .order("created_at", { ascending: true }),
       supabase
         .from("sesiones_antifragil")
-        .select("id, fecha, completada, duracion_minutos, rpe, comentario, entreno_id, entrenos_antifragil(tipo, nombre)")
+        .select("id, fecha, completada, duracion_minutos, rpe, comentario, entreno_id, tipo_resumen, entrenos_antifragil(nombre)")
         .eq("user_id", userId)
         .eq("completada", true)
         .order("fecha", { ascending: false })
@@ -60,6 +60,41 @@ export async function GET(
       return NextResponse.json({ error: userRes.error?.message ?? "Usuario no encontrado" }, { status: 404 });
     }
 
+    const entrenoIds = (entrenosRes.data ?? []).map((e: any) => e.id);
+    const tiposPorEntreno: Record<string, Set<string>> = {};
+    if (entrenoIds.length > 0) {
+      const [bf, bc, bfn] = await Promise.all([
+        supabase.from("bloques_fuerza").select("entreno_id").in("entreno_id", entrenoIds),
+        supabase.from("bloques_cardio").select("entreno_id").in("entreno_id", entrenoIds),
+        supabase.from("bloques_funcional").select("entreno_id").in("entreno_id", entrenoIds),
+      ]);
+      for (const row of bf.data ?? []) {
+        (tiposPorEntreno[row.entreno_id] ??= new Set()).add("fuerza");
+      }
+      for (const row of bc.data ?? []) {
+        (tiposPorEntreno[row.entreno_id] ??= new Set()).add("cardio");
+      }
+      for (const row of bfn.data ?? []) {
+        (tiposPorEntreno[row.entreno_id] ??= new Set()).add("funcional");
+      }
+    }
+    function resumen(set: Set<string> | undefined): string {
+      if (!set || set.size === 0) return "";
+      if (set.size > 1) return "mixto";
+      return [...set][0];
+    }
+    const entrenos = (entrenosRes.data ?? []).map((e: any) => ({
+      ...e,
+      tipo: resumen(tiposPorEntreno[e.id]),
+    }));
+
+    const sesiones = (sesionesRes.data ?? []).map((s: any) => ({
+      ...s,
+      entrenos_antifragil: s.entrenos_antifragil
+        ? { tipo: s.tipo_resumen ?? "", nombre: s.entrenos_antifragil.nombre }
+        : null,
+    }));
+
     const u = userRes.data.user;
     return NextResponse.json({
       user: {
@@ -68,8 +103,8 @@ export async function GET(
         full_name: (u.user_metadata?.full_name as string | undefined) ?? null,
         is_antifragil: !!profileRes.data?.is_antifragil,
       },
-      entrenos: entrenosRes.data ?? [],
-      sesiones: sesionesRes.data ?? [],
+      entrenos,
+      sesiones,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? "Error desconocido" }, { status: 500 });

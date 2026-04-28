@@ -33,9 +33,10 @@ interface WellnessCheckInProps {
   onComplete: () => void;
   onSkip: () => void;
   ctaLabel?: string;
+  onSubmit?: (answers: { sueno: number; fatiga: number; estres: number; animo: number; dolor: number; omitido: boolean }) => Promise<{ ok: boolean; error?: string }>;
 }
 
-export default function WellnessCheckIn({ sesionId, onComplete, onSkip, ctaLabel = "Iniciar entrenamiento" }: WellnessCheckInProps) {
+export default function WellnessCheckIn({ sesionId, onComplete, onSkip, ctaLabel = "Iniciar entrenamiento", onSubmit }: WellnessCheckInProps) {
   const [answers, setAnswers] = useState<WellnessAnswers>({});
   const [isSaving, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +55,14 @@ export default function WellnessCheckIn({ sesionId, onComplete, onSkip, ctaLabel
     if (!allDone) return;
     setError(null);
     startSave(async () => {
+      if (onSubmit) {
+        const res = await onSubmit({
+          sueno: answers.sueno, fatiga: answers.fatiga, estres: answers.estres, animo: answers.animo, dolor: answers.dolor, omitido: false,
+        });
+        if (!res.ok) { setError(res.error ?? "Error al guardar. Inténtalo de nuevo."); return; }
+        onComplete();
+        return;
+      }
       const supabase = getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -68,6 +77,11 @@ export default function WellnessCheckIn({ sesionId, onComplete, onSkip, ctaLabel
   }
 
   async function handleOmitir() {
+    if (onSubmit) {
+      await onSubmit({ sueno: 3, fatiga: 3, estres: 3, animo: 3, dolor: 3, omitido: true });
+      onSkip();
+      return;
+    }
     const supabase = getSupabase();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { onSkip(); return; }

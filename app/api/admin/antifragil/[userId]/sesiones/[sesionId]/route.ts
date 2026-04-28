@@ -1,0 +1,83 @@
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { NextResponse, type NextRequest } from "next/server";
+
+const ADMIN_EMAIL = "carlosvf42@gmail.com";
+
+function getAdminClient(): SupabaseClient {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
+
+async function verifyAdmin(request: NextRequest): Promise<boolean> {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return false;
+  const token = authHeader.slice(7);
+  const { data } = await getAdminClient().auth.getUser(token);
+  return data.user?.email === ADMIN_EMAIL;
+}
+
+type SerieFuerza = { bloque_id: string; numero_serie: number; repeticiones: number | null; peso: number | null; completada: boolean };
+type SerieCardio = { bloque_id: string; numero_ronda: number; watts: number | null; calorias_real: number | null; distancia_metros_real: number | null; calorias_total_real: number | null; completada: boolean };
+type RegistroFuncional = { ejercicio_funcional_id: string; kg: number | null; reps_real: number | null; calorias_real: number | null; metros_real: number | null };
+
+export async function PATCH(
+  request: NextRequest,
+  ctx: { params: Promise<{ userId: string; sesionId: string }> }
+) {
+  if (!(await verifyAdmin(request))) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  try {
+    const { userId, sesionId } = await ctx.params;
+    const body = await request.json();
+    const supabase = getAdminClient();
+
+    const { data: sesion } = await supabase
+      .from("sesiones_antifragil")
+      .select("id, user_id, entreno_id")
+      .eq("id", sesionId)
+      .maybeSingle();
+    if (!sesion || sesion.user_id !== userId) {
+      return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
+    }
+
+    const { error: updErr } = await supabase
+      .from("sesiones_antifragil")
+      .update({
+        completada: true,
+        rpe: body.rpe ?? null,
+        comentario: body.comentario ?? null,
+        duracion_minutos: body.duracion_minutos ?? null,
+        tipo_resumen: body.tipo_resumen ?? null,
+        wellness_entry_id: body.wellness_entry_id ?? null,
+      })
+      .eq("id", sesionId);
+    if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
+
+    if (Array.isArray(body.series_fuerza) && body.series_fuerza.length > 0) {
+      const rows = (body.series_fuerza as SerieFuerza[]).map((s) => ({ ...s, sesion_id: sesionId }));
+      const { error } = await supabase.from("series_fuerza_antifragil").insert(rows);
+      if (error) return NextResponse.json({ error: `series_fuerza: ${error.message}` }, { status: 500 });
+    }
+    if (Array.isArray(body.series_cardio) && body.series_cardio.length > 0) {
+      const rows = (body.series_cardio as SerieCardio[]).map((s) => ({ ...s, sesion_id: sesionId }));
+      const { error } = await supabase.from("series_cardio_antifragil").insert(rows);
+      if (error) return NextResponse.json({ error: `series_cardio: ${error.message}` }, { status: 500 });
+    }
+    if (Array.isArray(body.registros_funcional) && body.registros_funcional.length > 0) {
+      const rows = (body.registros_funcional as RegistroFuncional[]).map((r) => ({ ...r, sesion_id: sesionId }));
+      const { error } = await supabase.from("registros_funcional").insert(rows);
+      if (error) return NextResponse.json({ error: `registros_funcional: ${error.message}` }, { status: 500 });
+    }
+
+    await supabase
+      .from("entrenos_antifragil")
+      .update({ estado: "completado", updated_at: new Date().toISOString() })
+      .eq("id", sesion.entreno_id);
+
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message ?? "Error desconocido" }, { status: 500 });
+  }
+}

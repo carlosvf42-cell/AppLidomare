@@ -111,6 +111,27 @@ export default function ClienteDetailPage() {
   const [data, setData] = useState<ClienteData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [duplicandoId, setDuplicandoId] = useState<string | null>(null);
+
+  async function duplicar(entrenoId: string) {
+    if (!token || !userId) return;
+    setDuplicandoId(entrenoId);
+    const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}/duplicar`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setDuplicandoId(null);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setError(j.error ?? "No se pudo duplicar");
+      return;
+    }
+    const refreshed = await fetch(`/api/admin/antifragil/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json());
+    if (refreshed.error) setError(refreshed.error);
+    else setData(refreshed as ClienteData);
+  }
 
   useEffect(() => {
     getSupabase()
@@ -258,19 +279,38 @@ export default function ClienteDetailPage() {
                         {e.nombre || "Sin nombre"}
                       </p>
                     </div>
-                    <Link
-                      href={`/admin/antifragil/${data.user.id}/entreno/${e.id}`}
-                      className="shrink-0 px-4 py-2 rounded-xl text-[10px] font-semibold tracking-widest uppercase transition-colors active:scale-[0.98]"
-                      style={{
-                        background: "rgba(42,191,191,0.12)",
-                        border: "0.5px solid rgba(42,191,191,0.35)",
-                        color: "#2abfbf",
-                        fontFamily: "Barlow Condensed, sans-serif",
-                        textDecoration: "none",
-                      }}
-                    >
-                      Iniciar
-                    </Link>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => duplicar(e.id)}
+                        disabled={duplicandoId === e.id}
+                        aria-label="Duplicar entreno"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-[0.96] disabled:opacity-40"
+                        style={{
+                          background: "rgba(255,255,255,0.05)",
+                          border: "0.5px solid rgba(255,255,255,0.12)",
+                          color: "rgba(255,255,255,0.6)",
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.4" />
+                          <path d="M5 15V6a2 2 0 012-2h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                      <Link
+                        href={`/admin/antifragil/${data.user.id}/entreno/${e.id}`}
+                        className="px-4 py-2 rounded-xl text-[10px] font-semibold tracking-widest uppercase transition-colors active:scale-[0.98]"
+                        style={{
+                          background: "rgba(42,191,191,0.12)",
+                          border: "0.5px solid rgba(42,191,191,0.35)",
+                          color: "#2abfbf",
+                          fontFamily: "Barlow Condensed, sans-serif",
+                          textDecoration: "none",
+                        }}
+                      >
+                        Iniciar
+                      </Link>
+                    </div>
                   </div>
                 );
               })}
@@ -315,13 +355,29 @@ export default function ClienteDetailPage() {
                     <p className="truncate mb-1" style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>
                       {nombreEntreno}
                     </p>
-                    <div className="flex items-center gap-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>
-                      {s.duracion_minutos != null && (
-                        <span>{s.duracion_minutos} min</span>
-                      )}
-                      {s.rpe != null && (
-                        <span>RPE {s.rpe}/10</span>
-                      )}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>
+                        {s.duracion_minutos != null && (
+                          <span>{s.duracion_minutos} min</span>
+                        )}
+                        {s.rpe != null && (
+                          <span>RPE {s.rpe}/10</span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => duplicar(s.entreno_id)}
+                        disabled={duplicandoId === s.entreno_id}
+                        className="text-[10px] font-semibold tracking-widest uppercase active:scale-[0.97] disabled:opacity-40 px-3 py-1.5 rounded-lg"
+                        style={{
+                          background: "rgba(42,191,191,0.08)",
+                          border: "0.5px solid rgba(42,191,191,0.25)",
+                          color: "#2abfbf",
+                          fontFamily: "Barlow Condensed, sans-serif",
+                        }}
+                      >
+                        {duplicandoId === s.entreno_id ? "Duplicando…" : "Repetir"}
+                      </button>
                     </div>
                   </div>
                 );
