@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
 const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
@@ -10,6 +11,8 @@ type UsuarioRow = {
   email: string;
   last_sign_in_at: string | null;
   created_at: string;
+  full_name: string | null;
+  is_antifragil: boolean;
 };
 
 function getSupabase() {
@@ -31,6 +34,22 @@ function formatDate(dateStr: string | null) {
   });
 }
 
+function AntifragilBadge() {
+  return (
+    <span
+      className="shrink-0 text-[9px] tracking-[0.2em] uppercase font-semibold px-2 py-0.5 rounded"
+      style={{
+        background: "rgba(42,191,191,0.12)",
+        border: "0.5px solid rgba(42,191,191,0.4)",
+        color: "#2abfbf",
+        fontFamily: "Barlow Condensed, sans-serif",
+      }}
+    >
+      Antifrágil
+    </span>
+  );
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
@@ -38,6 +57,7 @@ export default function AdminPage() {
 
   // Invite state
   const [email, setEmail] = useState("");
+  const [inviteAntifragil, setInviteAntifragil] = useState(false);
   const [inviteStatus, setInviteStatus] = useState<"idle" | "ok" | "error">("idle");
   const [inviteMsg, setInviteMsg] = useState("");
   const [isSending, startSend] = useTransition();
@@ -49,6 +69,7 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState("");
   const [deletingUser, setDeletingUser] = useState<UsuarioRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   // Auth check + capture token for API calls
   useEffect(() => {
@@ -103,9 +124,32 @@ export default function AdminPage() {
         });
         const data = await res.json();
         if (res.ok) {
+          // If marked antifragil, set the flag on the new user (returned id)
+          const newUserId = data.user?.id ?? data.id;
+          if (inviteAntifragil && newUserId) {
+            await fetch("/api/users", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ id: newUserId, is_antifragil: true }),
+            });
+          }
           setInviteStatus("ok");
           setInviteMsg("Invitación enviada correctamente.");
           setEmail("");
+          setInviteAntifragil(false);
+          // Refresh users list
+          fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } })
+            .then((r) => r.json())
+            .then((d) => {
+              if (Array.isArray(d.users)) {
+                const sorted = (d.users as UsuarioRow[]).sort(
+                  (a, b) =>
+                    new Date(b.last_sign_in_at ?? b.created_at).getTime() -
+                    new Date(a.last_sign_in_at ?? a.created_at).getTime()
+                );
+                setUsuarios(sorted);
+              }
+            });
         } else {
           setInviteStatus("error");
           setInviteMsg(data.details ?? data.error ?? "Error al enviar la invitación.");
@@ -134,9 +178,40 @@ export default function AdminPage() {
     setDeletingUser(null);
   }
 
+  async function toggleAntifragil(user: UsuarioRow) {
+    if (!token || togglingId) return;
+    const next = !user.is_antifragil;
+    setTogglingId(user.id);
+    // Optimistic update
+    setUsuarios((prev) =>
+      prev.map((u) => (u.id === user.id ? { ...u, is_antifragil: next } : u))
+    );
+    try {
+      const res = await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: user.id, is_antifragil: next }),
+      });
+      if (!res.ok) {
+        // Revert
+        setUsuarios((prev) =>
+          prev.map((u) => (u.id === user.id ? { ...u, is_antifragil: !next } : u))
+        );
+      }
+    } catch {
+      setUsuarios((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, is_antifragil: !next } : u))
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
   const filteredUsers = userSearch.trim()
     ? usuarios.filter((u) => u.email?.toLowerCase().includes(userSearch.toLowerCase()))
     : usuarios;
+
+  const antifragilCount = usuarios.filter((u) => u.is_antifragil).length;
 
   if (checking) {
     return (
@@ -155,6 +230,32 @@ export default function AdminPage() {
       </div>
 
       <div className="px-4 pb-10 space-y-6">
+        {/* ── Antifrágil section link ── */}
+        <section>
+          <Link
+            href="/admin/antifragil"
+            className="block rounded-xl px-4 py-4 transition-colors active:scale-[0.98]"
+            style={{
+              background: "rgba(42,191,191,0.06)",
+              border: "0.5px solid rgba(42,191,191,0.25)",
+              textDecoration: "none",
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] tracking-[0.2em] uppercase text-[#2abfbf] mb-1">Antifrágil</p>
+                <p className="text-sm text-[#f0f0f0] font-light">Clientes Antifrágil</p>
+                <p className="text-[11px] text-[#666] mt-0.5">
+                  {antifragilCount} {antifragilCount === 1 ? "cliente" : "clientes"} activos
+                </p>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                <path d="M9 6l6 6-6 6" stroke="#2abfbf" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </Link>
+        </section>
+
         {/* ── Invitar alumno ── */}
         <section>
           <p className="text-[10px] tracking-[0.2em] uppercase text-[#444] mb-3 px-1">Invitar alumno</p>
@@ -176,6 +277,40 @@ export default function AdminPage() {
                   className="w-full bg-[#1a1a1a] border border-[#222] rounded-lg px-4 py-3 text-[#f0f0f0] placeholder-[#333] text-sm outline-none focus:border-[#2abfbf] transition-colors"
                 />
               </div>
+
+              {/* Antifrágil toggle */}
+              <label className="flex items-center justify-between gap-3 px-1 cursor-pointer">
+                <div>
+                  <span className="text-xs text-[#ccc] font-light">Cliente Antifrágil</span>
+                  <p className="text-[10px] text-[#555] mt-0.5">Marca a este alumno como cliente Antifrágil</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={inviteAntifragil}
+                  onClick={() => setInviteAntifragil((v) => !v)}
+                  className="relative shrink-0 transition-colors"
+                  style={{
+                    width: 38,
+                    height: 22,
+                    borderRadius: 999,
+                    background: inviteAntifragil ? "#2abfbf" : "#1e1e1e",
+                    border: `0.5px solid ${inviteAntifragil ? "#2abfbf" : "#333"}`,
+                  }}
+                >
+                  <span
+                    className="absolute top-1/2 transition-all"
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: "50%",
+                      background: inviteAntifragil ? "#080808" : "#666",
+                      transform: `translate(${inviteAntifragil ? 18 : 2}px, -50%)`,
+                    }}
+                  />
+                </button>
+              </label>
+
               <button
                 type="submit"
                 disabled={isSending}
@@ -230,28 +365,65 @@ export default function AdminPage() {
                   className="rounded-xl px-4 py-3.5 flex items-center justify-between gap-3"
                   style={{ background: "#141414", border: "1px solid #222" }}
                 >
-                  <div className="min-w-0">
-                    <p className="text-[#f0f0f0] text-sm font-light truncate">{u.email}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[#f0f0f0] text-sm font-light truncate">{u.email}</p>
+                      {u.is_antifragil && <AntifragilBadge />}
+                    </div>
                     <p className="text-[#555] text-xs mt-0.5">
                       Último acceso: {formatDate(u.last_sign_in_at)}
                     </p>
                   </div>
-                  {u.email !== ADMIN_EMAIL && (
-                    <button
-                      type="button"
-                      onClick={() => setDeletingUser(u)}
-                      className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[#1e1e1e]"
-                      style={{ color: "#555" }}
-                      aria-label="Eliminar usuario"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                        <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                  )}
+
+                  <div className="shrink-0 flex items-center gap-2">
+                    {/* Antifragil toggle (per row) */}
+                    {u.email !== ADMIN_EMAIL && (
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={u.is_antifragil}
+                        aria-label={u.is_antifragil ? "Quitar marca Antifrágil" : "Marcar como Antifrágil"}
+                        disabled={togglingId === u.id}
+                        onClick={() => toggleAntifragil(u)}
+                        className="relative transition-colors disabled:opacity-50"
+                        style={{
+                          width: 34,
+                          height: 20,
+                          borderRadius: 999,
+                          background: u.is_antifragil ? "#2abfbf" : "#1e1e1e",
+                          border: `0.5px solid ${u.is_antifragil ? "#2abfbf" : "#333"}`,
+                        }}
+                      >
+                        <span
+                          className="absolute top-1/2 transition-all"
+                          style={{
+                            width: 14,
+                            height: 14,
+                            borderRadius: "50%",
+                            background: u.is_antifragil ? "#080808" : "#666",
+                            transform: `translate(${u.is_antifragil ? 16 : 2}px, -50%)`,
+                          }}
+                        />
+                      </button>
+                    )}
+
+                    {u.email !== ADMIN_EMAIL && (
+                      <button
+                        type="button"
+                        onClick={() => setDeletingUser(u)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-[#1e1e1e]"
+                        style={{ color: "#555" }}
+                        aria-label="Eliminar usuario"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
               {filteredUsers.length === 0 && (
