@@ -54,7 +54,7 @@ const DEFAULT_HIGHLIGHT: MetricKey = "puntuacion_total";
 const DIM_OPACITY = 0.15;
 
 const STATUS_COLOR = {
-  bien: "#639922",
+  bien: "#2abfbf",
   regular: "#EF9F27",
   mal: "#E24B4A",
 };
