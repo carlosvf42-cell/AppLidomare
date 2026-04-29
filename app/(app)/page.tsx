@@ -5,6 +5,7 @@ import Eyebrow from "@/components/design/Eyebrow";
 import PrimaryBtn from "@/components/design/PrimaryBtn";
 import { IconFlame, IconCheck, IconPlay } from "@/components/design/icons";
 import WellnessHomeCard from "@/components/health/WellnessHomeCard";
+import MonitorizacionCard from "@/components/health/MonitorizacionCard";
 import WorkloadChart from "@/components/health/WorkloadChart";
 
 const HERO_BG = "/images/hero-home.jpg";
@@ -241,6 +242,9 @@ export default async function HomePage() {
             ))}
           </div>
         </GlassCard>
+
+        {/* ── Monitorización IA ── */}
+        <MonitorizacionCard />
 
         {/* ── Racha ── */}
         <GlassCard variant="light" style={{ padding: "16px 20px" }}>

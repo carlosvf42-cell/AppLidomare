@@ -159,6 +159,38 @@ export default function ClienteDetailPage() {
   const [duplicandoId, setDuplicandoId] = useState<string | null>(null);
   const [borrandoId, setBorrandoId] = useState<string | null>(null);
   const [iniciandoVacio, setIniciandoVacio] = useState(false);
+  const [analizando, setAnalizando] = useState(false);
+  const [analisis, setAnalisis] = useState<{
+    nivel_riesgo: string;
+    mensaje_usuario: string | null;
+    razonamiento: string | null;
+    recomendacion: string | null;
+    categoria: string | null;
+  } | null>(null);
+
+  async function analizarAhora() {
+    if (!token || !userId) return;
+    setAnalizando(true);
+    setError(null);
+    setAnalisis(null);
+    try {
+      const supabase = getSupabase();
+      const { data, error: fnErr } = await supabase.functions.invoke("analizar-usuario", {
+        body: { user_id: userId },
+      });
+      if (fnErr) {
+        setError(fnErr.message ?? "No se pudo ejecutar el análisis");
+      } else if ((data as any)?.error) {
+        setError((data as any).error);
+      } else {
+        setAnalisis(data as any);
+      }
+    } catch (e: any) {
+      setError(e?.message ?? "Error de red al analizar");
+    } finally {
+      setAnalizando(false);
+    }
+  }
   const [siguientesOpen, setSiguientesOpen] = useState(true);
   const [historialOpen, setHistorialOpen] = useState(false);
 
@@ -383,6 +415,77 @@ export default function ClienteDetailPage() {
             Programar nuevo entreno
           </Link>
         </div>
+
+        {/* Analizar ahora — IA */}
+        <section>
+          <p className="mb-3 px-1" style={EYEBROW}>Análisis IA</p>
+          <button
+            type="button"
+            onClick={analizarAhora}
+            disabled={analizando}
+            className="w-full py-3 rounded-2xl text-xs font-semibold tracking-widest uppercase active:scale-[0.98] disabled:opacity-60"
+            style={{
+              background: "rgba(42,191,191,0.08)",
+              border: "0.5px dashed rgba(42,191,191,0.4)",
+              color: "#2abfbf",
+              fontFamily: "Barlow Condensed, sans-serif",
+            }}
+          >
+            {analizando ? "Analizando…" : "Analizar ahora"}
+          </button>
+
+          {analisis && (() => {
+            const NIVEL: Record<string, { label: string; color: string; bg: string; border: string; emoji: string }> = {
+              verde: { label: "Sin riesgo", color: "#2abfbf", bg: "rgba(42,191,191,0.10)", border: "rgba(42,191,191,0.4)", emoji: "🟢" },
+              amarillo: { label: "Precaución", color: "#EF9F27", bg: "rgba(239,159,39,0.10)", border: "rgba(239,159,39,0.4)", emoji: "🟡" },
+              rojo: { label: "Alerta", color: "#E24B4A", bg: "rgba(226,75,74,0.10)", border: "rgba(226,75,74,0.4)", emoji: "🔴" },
+            };
+            const m = NIVEL[analisis.nivel_riesgo] ?? NIVEL.verde;
+            return (
+              <div className="mt-3 rounded-2xl px-4 py-4 space-y-3" style={GLASS}>
+                <div className="flex items-center justify-between gap-2">
+                  <span style={{ fontSize: 16 }}>{m.emoji}</span>
+                  <span
+                    className="px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
+                    style={{ background: m.bg, border: `0.5px solid ${m.border}`, color: m.color, fontFamily: "Barlow Condensed, sans-serif" }}
+                  >
+                    {m.label}
+                  </span>
+                </div>
+                {analisis.razonamiento && (
+                  <div>
+                    <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "Barlow Condensed, sans-serif" }}>
+                      Razonamiento
+                    </p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+                      {analisis.razonamiento}
+                    </p>
+                  </div>
+                )}
+                {analisis.recomendacion && (
+                  <div>
+                    <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>
+                      Recomendación
+                    </p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+                      {analisis.recomendacion}
+                    </p>
+                  </div>
+                )}
+                {analisis.mensaje_usuario && (
+                  <div className="rounded-xl px-3 py-2.5" style={{ background: "rgba(42,191,191,0.06)", border: "0.5px solid rgba(42,191,191,0.25)" }}>
+                    <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>
+                      Mensaje al usuario
+                    </p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.95)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+                      {analisis.mensaje_usuario}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </section>
 
         {/* Siguientes entrenos */}
         <section>
