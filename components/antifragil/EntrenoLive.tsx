@@ -83,7 +83,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
 
   const [rpe, setRpe] = useState<number | null>(null);
   const [comentario, setComentario] = useState("");
-  const [duracionOverride, setDuracionOverride] = useState<number | null>(null);
+  const [duracionStr, setDuracionStr] = useState<string>("");
   const [finalizing, setFinalizing] = useState(false);
 
   function applyLoadedBlocks(loaded: Block[]) {
@@ -224,9 +224,11 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
     setShowAddSheet(false);
     if (kind === "fuerza") {
       // Live mode: skip creator-style configurator. Persist empty fuerza block
-      // directly. The user will fill ejercicios + series via the inline UI.
+      // (no ejercicios) so the registration UI shows just "+ Ejercicio" and
+      // the admin picks ejercicios from the catalog one by one.
       setSavingDraft(true);
-      await persistBlock(makeFuerza(blocks.length));
+      const empty = { ...makeFuerza(blocks.length), ejercicios: [] };
+      await persistBlock(empty);
       setSavingDraft(false);
       return;
     }
@@ -318,10 +320,16 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
   }
 
   const computedDuracion = useMemo(() => {
-    if (duracionOverride != null) return duracionOverride;
     if (startedAt == null) return 0;
     return Math.max(1, Math.round((Date.now() - startedAt) / 60000));
-  }, [duracionOverride, startedAt, phase]);
+  }, [startedAt, phase]);
+
+  // Pre-fill duracionStr from auto-computed when entering finalize phase.
+  useEffect(() => {
+    if (phase === "finalize") {
+      setDuracionStr(String(computedDuracion));
+    }
+  }, [phase]);
 
   async function handleFinalize() {
     if (!sesionId) {
@@ -370,13 +378,14 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
     );
 
     try {
+      const duracionFinal = duracionStr.trim() === "" ? computedDuracion : Number(duracionStr);
       const res = await fetch(`/api/admin/antifragil/${userId}/sesiones/${sesionId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           rpe,
           comentario: comentario.trim() || null,
-          duracion_minutos: computedDuracion,
+          duracion_minutos: Number.isFinite(duracionFinal) && duracionFinal > 0 ? duracionFinal : null,
           tipo_resumen: tipoResumen(blocks),
           wellness_entry_id: wellnessEntryId,
           series_fuerza: seriesFuerza,
@@ -655,9 +664,10 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
           <p style={LABEL}>Duración (minutos)</p>
           <input
             type="number"
-            min={1}
-            value={duracionOverride ?? computedDuracion}
-            onChange={(e) => setDuracionOverride(e.target.value === "" ? null : Number(e.target.value))}
+            min={0}
+            value={duracionStr}
+            onChange={(e) => setDuracionStr(e.target.value)}
+            placeholder="min"
             className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
           />
         </div>
