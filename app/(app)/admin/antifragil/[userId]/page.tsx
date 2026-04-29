@@ -4,11 +4,22 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import WorkloadChart from "@/components/health/WorkloadChart";
+import WellnessChart from "@/components/WellnessChart";
 
 const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
 type ClienteData = {
-  user: { id: string; email: string; full_name: string | null; is_antifragil: boolean };
+  user: {
+    id: string;
+    email: string;
+    full_name: string | null;
+    is_antifragil: boolean;
+    peso_kg: number | null;
+    altura_cm: number | null;
+    fecha_nacimiento: string | null;
+    sexo: string | null;
+  };
   entrenos: Array<{
     id: string;
     tipo: "fuerza" | "cardio" | "funcional" | string;
@@ -89,6 +100,29 @@ function TipoIcon({ tipo, color }: { tipo: string; color: string }) {
       <circle cx="12" cy="12" r="6" stroke={color} strokeWidth="1.5"/>
     </svg>
   );
+}
+
+function DatoPersonal({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[9px] tracking-[0.18em] uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>
+        {label}
+      </p>
+      <p className="text-sm" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function capital(s: string): string {
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function formatNacimiento(s: string): string {
+  const d = new Date(s + "T12:00:00");
+  return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function Chevron({ open }: { open: boolean }) {
@@ -284,6 +318,39 @@ export default function ClienteDetailPage() {
       </div>
 
       <div className="px-4 pb-16 space-y-6">
+        {/* Datos personales */}
+        {(data.user.peso_kg != null || data.user.altura_cm != null || data.user.fecha_nacimiento || data.user.sexo) && (
+          <section>
+            <p className="mb-3 px-1" style={EYEBROW}>Datos personales</p>
+            <div className="rounded-2xl px-4 py-3 grid grid-cols-2 gap-x-3 gap-y-3" style={GLASS}>
+              {data.user.peso_kg != null && (
+                <DatoPersonal label="Peso" value={`${data.user.peso_kg} kg`} />
+              )}
+              {data.user.altura_cm != null && (
+                <DatoPersonal label="Altura" value={`${data.user.altura_cm} cm`} />
+              )}
+              {data.user.fecha_nacimiento && (
+                <DatoPersonal label="Nacimiento" value={formatNacimiento(data.user.fecha_nacimiento)} />
+              )}
+              {data.user.sexo && (
+                <DatoPersonal label="Sexo" value={capital(data.user.sexo)} />
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Carga de entrenamiento */}
+        <section>
+          <p className="mb-3 px-1" style={EYEBROW}>Carga de entrenamiento</p>
+          <WorkloadChart userId={data.user.id} />
+        </section>
+
+        {/* Wellness */}
+        <section>
+          <p className="mb-3 px-1" style={EYEBROW}>Wellness</p>
+          <WellnessChart userId={data.user.id} />
+        </section>
+
         {/* CTA: Entrenar ahora — crea entreno vacío y entra DIRECTAMENTE en modo en vivo */}
         <div className="space-y-2">
           <button

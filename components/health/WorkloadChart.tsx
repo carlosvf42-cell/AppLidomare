@@ -102,7 +102,7 @@ const BADGE_BASE: React.CSSProperties = {
   fontWeight: 500,
 };
 
-export default function WorkloadChart() {
+export default function WorkloadChart({ userId: userIdProp }: { userId?: string } = {}) {
   const [loading, setLoading] = useState(true);
   const [weeks, setWeeks] = useState<WeekPoint[]>([]);
   const [dayPoints, setDayPoints] = useState<DayPoint[]>([]);
@@ -112,8 +112,12 @@ export default function WorkloadChart() {
   useEffect(() => {
     (async () => {
       const supabase = getSupabase();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      let uid = userIdProp;
+      if (!uid) {
+        const { data: { user } } = await supabase.auth.getUser();
+        uid = user?.id;
+      }
+      if (!uid) { setLoading(false); return; }
 
       const today = new Date();
       const from = new Date(today);
@@ -124,11 +128,11 @@ export default function WorkloadChart() {
         supabase
           .from("sesiones")
           .select("fecha, carga_dia")
-          .eq("user_id", user.id)
+          .eq("user_id", uid)
           .eq("completada", true)
           .not("carga_dia", "is", null)
           .gte("fecha", fromISO),
-        supabase.rpc("get_acwr", { p_user_id: user.id }),
+        supabase.rpc("get_acwr", { p_user_id: uid }),
       ]);
 
       const sesiones = (sesionesRes.data ?? []) as { fecha: string; carga_dia: number }[];

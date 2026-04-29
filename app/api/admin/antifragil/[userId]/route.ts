@@ -38,7 +38,7 @@ export async function GET(
       supabase.auth.admin.getUserById(userId),
       supabase
         .from("user_profiles")
-        .select("is_antifragil")
+        .select("is_antifragil, peso_kg, altura_cm, fecha_nacimiento, sexo")
         .eq("user_id", userId)
         .maybeSingle(),
       supabase
@@ -102,6 +102,10 @@ export async function GET(
         email: u.email,
         full_name: (u.user_metadata?.full_name as string | undefined) ?? null,
         is_antifragil: !!profileRes.data?.is_antifragil,
+        peso_kg: profileRes.data?.peso_kg ?? null,
+        altura_cm: profileRes.data?.altura_cm ?? null,
+        fecha_nacimiento: profileRes.data?.fecha_nacimiento ?? null,
+        sexo: profileRes.data?.sexo ?? null,
       },
       entrenos,
       sesiones,
