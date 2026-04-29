@@ -224,9 +224,16 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-[#080808]">
       {/* Header */}
-      <div className="px-6 pt-14 pb-6">
-        <p className="text-[10px] tracking-[0.2em] uppercase text-[#2abfbf] mb-1">Admin</p>
-        <h1 className="text-xl font-light text-[#f0f0f0] tracking-tight">Panel de administración</h1>
+      <div className="px-5 pt-14 pb-6">
+        <p style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>
+          Gestión de usuarios
+        </p>
+        <h1
+          className="mt-0.5"
+          style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
+        >
+          Alumnos
+        </h1>
       </div>
 
       <div className="px-4 pb-10 space-y-6">
