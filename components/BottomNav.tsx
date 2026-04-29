@@ -14,6 +14,12 @@ const TABS = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+
+  // Hide during focused workflows (live training).
+  if (pathname?.startsWith("/admin/antifragil/") && pathname.endsWith("/live")) {
+    return null;
+  }
+
   const activeIndex = TABS.findIndex((t) => t.match(pathname));
 
   return (

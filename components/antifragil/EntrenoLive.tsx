@@ -846,14 +846,15 @@ function FuerzaTrainer({
             className="rounded-xl px-3 py-3 space-y-2"
             style={{ background: "rgba(255,255,255,0.025)", border: "0.5px solid rgba(255,255,255,0.06)" }}
           >
-            <div className="flex items-baseline justify-between gap-2">
-              <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.85)", fontFamily: FONT_TEXT }}>
-                <span style={{ color: "rgba(255,128,96,0.7)" }}>{ejIdx + 1}.</span> {ej.nombre_ejercicio || "—"}
+            <div>
+              <p className="text-sm truncate" style={{ color: "rgba(255,255,255,0.95)", fontFamily: FONT_TEXT, letterSpacing: "0.02em" }}>
+                <span style={{ color: "rgba(255,128,96,0.7)", marginRight: 6 }}>{ejIdx + 1}.</span>
+                {ej.nombre_ejercicio || "—"}
               </p>
               {(ej.series_objetivo > 0 || ej.reps_objetivo > 0) && (
-                <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT, letterSpacing: "0.02em" }}>
+                <p className="mt-0.5" style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT, letterSpacing: "0.04em" }}>
                   Objetivo: {ej.series_objetivo} × {ej.reps_objetivo}
-                </span>
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
