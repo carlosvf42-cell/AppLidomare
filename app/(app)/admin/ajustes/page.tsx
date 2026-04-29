@@ -87,6 +87,31 @@ export default function AjustesPage() {
       </div>
 
       <div className="px-4 pb-16 space-y-6">
+        {/* Panel de usuario toggle */}
+        <button
+          type="button"
+          onClick={() => {
+            try {
+              localStorage.setItem("adminMode", "false");
+            } catch {}
+            router.push("/");
+          }}
+          className="w-full rounded-2xl px-5 py-4 flex items-center justify-between active:scale-[0.99]"
+          style={{
+            ...GLASS,
+            background: "rgba(42,191,191,0.06)",
+            border: "0.5px solid rgba(42,191,191,0.25)",
+            cursor: "pointer",
+          }}
+        >
+          <span className="text-xs tracking-[0.15em] uppercase" style={{ color: "#2abfbf", fontFamily: "Barlow Condensed, sans-serif" }}>
+            Panel de usuario
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M9 6l6 6-6 6" stroke="rgba(42,191,191,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
         {/* Mi cuenta */}
         <section>
           <p className="mb-3 px-1" style={EYEBROW}>Mi cuenta</p>

@@ -165,19 +165,29 @@ export default function PerfilPage() {
         </Link>
       </div>
 
-      {/* Admin link */}
+      {/* Admin mode toggle */}
       {email === ADMIN_EMAIL && (
         <div className="mx-4 mb-3">
-          <Link href="/admin" className="block ds-pressable" style={{ textDecoration: "none" }}>
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                localStorage.setItem("adminMode", "true");
+              } catch {}
+              router.push("/admin/antifragil");
+            }}
+            className="block w-full ds-pressable"
+            style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+          >
             <GlassCard variant="light" style={{ borderRadius: 16, padding: "16px 20px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
                 <span className="text-xs tracking-[0.15em] uppercase" style={{ color: "var(--fg-3)" }}>
-                  Panel de administración
+                  Panel de admin
                 </span>
                 <IconArrow c="rgba(255,255,255,0.3)" />
               </div>
             </GlassCard>
-          </Link>
+          </button>
         </div>
       )}
 
