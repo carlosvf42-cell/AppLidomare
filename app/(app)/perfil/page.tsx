@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import GlassCard from "@/components/design/GlassCard";
 import { IconArrow } from "@/components/design/icons";
 import ProgresoSection from "@/components/ProgresoSection";
+import { useAdminMode } from "@/lib/useAdminMode";
 
 const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
@@ -32,6 +33,7 @@ export default function PerfilPage() {
   const [loading, setLoading] = useState(true);
   const [healthEstado, setHealthEstado] = useState<HealthEstado | null>(null);
   const [healthLoaded, setHealthLoaded] = useState(false);
+  const [, setAdminMode] = useAdminMode();
 
   useEffect(() => {
     const supabase = createClient();
@@ -171,9 +173,7 @@ export default function PerfilPage() {
           <button
             type="button"
             onClick={() => {
-              try {
-                localStorage.setItem("adminMode", "true");
-              } catch {}
+              setAdminMode(true);
               router.push("/admin/antifragil");
             }}
             className="block w-full ds-pressable"

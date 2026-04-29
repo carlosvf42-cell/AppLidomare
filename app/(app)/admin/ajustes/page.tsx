@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import { useAdminMode } from "@/lib/useAdminMode";
 
 const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
@@ -37,6 +38,7 @@ export default function AjustesPage() {
   const [email, setEmail] = useState<string>("");
   const [fullName, setFullName] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [, setAdminMode] = useAdminMode();
 
   useEffect(() => {
     getSupabase()
@@ -91,9 +93,7 @@ export default function AjustesPage() {
         <button
           type="button"
           onClick={() => {
-            try {
-              localStorage.setItem("adminMode", "false");
-            } catch {}
+            setAdminMode(false);
             router.push("/");
           }}
           className="w-full rounded-2xl px-5 py-4 flex items-center justify-between active:scale-[0.99]"

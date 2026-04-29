@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { IconHome, IconGrid, IconCal, IconUser } from "@/components/design/icons";
 import LensSheen from "@/components/design/LensSheen";
+import { useAdminMode } from "@/lib/useAdminMode";
 
 const ADMIN_EMAIL = "carlosvf42@gmail.com";
 
@@ -62,7 +63,7 @@ const ADMIN_TABS: readonly Tab[] = [
 export default function BottomNav() {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [adminMode, setAdminMode] = useState<boolean>(true);
+  const [adminMode] = useAdminMode();
 
   useEffect(() => {
     let cancelled = false;
@@ -75,18 +76,6 @@ export default function BottomNav() {
     };
   }, [pathname]);
 
-  // Sync adminMode from localStorage on mount and on every navigation, so the
-  // toggle from /perfil or /admin/ajustes immediately swaps the nav.
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("adminMode");
-      // Default to admin mode (true) if not set yet.
-      setAdminMode(stored === null ? true : stored === "true");
-    } catch {
-      setAdminMode(true);
-    }
-  }, [pathname]);
-
   // Hide on antifragil entreno workflows (builder, edit, live) so the fixed
   // bottom action bar (save/finalize) doesn't get covered by the nav.
   if (pathname?.startsWith("/admin/antifragil/") && pathname.includes("/entreno/")) {
@@ -94,6 +83,8 @@ export default function BottomNav() {
   }
 
   if (isAdmin === null) return null; // wait for session
+  // Single source of truth: adminMode from useAdminMode hook (synced via
+  // storage + custom events). Non-admin users always see USER_TABS.
   const tabs = isAdmin && adminMode ? ADMIN_TABS : USER_TABS;
   return <NavShell tabs={tabs} pathname={pathname} />;
 }
