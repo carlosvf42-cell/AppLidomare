@@ -33,6 +33,8 @@ type WellnessRow = {
 
 type MetricKey = "puntuacion_total" | "sueno" | "fatiga" | "estres" | "animo" | "dolor";
 
+// All values plotted on a unified 1-5 axis. Individual metrics map directly;
+// total (raw 5-25) is divided by 5 → 1-5.
 const METRICS: ReadonlyArray<{
   key: MetricKey;
   label: string;
@@ -40,16 +42,89 @@ const METRICS: ReadonlyArray<{
   max: number;
   normalize: (v: number) => number;
 }> = [
-  { key: "puntuacion_total", label: "Total", color: "#2abfbf", max: 25, normalize: (v) => v / 2.5 },
-  { key: "sueno", label: "Sueño", color: "#378ADD", max: 5, normalize: (v) => v * 2 },
-  { key: "fatiga", label: "Fatiga", color: "#EF9F27", max: 5, normalize: (v) => v * 2 },
-  { key: "estres", label: "Estrés", color: "#E24B4A", max: 5, normalize: (v) => v * 2 },
-  { key: "animo", label: "Ánimo", color: "#639922", max: 5, normalize: (v) => v * 2 },
-  { key: "dolor", label: "Dolor", color: "#9B59B6", max: 5, normalize: (v) => v * 2 },
+  { key: "puntuacion_total", label: "Total", color: "#2abfbf", max: 25, normalize: (v) => v / 5 },
+  { key: "sueno", label: "Sueño", color: "#378ADD", max: 5, normalize: (v) => v },
+  { key: "fatiga", label: "Fatiga", color: "#EF9F27", max: 5, normalize: (v) => v },
+  { key: "estres", label: "Estrés", color: "#E24B4A", max: 5, normalize: (v) => v },
+  { key: "animo", label: "Ánimo", color: "#639922", max: 5, normalize: (v) => v },
+  { key: "dolor", label: "Dolor", color: "#9B59B6", max: 5, normalize: (v) => v },
 ];
 
 const DEFAULT_HIGHLIGHT: MetricKey = "puntuacion_total";
 const DIM_OPACITY = 0.15;
+
+const STATUS_COLOR = {
+  bien: "#639922",
+  regular: "#EF9F27",
+  mal: "#E24B4A",
+};
+
+type StatusLabel = { label: string; color: string };
+
+// Higher = better (sueño, ánimo): 1-2 Mal, 3 Regular, 4-5 Bien.
+function statusHigherIsBetter(v: number): StatusLabel {
+  if (v >= 4) return { label: "Bien", color: STATUS_COLOR.bien };
+  if (v === 3) return { label: "Regular", color: STATUS_COLOR.regular };
+  return { label: "Mal", color: STATUS_COLOR.mal };
+}
+
+// Higher = worse (fatiga, estrés, dolor): 1-2 Bien, 3 Regular, 4-5 Mal.
+function statusHigherIsWorse(v: number): StatusLabel {
+  if (v >= 4) return { label: "Mal", color: STATUS_COLOR.mal };
+  if (v === 3) return { label: "Regular", color: STATUS_COLOR.regular };
+  return { label: "Bien", color: STATUS_COLOR.bien };
+}
+
+// Total (raw 5-25): 20-25 Óptimo, 14-19 Precaución, 5-13 Alerta.
+function statusTotal(v: number): StatusLabel {
+  if (v >= 20) return { label: "Óptimo", color: STATUS_COLOR.bien };
+  if (v >= 14) return { label: "Precaución", color: STATUS_COLOR.regular };
+  return { label: "Alerta", color: STATUS_COLOR.mal };
+}
+
+function statusFor(key: MetricKey, raw: number): StatusLabel {
+  switch (key) {
+    case "puntuacion_total":
+      return statusTotal(raw);
+    case "sueno":
+    case "animo":
+      return statusHigherIsBetter(raw);
+    case "fatiga":
+    case "estres":
+    case "dolor":
+      return statusHigherIsWorse(raw);
+  }
+}
+
+// Zone bands in normalized (1-5) space for the chart background. Each
+// zone marks the "good" or "bad" range so the user reads the line at a
+// glance.
+type Zone = { from: number; to: number; type: "good" | "bad" };
+function zonesFor(key: MetricKey): Zone[] {
+  switch (key) {
+    case "sueno":
+    case "animo":
+      // Higher = better. Bad 1-2, Good 4-5.
+      return [
+        { from: 1, to: 2, type: "bad" },
+        { from: 4, to: 5, type: "good" },
+      ];
+    case "fatiga":
+    case "estres":
+    case "dolor":
+      // Higher = worse. Good 1-2, Bad 4-5.
+      return [
+        { from: 1, to: 2, type: "good" },
+        { from: 4, to: 5, type: "bad" },
+      ];
+    case "puntuacion_total":
+      // Raw 5-25 → normalized 1-5. Alerta 5-13 → 1-2.6, Óptimo 20-25 → 4-5.
+      return [
+        { from: 1, to: 13 / 5, type: "bad" },
+        { from: 20 / 5, to: 5, type: "good" },
+      ];
+  }
+}
 
 function buildSmoothPath(points: { x: number; y: number }[]): string {
   if (points.length === 0) return "";
@@ -179,12 +254,15 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
     if (rows.length === 1) return PAD_L + innerW / 2;
     return PAD_L + (i / (rows.length - 1)) * innerW;
   }
-  function yFor(value0to10: number): number {
-    // 0 → bottom, 10 → top
-    return PAD_T + innerH - (value0to10 / 10) * innerH;
+  function yFor(value1to5: number): number {
+    // 1 → bottom, 5 → top
+    const clamped = Math.max(1, Math.min(5, value1to5));
+    return PAD_T + innerH - ((clamped - 1) / 4) * innerH;
   }
 
   const last = rows[rows.length - 1];
+  const activeKey: MetricKey = selected ?? DEFAULT_HIGHLIGHT;
+  const activeZones = zonesFor(activeKey);
 
   return (
     <div className="rounded-2xl px-4 py-4 space-y-4" style={GLASS}>
@@ -210,8 +288,27 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
       {/* Chart */}
       <div className="relative">
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: 180, display: "block" }}>
-          {/* Y grid lines at 2,4,6,8,10 */}
-          {[2, 4, 6, 8, 10].map((v) => (
+          {/* Background zones for the active metric only — green = good
+              range, red = bad range. */}
+          {activeZones.map((z, i) => {
+            const yTop = yFor(z.to);
+            const yBottom = yFor(z.from);
+            const fill = z.type === "good" ? "rgba(99,153,34,0.10)" : "rgba(226,75,74,0.10)";
+            return (
+              <rect
+                key={i}
+                x={PAD_L}
+                y={yTop}
+                width={W - PAD_L - PAD_R}
+                height={Math.max(0, yBottom - yTop)}
+                fill={fill}
+                style={{ transition: "fill 200ms ease" }}
+              />
+            );
+          })}
+
+          {/* Y grid lines at 1, 2, 3, 4, 5 */}
+          {[1, 2, 3, 4, 5].map((v) => (
             <g key={v}>
               <line
                 x1={PAD_L}
@@ -232,13 +329,10 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
             </g>
           ))}
 
-          {/* Lines — only the highlighted line is at full opacity, the rest
-              are dimmed. Selected metric (or total by default) gets thicker
-              stroke and visible point circles. */}
+          {/* Lines — only the active line at full opacity, rest dimmed.
+              Active line gets thicker stroke + visible points. */}
           {METRICS.map((m) => {
-            const isHighlighted = selected === null
-              ? m.key === DEFAULT_HIGHLIGHT
-              : selected === m.key;
+            const isHighlighted = m.key === activeKey;
             const points = rows.map((r, i) => ({ x: xFor(i), y: yFor(m.normalize(r[m.key])) }));
             const d = buildSmoothPath(points);
             return (
@@ -296,40 +390,72 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
         </svg>
       </div>
 
-      {/* Pills — click to highlight that metric. Click the active pill
-          again to return to the default (total highlighted). Only one
-          metric highlighted at a time. */}
-      <div className="flex flex-wrap gap-1.5">
+      {/* Tarjetas — click to highlight that metric in the chart. Click
+          the active card again to return to the default (total). */}
+      <div className="grid grid-cols-3 gap-2">
         {METRICS.map((m) => {
-          const isActive = selected === m.key;
-          const lastVal = last[m.key];
+          const isActive = m.key === activeKey;
+          const isPicked = selected === m.key;
+          const raw = last[m.key];
+          const status = statusFor(m.key, raw);
           return (
             <button
               key={m.key}
               type="button"
               onClick={() => setSelected((cur) => (cur === m.key ? null : m.key))}
-              className="px-3 py-1.5 rounded-full text-[10px] tracking-[0.15em] uppercase font-semibold inline-flex items-center gap-2 active:scale-[0.97]"
+              className="rounded-xl px-2.5 py-2.5 text-left active:scale-[0.98]"
               style={{
-                background: isActive ? m.color : "rgba(255,255,255,0.04)",
-                border: `0.5px solid ${isActive ? m.color : `${m.color}55`}`,
-                color: isActive ? "#080808" : m.color,
+                background: isPicked ? `${m.color}20` : "rgba(255,255,255,0.025)",
+                border: `0.5px solid ${isPicked ? `${m.color}80` : `${m.color}33`}`,
                 fontFamily: FONT_TEXT,
-                transition: "background 200ms ease, color 200ms ease, border-color 200ms ease",
+                cursor: "pointer",
+                transition: "background 200ms ease, border-color 200ms ease",
               }}
             >
-              <span>{m.label}</span>
-              <span
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 999,
+                    background: m.color,
+                    boxShadow: isActive ? `0 0 6px ${m.color}` : "none",
+                    transition: "box-shadow 200ms ease",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 9,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.55)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {m.label}
+                </span>
+              </div>
+              <p
                 style={{
-                  fontSize: 10,
+                  fontSize: 13,
                   fontWeight: 600,
                   letterSpacing: "0.02em",
-                  color: isActive ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.55)",
-                  textTransform: "none",
+                  color: status.color,
+                  lineHeight: 1.1,
                 }}
               >
-                {lastVal}
-                <span style={{ opacity: 0.6 }}>/{m.max}</span>
-              </span>
+                {status.label}
+              </p>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.35)",
+                  marginTop: 2,
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {raw}/{m.max}
+              </p>
             </button>
           );
         })}
