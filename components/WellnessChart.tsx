@@ -390,10 +390,93 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
         </svg>
       </div>
 
-      {/* Tarjetas — click to highlight that metric in the chart. Click
-          the active card again to return to the default (total). */}
+      {/* TOTAL — banner destacado a ancho completo */}
+      {(() => {
+        const totalMeta = METRICS[0];
+        const isActive = totalMeta.key === activeKey;
+        const isPicked = selected === totalMeta.key;
+        const raw = last[totalMeta.key];
+        const status = statusFor(totalMeta.key, raw);
+        const isOptimo = status.label === "Óptimo";
+        return (
+          <button
+            type="button"
+            onClick={() => setSelected((cur) => (cur === totalMeta.key ? null : totalMeta.key))}
+            className="w-full rounded-2xl px-5 py-4 text-left active:scale-[0.99]"
+            style={{
+              background: isOptimo
+                ? `${totalMeta.color}1f`
+                : isPicked
+                ? `${totalMeta.color}15`
+                : "rgba(255,255,255,0.04)",
+              border: `0.5px solid ${
+                isOptimo ? `${totalMeta.color}80` : isPicked ? `${totalMeta.color}55` : `${totalMeta.color}33`
+              }`,
+              boxShadow: isOptimo ? `inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px ${totalMeta.color}22` : "none",
+              fontFamily: FONT_TEXT,
+              cursor: "pointer",
+              transition: "background 200ms ease, border-color 200ms ease, box-shadow 200ms ease",
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 999,
+                  background: totalMeta.color,
+                  boxShadow: isActive ? `0 0 8px ${totalMeta.color}` : "none",
+                  transition: "box-shadow 200ms ease",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.25em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.7)",
+                  fontWeight: 600,
+                }}
+              >
+                Estado general
+              </span>
+            </div>
+            <div className="flex items-end justify-between gap-3">
+              <p
+                style={{
+                  fontFamily: FONT_TITLE,
+                  fontSize: "1.6rem",
+                  fontWeight: 400,
+                  letterSpacing: "0.01em",
+                  color: status.color,
+                  lineHeight: 1,
+                }}
+              >
+                {status.label}
+              </p>
+              <p
+                style={{
+                  fontSize: 24,
+                  fontWeight: 600,
+                  letterSpacing: "0.02em",
+                  color: "rgba(255,255,255,0.95)",
+                  lineHeight: 1,
+                  fontFamily: FONT_TEXT,
+                }}
+              >
+                {raw}
+                <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", fontWeight: 400, marginLeft: 2 }}>
+                  /{totalMeta.max}
+                </span>
+              </p>
+            </div>
+          </button>
+        );
+      })()}
+
+      {/* Métricas individuales — grid 3+2 (3 cols) compactas */}
       <div className="grid grid-cols-3 gap-2">
-        {METRICS.map((m) => {
+        {METRICS.slice(1).map((m) => {
           const isActive = m.key === activeKey;
           const isPicked = selected === m.key;
           const raw = last[m.key];
@@ -403,7 +486,7 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
               key={m.key}
               type="button"
               onClick={() => setSelected((cur) => (cur === m.key ? null : m.key))}
-              className="rounded-xl px-2.5 py-2.5 text-left active:scale-[0.98]"
+              className="rounded-xl px-2.5 py-2 text-left active:scale-[0.98]"
               style={{
                 background: isPicked ? `${m.color}20` : "rgba(255,255,255,0.025)",
                 border: `0.5px solid ${isPicked ? `${m.color}80` : `${m.color}33`}`,
@@ -412,20 +495,20 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
                 transition: "background 200ms ease, border-color 200ms ease",
               }}
             >
-              <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="flex items-center gap-1.5 mb-1">
                 <span
                   style={{
-                    width: 6,
-                    height: 6,
+                    width: 5,
+                    height: 5,
                     borderRadius: 999,
                     background: m.color,
-                    boxShadow: isActive ? `0 0 6px ${m.color}` : "none",
+                    boxShadow: isActive ? `0 0 5px ${m.color}` : "none",
                     transition: "box-shadow 200ms ease",
                   }}
                 />
                 <span
                   style={{
-                    fontSize: 9,
+                    fontSize: 8.5,
                     letterSpacing: "0.18em",
                     textTransform: "uppercase",
                     color: "rgba(255,255,255,0.55)",
@@ -437,7 +520,7 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
               </div>
               <p
                 style={{
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: 600,
                   letterSpacing: "0.02em",
                   color: status.color,
@@ -448,9 +531,9 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
               </p>
               <p
                 style={{
-                  fontSize: 10,
+                  fontSize: 9.5,
                   color: "rgba(255,255,255,0.35)",
-                  marginTop: 2,
+                  marginTop: 1,
                   letterSpacing: "0.02em",
                 }}
               >
