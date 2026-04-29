@@ -195,6 +195,34 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
     await reloadBlocks();
   }
 
+  async function addEjercicioFuncional(
+    bloqueId: string,
+    payload: {
+      tipo: "fuerza" | "cardio";
+      ejercicio_id: string | null;
+      nombre_ejercicio: string | null;
+      reps_objetivo: number | null;
+      maquina: "carrera" | "bici" | "ski" | "remo" | null;
+      calorias_objetivo: number | null;
+      metros_objetivo: number | null;
+    }
+  ) {
+    const res = await fetch(
+      `/api/admin/antifragil/${userId}/entrenos/${entrenoId}/bloques/${bloqueId}/ejercicios-funcional`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      }
+    );
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setError(j.error ?? "No se pudo añadir el ejercicio");
+      return;
+    }
+    await reloadBlocks();
+  }
+
   async function reloadBlocks() {
     const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -565,6 +593,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
                 });
               }}
               onAddEjercicioFuerza={addEjercicioFuerza}
+              onAddEjercicioFuncional={addEjercicioFuncional}
             />
           ))}
 
@@ -764,6 +793,7 @@ function BlockTrainer({
   onRemoveRonda,
   onFuncionalUpdate,
   onAddEjercicioFuerza,
+  onAddEjercicioFuncional,
 }: {
   block: Block;
   index: number;
@@ -780,6 +810,18 @@ function BlockTrainer({
   onAddEjercicioFuerza: (
     bloqueId: string,
     payload: { ejercicio_id: string | null; nombre_ejercicio: string; series_objetivo: number; reps_objetivo: number }
+  ) => Promise<void>;
+  onAddEjercicioFuncional: (
+    bloqueId: string,
+    payload: {
+      tipo: "fuerza" | "cardio";
+      ejercicio_id: string | null;
+      nombre_ejercicio: string | null;
+      reps_objetivo: number | null;
+      maquina: "carrera" | "bici" | "ski" | "remo" | null;
+      calorias_objetivo: number | null;
+      metros_objetivo: number | null;
+    }
   ) => Promise<void>;
 }) {
   const meta = BLOCK_META[block.kind];
@@ -821,7 +863,12 @@ function BlockTrainer({
         />
       )}
       {block.kind === "funcional" && (
-        <FuncionalTrainer block={block as FuncionalBlock} regs={funcionalRegs ?? {}} onUpdate={onFuncionalUpdate} />
+        <FuncionalTrainer
+          block={block as FuncionalBlock}
+          regs={funcionalRegs ?? {}}
+          onUpdate={onFuncionalUpdate}
+          onAddEjercicio={onAddEjercicioFuncional}
+        />
       )}
     </div>
   );
@@ -870,29 +917,31 @@ function FuerzaTrainer({
             <div className="space-y-1.5">
               {series.map((s, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="w-6 text-[10px] tracking-wider" style={{ color: "rgba(255,255,255,0.35)", fontFamily: FONT_TEXT }}>
+                  <span className="w-6 text-[10px] tracking-wider shrink-0" style={{ color: "rgba(255,255,255,0.35)", fontFamily: FONT_TEXT }}>
                     {s.numero_serie}.
                   </span>
-                  <input
-                    type="number"
-                    placeholder="reps"
-                    value={s.repeticiones ?? ""}
-                    onChange={(e) => ej.id && onUpdate(ej.id, i, { repeticiones: e.target.value === "" ? null : Number(e.target.value) })}
-                    className="flex-1 min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-                  />
-                  <input
-                    type="number"
-                    step="0.5"
-                    placeholder="kg"
-                    value={s.peso ?? ""}
-                    onChange={(e) => ej.id && onUpdate(ej.id, i, { peso: e.target.value === "" ? null : Number(e.target.value) })}
-                    className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-                  />
+                  <div className="flex-1 grid grid-cols-2 gap-2 min-w-0">
+                    <input
+                      type="number"
+                      placeholder="reps"
+                      value={s.repeticiones ?? ""}
+                      onChange={(e) => ej.id && onUpdate(ej.id, i, { repeticiones: e.target.value === "" ? null : Number(e.target.value) })}
+                      className="w-full min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                    />
+                    <input
+                      type="number"
+                      step="0.5"
+                      placeholder="kg"
+                      value={s.peso ?? ""}
+                      onChange={(e) => ej.id && onUpdate(ej.id, i, { peso: e.target.value === "" ? null : Number(e.target.value) })}
+                      className="w-full min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => ej.id && onRemoveSerie(ej.id, i)}
                     aria-label="Eliminar serie"
-                    className="w-9 h-9 rounded-lg flex items-center justify-center"
+                    className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
                     style={{
                       background: "rgba(255,255,255,0.04)",
                       border: "0.5px solid rgba(255,255,255,0.1)",
@@ -1066,28 +1115,30 @@ function CardioTrainer({
         <>
           {rondas.map((r, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="w-8 text-[10px] tracking-wider" style={{ color: "rgba(255,255,255,0.35)", fontFamily: FONT_TEXT }}>
+              <span className="w-8 text-[10px] tracking-wider shrink-0" style={{ color: "rgba(255,255,255,0.35)", fontFamily: FONT_TEXT }}>
                 R{r.numero_ronda}
               </span>
-              <input
-                type="number"
-                placeholder="cal"
-                value={r.calorias_real ?? ""}
-                onChange={(e) => onUpdate(i, { calorias_real: e.target.value === "" ? null : Number(e.target.value) })}
-                className="flex-1 min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-              />
-              <input
-                type="number"
-                placeholder="W"
-                value={r.watts ?? ""}
-                onChange={(e) => onUpdate(i, { watts: e.target.value === "" ? null : Number(e.target.value) })}
-                className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-              />
+              <div className="flex-1 grid grid-cols-2 gap-2 min-w-0">
+                <input
+                  type="number"
+                  placeholder="cal"
+                  value={r.calorias_real ?? ""}
+                  onChange={(e) => onUpdate(i, { calorias_real: e.target.value === "" ? null : Number(e.target.value) })}
+                  className="w-full min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                />
+                <input
+                  type="number"
+                  placeholder="W"
+                  value={r.watts ?? ""}
+                  onChange={(e) => onUpdate(i, { watts: e.target.value === "" ? null : Number(e.target.value) })}
+                  className="w-full min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => block.id && onRemoveRonda(block.id, i)}
                 aria-label="Eliminar ronda"
-                className="w-9 h-9 rounded-lg flex items-center justify-center"
+                className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
                 style={{
                   background: "rgba(255,255,255,0.04)",
                   border: "0.5px solid rgba(255,255,255,0.1)",
@@ -1143,11 +1194,25 @@ function FuncionalTrainer({
   block,
   regs,
   onUpdate,
+  onAddEjercicio,
 }: {
   block: FuncionalBlock;
   regs: Record<string, FuncionalReg>;
   onUpdate: (ejId: string, patch: Partial<FuncionalReg>) => void;
+  onAddEjercicio: (
+    bloqueId: string,
+    payload: {
+      tipo: "fuerza" | "cardio";
+      ejercicio_id: string | null;
+      nombre_ejercicio: string | null;
+      reps_objetivo: number | null;
+      maquina: "carrera" | "bici" | "ski" | "remo" | null;
+      calorias_objetivo: number | null;
+      metros_objetivo: number | null;
+    }
+  ) => Promise<void>;
 }) {
+  const [showAddEj, setShowAddEj] = useState(false);
   return (
     <div className="space-y-2">
       <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: FONT_TEXT }}>
@@ -1168,24 +1233,24 @@ function FuncionalTrainer({
               className="rounded-lg px-3 py-2.5 space-y-2"
               style={{ background: "rgba(255,255,255,0.025)", border: "0.5px solid rgba(255,255,255,0.06)" }}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] tracking-wider" style={{ color: "rgba(255,255,255,0.5)", fontFamily: FONT_TEXT }}>
-                  {i + 1}. {ej.tipo === "fuerza" ? ej.nombre_ejercicio || "—" : `${capital(ej.maquina ?? "")}`}
-                </span>
-                <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)", fontFamily: FONT_TEXT }}>
-                  {ej.tipo === "fuerza"
-                    ? ej.reps_objetivo
+              <div>
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.95)", fontFamily: FONT_TEXT, letterSpacing: "0.02em" }}>
+                  <span style={{ color: "rgba(42,191,191,0.7)", marginRight: 6 }}>{i + 1}.</span>
+                  {ej.tipo === "fuerza" ? ej.nombre_ejercicio || "—" : capital(ej.maquina ?? "")}
+                </p>
+                {(ej.reps_objetivo || ej.calorias_objetivo || ej.metros_objetivo) && (
+                  <p className="mt-0.5" style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT, letterSpacing: "0.04em" }}>
+                    Objetivo:{" "}
+                    {ej.tipo === "fuerza"
                       ? `${ej.reps_objetivo} reps`
-                      : ""
-                    : ej.calorias_objetivo
-                    ? `${ej.calorias_objetivo} cal`
-                    : ej.metros_objetivo
-                    ? `${ej.metros_objetivo}m`
-                    : ""}
-                </span>
+                      : ej.calorias_objetivo
+                      ? `${ej.calorias_objetivo} cal`
+                      : `${ej.metros_objetivo}m`}
+                  </p>
+                )}
               </div>
               {ej.id && (
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {ej.tipo === "fuerza" ? (
                     <>
                       <input
@@ -1194,31 +1259,31 @@ function FuncionalTrainer({
                         placeholder="kg"
                         value={reg.kg ?? ""}
                         onChange={(e) => onUpdate(ej.id!, { kg: e.target.value === "" ? null : Number(e.target.value) })}
-                        className="w-20 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                        className="w-full min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
                       />
                       <input
                         type="number"
-                        placeholder="reps real"
+                        placeholder="reps"
                         value={reg.reps_real ?? ""}
                         onChange={(e) => onUpdate(ej.id!, { reps_real: e.target.value === "" ? null : Number(e.target.value) })}
-                        className="flex-1 min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                        className="w-full min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
                       />
                     </>
                   ) : (
                     <>
                       <input
                         type="number"
-                        placeholder="cal real"
+                        placeholder="cal"
                         value={reg.calorias_real ?? ""}
                         onChange={(e) => onUpdate(ej.id!, { calorias_real: e.target.value === "" ? null : Number(e.target.value) })}
-                        className="flex-1 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                        className="w-full min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
                       />
                       <input
                         type="number"
-                        placeholder="m real"
+                        placeholder="metros"
                         value={reg.metros_real ?? ""}
                         onChange={(e) => onUpdate(ej.id!, { metros_real: e.target.value === "" ? null : Number(e.target.value) })}
-                        className="flex-1 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+                        className="w-full min-w-0 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
                       />
                     </>
                   )}
@@ -1227,6 +1292,152 @@ function FuncionalTrainer({
             </div>
           );
         })}
+      </div>
+
+      {showAddEj ? (
+        <AddEjercicioFuncionalInline
+          onCancel={() => setShowAddEj(false)}
+          onSave={async (payload) => {
+            if (!block.id) return;
+            await onAddEjercicio(block.id, payload);
+            setShowAddEj(false);
+          }}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowAddEj(true)}
+          disabled={!block.id}
+          className="w-full py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold disabled:opacity-30"
+          style={{
+            background: "rgba(42,191,191,0.06)",
+            border: "0.5px dashed rgba(42,191,191,0.3)",
+            color: "rgba(42,191,191,0.85)",
+            fontFamily: FONT_TEXT,
+          }}
+        >
+          + Ejercicio
+        </button>
+      )}
+    </div>
+  );
+}
+
+function AddEjercicioFuncionalInline({
+  onCancel,
+  onSave,
+}: {
+  onCancel: () => void;
+  onSave: (payload: {
+    tipo: "fuerza" | "cardio";
+    ejercicio_id: string | null;
+    nombre_ejercicio: string | null;
+    reps_objetivo: number | null;
+    maquina: "carrera" | "bici" | "ski" | "remo" | null;
+    calorias_objetivo: number | null;
+    metros_objetivo: number | null;
+  }) => Promise<void>;
+}) {
+  const [tipo, setTipo] = useState<"fuerza" | "cardio">("fuerza");
+  const [nombre, setNombre] = useState("");
+  const [ejercicioId, setEjercicioId] = useState<string | null>(null);
+  const [maquina, setMaquina] = useState<"carrera" | "bici" | "ski" | "remo">("carrera");
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <div
+      className="rounded-xl px-3 py-3 space-y-2"
+      style={{ background: "rgba(42,191,191,0.04)", border: "0.5px dashed rgba(42,191,191,0.3)" }}
+    >
+      <p className="text-[9px] tracking-[0.18em] uppercase font-semibold" style={{ color: "rgba(42,191,191,0.85)", fontFamily: FONT_TEXT }}>
+        Nuevo ejercicio funcional
+      </p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {(["fuerza", "cardio"] as const).map((t) => {
+          const sel = tipo === t;
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTipo(t)}
+              className="py-2 rounded-md text-[10px] tracking-[0.15em] uppercase font-semibold"
+              style={{
+                background: sel ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.04)",
+                border: `0.5px solid ${sel ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.08)"}`,
+                color: sel ? "#2abfbf" : "rgba(255,255,255,0.5)",
+                fontFamily: FONT_TEXT,
+              }}
+            >
+              {t === "fuerza" ? "Fuerza" : "Cardio"}
+            </button>
+          );
+        })}
+      </div>
+      {tipo === "fuerza" ? (
+        <div className="flex">
+          <EjercicioSelector
+            value={nombre}
+            ejercicioId={ejercicioId}
+            onChange={(n, id) => {
+              setNombre(n);
+              setEjercicioId(id);
+            }}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-1.5">
+          {(["carrera", "bici", "ski", "remo"] as const).map((m) => {
+            const sel = maquina === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMaquina(m)}
+                className="py-1.5 rounded-md text-[9px] tracking-[0.15em] uppercase font-semibold"
+                style={{
+                  background: sel ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.04)",
+                  border: `0.5px solid ${sel ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  color: sel ? "#2abfbf" : "rgba(255,255,255,0.5)",
+                  fontFamily: FONT_TEXT,
+                }}
+              >
+                {capital(m)}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold"
+          style={{ background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", fontFamily: FONT_TEXT }}
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
+            if (tipo === "fuerza" && !nombre.trim()) return;
+            setSaving(true);
+            await onSave({
+              tipo,
+              ejercicio_id: tipo === "fuerza" ? ejercicioId : null,
+              nombre_ejercicio: tipo === "fuerza" ? nombre.trim() : null,
+              reps_objetivo: null,
+              maquina: tipo === "cardio" ? maquina : null,
+              calorias_objetivo: null,
+              metros_objetivo: null,
+            });
+            setSaving(false);
+          }}
+          disabled={saving || (tipo === "fuerza" && !nombre.trim())}
+          className="py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold disabled:opacity-40"
+          style={{ background: "#2abfbf", color: "#000", fontFamily: FONT_TEXT }}
+        >
+          {saving ? "Guardando…" : "Añadir"}
+        </button>
       </div>
     </div>
   );

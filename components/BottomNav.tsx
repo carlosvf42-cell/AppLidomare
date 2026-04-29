@@ -15,8 +15,9 @@ const TABS = [
 export default function BottomNav() {
   const pathname = usePathname();
 
-  // Hide during focused workflows (live training).
-  if (pathname?.startsWith("/admin/antifragil/") && pathname.endsWith("/live")) {
+  // Hide on antifragil entreno workflows (builder, edit, live) so the fixed
+  // bottom action bar (save/finalize) doesn't get covered by the nav.
+  if (pathname?.startsWith("/admin/antifragil/") && pathname.includes("/entreno/")) {
     return null;
   }
 
