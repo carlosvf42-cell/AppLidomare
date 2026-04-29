@@ -91,6 +91,17 @@ function TipoIcon({ tipo, color }: { tipo: string; color: string }) {
   );
 }
 
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16" height="16" viewBox="0 0 24 24" fill="none"
+      style={{ transition: "transform 0.3s ease", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+    >
+      <path d="M6 9l6 6 6-6" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function formatFecha(fecha: string): string {
   const d = new Date(fecha + "T12:00:00");
   return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
@@ -112,7 +123,10 @@ export default function ClienteDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [duplicandoId, setDuplicandoId] = useState<string | null>(null);
+  const [borrandoId, setBorrandoId] = useState<string | null>(null);
   const [iniciandoVacio, setIniciandoVacio] = useState(false);
+  const [siguientesOpen, setSiguientesOpen] = useState(true);
+  const [historialOpen, setHistorialOpen] = useState(false);
 
   async function iniciarEntrenoVacio() {
     if (!token || !userId) return;
@@ -135,6 +149,28 @@ export default function ClienteDetailPage() {
       setError(err?.message ?? "Error de red al iniciar el entreno");
       setIniciandoVacio(false);
     }
+  }
+
+  async function borrarEntreno(entrenoId: string) {
+    if (!token || !userId) return;
+    if (!confirm("¿Borrar este entreno? Esta acción no se puede deshacer.")) return;
+    setBorrandoId(entrenoId);
+    setError(null);
+    const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setBorrandoId(null);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setError(j.error ?? "No se pudo borrar el entreno");
+      return;
+    }
+    const refreshed = await fetch(`/api/admin/antifragil/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json());
+    if (refreshed.error) setError(refreshed.error);
+    else setData(refreshed as ClienteData);
   }
 
   async function duplicar(entrenoId: string) {
@@ -283,9 +319,23 @@ export default function ClienteDetailPage() {
 
         {/* Siguientes entrenos */}
         <section>
-          <p className="mb-3 px-1" style={EYEBROW}>Siguientes entrenos</p>
-          {data.entrenos.length === 0 ? (
-            <div className="rounded-2xl px-5 py-8 text-center" style={GLASS}>
+          <button
+            type="button"
+            onClick={() => setSiguientesOpen((v) => !v)}
+            className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all active:scale-[0.99]"
+            style={GLASS}
+          >
+            <div className="flex-1 text-left">
+              <p style={EYEBROW}>Siguientes entrenos</p>
+            </div>
+            <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif" }}>
+              {data.entrenos.length}
+            </span>
+            <Chevron open={siguientesOpen} />
+          </button>
+
+          {siguientesOpen && (data.entrenos.length === 0 ? (
+            <div className="mt-3 rounded-2xl px-5 py-8 text-center" style={GLASS}>
               <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.5 }}>
                 Sin entrenos programados
               </p>
@@ -294,7 +344,7 @@ export default function ClienteDetailPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="mt-3 space-y-2">
               {data.entrenos.map((e) => {
                 const meta = tipoMeta(e.tipo);
                 return (
@@ -321,20 +371,20 @@ export default function ClienteDetailPage() {
                         {e.nombre || "Sin nombre"}
                       </p>
                     </div>
-                    <div className="shrink-0 flex items-center gap-2">
+                    <div className="shrink-0 flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => duplicar(e.id)}
                         disabled={duplicandoId === e.id}
                         aria-label="Duplicar entreno"
-                        className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-[0.96] disabled:opacity-40"
+                        className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-[0.96] disabled:opacity-40"
                         style={{
                           background: "rgba(255,255,255,0.05)",
                           border: "0.5px solid rgba(255,255,255,0.12)",
                           color: "rgba(255,255,255,0.6)",
                         }}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                           <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.4" />
                           <path d="M5 15V6a2 2 0 012-2h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
                         </svg>
@@ -342,7 +392,7 @@ export default function ClienteDetailPage() {
                       <Link
                         href={`/admin/antifragil/${data.user.id}/entreno/${e.id}`}
                         aria-label="Editar entreno"
-                        className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-[0.96]"
+                        className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-[0.96]"
                         style={{
                           background: "rgba(255,255,255,0.05)",
                           border: "0.5px solid rgba(255,255,255,0.12)",
@@ -350,13 +400,29 @@ export default function ClienteDetailPage() {
                           textDecoration: "none",
                         }}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                           <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => borrarEntreno(e.id)}
+                        disabled={borrandoId === e.id}
+                        aria-label="Borrar entreno"
+                        className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-[0.96] disabled:opacity-40"
+                        style={{
+                          background: "rgba(255,128,128,0.06)",
+                          border: "0.5px solid rgba(255,128,128,0.2)",
+                          color: "rgba(255,128,128,0.75)",
+                        }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                          <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
                       <Link
                         href={`/admin/antifragil/${data.user.id}/entreno/${e.id}/live`}
-                        className="px-4 py-2 rounded-xl text-[10px] font-semibold tracking-widest uppercase transition-colors active:scale-[0.98]"
+                        className="ml-1 px-3.5 py-2 rounded-xl text-[10px] font-semibold tracking-widest uppercase transition-colors active:scale-[0.98]"
                         style={{
                           background: "rgba(42,191,191,0.12)",
                           border: "0.5px solid rgba(42,191,191,0.35)",
@@ -372,20 +438,34 @@ export default function ClienteDetailPage() {
                 );
               })}
             </div>
-          )}
+          ))}
         </section>
 
         {/* Historial */}
         <section>
-          <p className="mb-3 px-1" style={EYEBROW}>Historial</p>
-          {data.sesiones.length === 0 ? (
-            <div className="rounded-2xl px-5 py-8 text-center" style={GLASS}>
+          <button
+            type="button"
+            onClick={() => setHistorialOpen((v) => !v)}
+            className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all active:scale-[0.99]"
+            style={GLASS}
+          >
+            <div className="flex-1 text-left">
+              <p style={EYEBROW}>Historial</p>
+            </div>
+            <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif" }}>
+              {data.sesiones.length}
+            </span>
+            <Chevron open={historialOpen} />
+          </button>
+
+          {historialOpen && (data.sesiones.length === 0 ? (
+            <div className="mt-3 rounded-2xl px-5 py-8 text-center" style={GLASS}>
               <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.5 }}>
                 Sin sesiones completadas todavía
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="mt-3 space-y-2">
               {data.sesiones.map((s) => {
                 const tipo = s.entrenos_antifragil?.tipo ?? "";
                 const meta = tipoMeta(tipo);
@@ -440,7 +520,7 @@ export default function ClienteDetailPage() {
                 );
               })}
             </div>
-          )}
+          ))}
         </section>
       </div>
     </div>
