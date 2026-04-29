@@ -62,10 +62,11 @@ interface Props {
   blocks: Block[];
 }
 
-export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props) {
+export default function EntrenoLive({ userId, token, entrenoId, nombre: nombreProp }: Props) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("loading");
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [nombre, setNombre] = useState<string | null>(nombreProp);
   const [sesionId, setSesionId] = useState<string | null>(null);
   const [wellnessEntryId, setWellnessEntryId] = useState<string | null>(null);
   const wellnessIdRef = useRef<string | null>(null);
@@ -260,6 +261,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
         }
         const loaded = fromApiBlocks(json.bloques ?? []);
         applyLoadedBlocks(loaded);
+        if (json.entreno?.nombre !== undefined) setNombre(json.entreno.nombre);
         setPhase("wellness-gate");
       } catch (err: any) {
         if (cancelled) return;

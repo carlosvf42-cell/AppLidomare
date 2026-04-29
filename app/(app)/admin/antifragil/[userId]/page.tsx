@@ -112,6 +112,30 @@ export default function ClienteDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [duplicandoId, setDuplicandoId] = useState<string | null>(null);
+  const [iniciandoVacio, setIniciandoVacio] = useState(false);
+
+  async function iniciarEntrenoVacio() {
+    if (!token || !userId) return;
+    setIniciandoVacio(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/antifragil/${userId}/entrenos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nombre: null, estado: "programado", bloques: [] }),
+      });
+      const j = await res.json();
+      if (!res.ok) {
+        setError(j.error ?? `No se pudo iniciar el entreno (HTTP ${res.status})`);
+        setIniciandoVacio(false);
+        return;
+      }
+      router.push(`/admin/antifragil/${userId}/entreno/${j.id}/live`);
+    } catch (err: any) {
+      setError(err?.message ?? "Error de red al iniciar el entreno");
+      setIniciandoVacio(false);
+    }
+  }
 
   async function duplicar(entrenoId: string) {
     if (!token || !userId) return;
@@ -224,20 +248,38 @@ export default function ClienteDetailPage() {
       </div>
 
       <div className="px-4 pb-16 space-y-6">
-        {/* CTA: Entrenar ahora */}
-        <Link
-          href={`/admin/antifragil/${data.user.id}/entreno/nuevo`}
-          className="block w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all active:scale-[0.98] text-center"
-          style={{
-            background: "#2abfbf",
-            color: "#000",
-            fontFamily: "Barlow Condensed, sans-serif",
-            boxShadow: "0 4px 24px rgba(42,191,191,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
-            textDecoration: "none",
-          }}
-        >
-          Entrenar ahora
-        </Link>
+        {/* CTA: Entrenar ahora — crea entreno vacío y entra DIRECTAMENTE en modo en vivo */}
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={iniciarEntrenoVacio}
+            disabled={iniciandoVacio}
+            className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all active:scale-[0.98] text-center disabled:opacity-60"
+            style={{
+              background: "#2abfbf",
+              color: "#000",
+              fontFamily: "Barlow Condensed, sans-serif",
+              boxShadow: "0 4px 24px rgba(42,191,191,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
+              border: "none",
+              cursor: iniciandoVacio ? "wait" : "pointer",
+            }}
+          >
+            {iniciandoVacio ? "Iniciando…" : "Entrenar ahora"}
+          </button>
+          <Link
+            href={`/admin/antifragil/${data.user.id}/entreno/nuevo`}
+            className="block w-full py-2.5 rounded-xl text-[10px] font-semibold tracking-widest uppercase transition-all text-center"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "0.5px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.6)",
+              fontFamily: "Barlow Condensed, sans-serif",
+              textDecoration: "none",
+            }}
+          >
+            Programar nuevo entreno
+          </Link>
+        </div>
 
         {/* Siguientes entrenos */}
         <section>
@@ -299,6 +341,21 @@ export default function ClienteDetailPage() {
                       </button>
                       <Link
                         href={`/admin/antifragil/${data.user.id}/entreno/${e.id}`}
+                        aria-label="Editar entreno"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-[0.96]"
+                        style={{
+                          background: "rgba(255,255,255,0.05)",
+                          border: "0.5px solid rgba(255,255,255,0.12)",
+                          color: "rgba(255,255,255,0.6)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </Link>
+                      <Link
+                        href={`/admin/antifragil/${data.user.id}/entreno/${e.id}/live`}
                         className="px-4 py-2 rounded-xl text-[10px] font-semibold tracking-widest uppercase transition-colors active:scale-[0.98]"
                         style={{
                           background: "rgba(42,191,191,0.12)",
