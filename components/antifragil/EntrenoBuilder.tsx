@@ -136,17 +136,24 @@ export default function EntrenoBuilder({ userId, entrenoId, initialNombre, initi
       ? `/api/admin/antifragil/${userId}/entrenos/${entrenoId}`
       : `/api/admin/antifragil/${userId}/entrenos`;
     const method = entrenoId ? "PUT" : "POST";
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      setError(json.error ?? "Error al guardar");
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        console.error("[Antifrágil] persist failed", { method, url, status: res.status, body: json });
+        setError(json.error ?? `Error al guardar (HTTP ${res.status})`);
+        return null;
+      }
+      return json.id ?? entrenoId ?? null;
+    } catch (err: any) {
+      console.error("[Antifrágil] persist threw", err);
+      setError(err?.message ?? "Error de red");
       return null;
     }
-    return json.id ?? entrenoId ?? null;
   }
 
   async function handleGuardar() {
@@ -200,6 +207,21 @@ export default function EntrenoBuilder({ userId, entrenoId, initialNombre, initi
       </div>
 
       <div className="px-4 space-y-3">
+        {error && (
+          <div
+            className="rounded-2xl px-4 py-3 space-y-1"
+            style={{
+              background: "rgba(255,128,128,0.08)",
+              border: "0.5px solid rgba(255,128,128,0.35)",
+            }}
+          >
+            <p style={{ ...EYEBROW, color: "rgba(255,128,128,0.85)" }}>Error</p>
+            <p className="text-xs" style={{ color: "rgba(255,200,200,0.95)", fontFamily: FONT_TEXT, lineHeight: 1.5 }}>
+              {error}
+            </p>
+          </div>
+        )}
+
         {blocks.length === 0 ? (
           <div className="rounded-2xl px-5 py-10 text-center" style={GLASS}>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT, lineHeight: 1.5 }}>
@@ -237,12 +259,6 @@ export default function EntrenoBuilder({ userId, entrenoId, initialNombre, initi
           + Añadir bloque
         </button>
       </div>
-
-      {error && (
-        <p className="px-4 mt-4 text-xs text-center" style={{ color: "#ff8080", fontFamily: FONT_TEXT }}>
-          {error}
-        </p>
-      )}
 
       {/* Bottom actions */}
       <div

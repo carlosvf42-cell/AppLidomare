@@ -6,7 +6,7 @@ import WellnessCheckIn from "@/components/health/WellnessCheckIn";
 import RPECapture from "@/components/health/RPECapture";
 import EjercicioSelector from "@/components/EjercicioSelector";
 import { type Block, type CardioBlock, type FuncionalBlock, type FuerzaBlock, fromApiBlocks, makeCardio, makeFuerza, makeFuncional, tipoResumen, toApiBlocks } from "./types";
-import { AddBlockSheet, BlockCard } from "./EntrenoBuilder";
+import { AddBlockSheet } from "./EntrenoBuilder";
 
 const GLASS: React.CSSProperties = {
   background: "rgba(255,255,255,0.04)",
@@ -202,49 +202,70 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
     if (res.ok) applyLoadedBlocks(fromApiBlocks(json.bloques ?? []));
   }
 
-  function startAddingBlock(kind: Block["kind"]) {
-    const orden = blocks.length;
-    if (kind === "fuerza") setDraftBlock(makeFuerza(orden));
-    if (kind === "cardio") setDraftBlock(makeCardio(orden));
-    if (kind === "funcional") setDraftBlock(makeFuncional(orden));
-    setShowAddSheet(false);
-  }
-
-  async function saveDraftBlock() {
-    if (!draftBlock) return;
-    setSavingDraft(true);
-    const [apiBlock] = toApiBlocks([draftBlock]);
+  async function persistBlock(block: Block): Promise<boolean> {
+    const [apiBlock] = toApiBlocks([block]);
     const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}/bloques`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ bloque: apiBlock }),
     });
-    setSavingDraft(false);
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
+      console.error("[Antifrágil] persistBlock failed", { status: res.status, body: j });
       setError(j.error ?? "No se pudo guardar el bloque");
+      return false;
+    }
+    await reloadBlocks();
+    return true;
+  }
+
+  async function startAddingBlock(kind: Block["kind"]) {
+    setShowAddSheet(false);
+    if (kind === "fuerza") {
+      // Live mode: skip creator-style configurator. Persist empty fuerza block
+      // directly. The user will fill ejercicios + series via the inline UI.
+      setSavingDraft(true);
+      await persistBlock(makeFuerza(blocks.length));
+      setSavingDraft(false);
       return;
     }
-    setDraftBlock(null);
-    await reloadBlocks();
+    // Cardio / funcional require structural fields (maquina+modo / formato+tiempo)
+    // before the registration UI can render. Show a minimal inline editor.
+    if (kind === "cardio") setDraftBlock(makeCardio(blocks.length));
+    if (kind === "funcional") setDraftBlock(makeFuncional(blocks.length));
+  }
+
+  async function saveDraftBlock() {
+    if (!draftBlock) return;
+    setSavingDraft(true);
+    const ok = await persistBlock(draftBlock);
+    setSavingDraft(false);
+    if (ok) setDraftBlock(null);
   }
 
   // Load entreno (with DB block ids) and initialize live state
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (cancelled) return;
-      if (!res.ok) {
-        setError(json.error ?? "No se pudo cargar el entreno");
-        return;
+      try {
+        const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = await res.json();
+        if (cancelled) return;
+        if (!res.ok) {
+          console.error("[Antifrágil] Load entreno failed", { status: res.status, body: json });
+          setError(json.error ?? `No se pudo cargar el entreno (HTTP ${res.status})`);
+          return;
+        }
+        const loaded = fromApiBlocks(json.bloques ?? []);
+        applyLoadedBlocks(loaded);
+        setPhase("wellness-gate");
+      } catch (err: any) {
+        if (cancelled) return;
+        console.error("[Antifrágil] Load entreno threw", err);
+        setError(err?.message ?? "Error de red al cargar el entreno");
       }
-      const loaded = fromApiBlocks(json.bloques ?? []);
-      applyLoadedBlocks(loaded);
-      setPhase("wellness-gate");
     })();
     return () => {
       cancelled = true;
@@ -252,19 +273,26 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
   }, [userId, token, entrenoId]);
 
   async function startSession(wellnessId: string | null) {
-    const res = await fetch(`/api/admin/antifragil/${userId}/sesiones`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ entreno_id: entrenoId, wellness_entry_id: wellnessId }),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      setError(json.error ?? "No se pudo iniciar la sesión");
-      return;
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/antifragil/${userId}/sesiones`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ entreno_id: entrenoId, wellness_entry_id: wellnessId }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        console.error("[Antifrágil] startSession failed", { status: res.status, body: json });
+        setError(json.error ?? `No se pudo iniciar la sesión (HTTP ${res.status})`);
+        return;
+      }
+      setSesionId(json.id);
+      setStartedAt(Date.now());
+      setPhase("training");
+    } catch (err: any) {
+      console.error("[Antifrágil] startSession threw", err);
+      setError(err?.message ?? "Error de red al iniciar la sesión");
     }
-    setSesionId(json.id);
-    setStartedAt(Date.now());
-    setPhase("training");
   }
 
   async function submitWellness(answers: { sueno: number; fatiga: number; estres: number; animo: number; dolor: number; omitido: boolean }) {
@@ -339,27 +367,34 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
       }))
     );
 
-    const res = await fetch(`/api/admin/antifragil/${userId}/sesiones/${sesionId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        rpe,
-        comentario: comentario.trim() || null,
-        duracion_minutos: computedDuracion,
-        tipo_resumen: tipoResumen(blocks),
-        wellness_entry_id: wellnessEntryId,
-        series_fuerza: seriesFuerza,
-        series_cardio: seriesCardio,
-        registros_funcional: registrosFuncional,
-      }),
-    });
-    const json = await res.json();
-    setFinalizing(false);
-    if (!res.ok) {
-      setError(json.error ?? "No se pudo guardar la sesión");
-      return;
+    try {
+      const res = await fetch(`/api/admin/antifragil/${userId}/sesiones/${sesionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          rpe,
+          comentario: comentario.trim() || null,
+          duracion_minutos: computedDuracion,
+          tipo_resumen: tipoResumen(blocks),
+          wellness_entry_id: wellnessEntryId,
+          series_fuerza: seriesFuerza,
+          series_cardio: seriesCardio,
+          registros_funcional: registrosFuncional,
+        }),
+      });
+      const json = await res.json();
+      setFinalizing(false);
+      if (!res.ok) {
+        console.error("[Antifrágil] handleFinalize failed", { status: res.status, body: json });
+        setError(json.error ?? `No se pudo guardar la sesión (HTTP ${res.status})`);
+        return;
+      }
+      router.push(`/admin/antifragil/${userId}`);
+    } catch (err: any) {
+      setFinalizing(false);
+      console.error("[Antifrágil] handleFinalize threw", err);
+      setError(err?.message ?? "Error de red al guardar la sesión");
     }
-    router.push(`/admin/antifragil/${userId}`);
   }
 
   if (phase === "loading") {
@@ -468,6 +503,21 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
         </div>
 
         <div className="px-4 space-y-3">
+          {error && (
+            <div
+              className="rounded-2xl px-4 py-3 space-y-1"
+              style={{
+                background: "rgba(255,128,128,0.08)",
+                border: "0.5px solid rgba(255,128,128,0.35)",
+              }}
+            >
+              <p style={{ ...EYEBROW, color: "rgba(255,128,128,0.85)" }}>Error</p>
+              <p className="text-xs" style={{ color: "rgba(255,200,200,0.95)", fontFamily: FONT_TEXT, lineHeight: 1.5 }}>
+                {error}
+              </p>
+            </div>
+          )}
+
           {blocks.map((b, idx) => (
             <BlockTrainer
               key={b.uid}
@@ -508,41 +558,13 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
           ))}
 
           {draftBlock && (
-            <div className="space-y-3">
-              <div
-                className="rounded-xl px-3 py-2 text-[10px] tracking-[0.18em] uppercase font-semibold text-center"
-                style={{
-                  background: "rgba(42,191,191,0.06)",
-                  border: "0.5px dashed rgba(42,191,191,0.3)",
-                  color: "rgba(42,191,191,0.85)",
-                  fontFamily: FONT_TEXT,
-                }}
-              >
-                Configurando bloque nuevo
-              </div>
-              <BlockCard
-                block={draftBlock}
-                index={blocks.length}
-                total={blocks.length + 1}
-                onChange={(patch) => setDraftBlock((prev) => (prev ? ({ ...prev, ...patch } as Block) : prev))}
-                onRemove={() => setDraftBlock(null)}
-                onMove={() => {}}
-              />
-              <button
-                type="button"
-                onClick={saveDraftBlock}
-                disabled={savingDraft}
-                className="w-full py-3 rounded-2xl text-[11px] font-semibold tracking-widest uppercase active:scale-[0.98] disabled:opacity-40"
-                style={{
-                  background: "#2abfbf",
-                  color: "#000",
-                  fontFamily: FONT_TEXT,
-                  boxShadow: "0 4px 24px rgba(42,191,191,0.3)",
-                }}
-              >
-                {savingDraft ? "Guardando…" : "Guardar bloque y registrar"}
-              </button>
-            </div>
+            <LiveBlockStructureEditor
+              block={draftBlock}
+              onChange={(patch) => setDraftBlock((prev) => (prev ? ({ ...prev, ...patch } as Block) : prev))}
+              onCancel={() => setDraftBlock(null)}
+              onSave={saveDraftBlock}
+              saving={savingDraft}
+            />
           )}
 
           {!draftBlock && (
@@ -567,12 +589,6 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
             onPick={(k) => startAddingBlock(k)}
             onClose={() => setShowAddSheet(false)}
           />
-        )}
-
-        {error && (
-          <p className="px-4 mt-4 text-xs text-center" style={{ color: "#ff8080", fontFamily: FONT_TEXT }}>
-            {error}
-          </p>
         )}
 
         <div
@@ -616,6 +632,21 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
       </div>
 
       <div className="px-4 space-y-4">
+        {error && (
+          <div
+            className="rounded-2xl px-4 py-3 space-y-1"
+            style={{
+              background: "rgba(255,128,128,0.08)",
+              border: "0.5px solid rgba(255,128,128,0.35)",
+            }}
+          >
+            <p style={{ ...EYEBROW, color: "rgba(255,128,128,0.85)" }}>Error al guardar</p>
+            <p className="text-xs" style={{ color: "rgba(255,200,200,0.95)", fontFamily: FONT_TEXT, lineHeight: 1.5 }}>
+              {error}
+            </p>
+          </div>
+        )}
+
         <RPECapture rpe={rpe} onRpeChange={setRpe} />
 
         <div className="rounded-2xl px-4 py-4 space-y-3" style={GLASS}>
@@ -639,12 +670,6 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre }: Props)
             className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] placeholder-[#333] text-xs outline-none focus:border-[#2abfbf] resize-none"
           />
         </div>
-
-        {error && (
-          <p className="text-xs text-center" style={{ color: "#ff8080", fontFamily: FONT_TEXT }}>
-            {error}
-          </p>
-        )}
       </div>
 
       <div
@@ -823,9 +848,11 @@ function FuerzaTrainer({
               <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.85)", fontFamily: FONT_TEXT }}>
                 <span style={{ color: "rgba(255,128,96,0.7)" }}>{ejIdx + 1}.</span> {ej.nombre_ejercicio || "—"}
               </p>
-              <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT, letterSpacing: "0.02em" }}>
-                Objetivo: {ej.series_objetivo} × {ej.reps_objetivo}
-              </span>
+              {(ej.series_objetivo > 0 || ej.reps_objetivo > 0) && (
+                <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)", fontFamily: FONT_TEXT, letterSpacing: "0.02em" }}>
+                  Objetivo: {ej.series_objetivo} × {ej.reps_objetivo}
+                </span>
+              )}
             </div>
             <div className="space-y-1.5">
               {series.map((s, i) => (
@@ -922,8 +949,6 @@ function AddEjercicioInline({
 }) {
   const [nombre, setNombre] = useState("");
   const [ejercicioId, setEjercicioId] = useState<string | null>(null);
-  const [series, setSeries] = useState(3);
-  const [reps, setReps] = useState(10);
   const [saving, setSaving] = useState(false);
 
   return (
@@ -945,28 +970,6 @@ function AddEjercicioInline({
         />
       </div>
       <div className="flex gap-2">
-        <div className="flex-1">
-          <p style={{ ...LABEL, marginBottom: 4 }}>Series</p>
-          <input
-            type="number"
-            min={1}
-            value={series}
-            onChange={(e) => setSeries(e.target.value === "" ? 0 : Number(e.target.value))}
-            className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-          />
-        </div>
-        <div className="flex-1">
-          <p style={{ ...LABEL, marginBottom: 4 }}>Reps</p>
-          <input
-            type="number"
-            min={1}
-            value={reps}
-            onChange={(e) => setReps(e.target.value === "" ? 0 : Number(e.target.value))}
-            className="w-full bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
-          />
-        </div>
-      </div>
-      <div className="flex gap-2">
         <button
           type="button"
           onClick={onCancel}
@@ -980,7 +983,7 @@ function AddEjercicioInline({
           onClick={async () => {
             if (!nombre.trim()) return;
             setSaving(true);
-            await onSave({ ejercicio_id: ejercicioId, nombre_ejercicio: nombre.trim(), series_objetivo: series, reps_objetivo: reps });
+            await onSave({ ejercicio_id: ejercicioId, nombre_ejercicio: nombre.trim(), series_objetivo: 0, reps_objetivo: 0 });
             setSaving(false);
           }}
           disabled={saving || !nombre.trim()}
@@ -1254,4 +1257,188 @@ function formatSec(s: number): string {
   const sec = s % 60;
   if (m === 0) return `${sec}s`;
   return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+const MAQUINAS_LIVE: { key: "carrera" | "bici" | "ski" | "remo"; label: string }[] = [
+  { key: "carrera", label: "Carrera" },
+  { key: "bici", label: "Bici" },
+  { key: "ski", label: "Ski" },
+  { key: "remo", label: "Remo" },
+];
+
+const FORMATOS_LIVE: { key: FuncionalBlock["formato"]; label: string }[] = [
+  { key: "for_time", label: "For time" },
+  { key: "amrap", label: "AMRAP" },
+  { key: "emom", label: "EMOM" },
+  { key: "tabata", label: "Tabata" },
+];
+
+function modosForLive(maquina: CardioBlock["maquina"]): { key: CardioBlock["modo"]; label: string }[] {
+  if (maquina === "carrera") {
+    return [
+      { key: "distancia", label: "Distancia" },
+      { key: "intervalos_tiempo", label: "Intervalos por tiempo" },
+    ];
+  }
+  return [
+    { key: "calorias_total", label: "Calorías totales" },
+    { key: "distancia_total", label: "Distancia total" },
+    { key: "intervalos_tiempo", label: "Intervalos por tiempo" },
+    { key: "intervalos_calorias", label: "Intervalos por calorías" },
+  ];
+}
+
+function LiveBlockStructureEditor({
+  block,
+  onChange,
+  onCancel,
+  onSave,
+  saving,
+}: {
+  block: Block;
+  onChange: (patch: any) => void;
+  onCancel: () => void;
+  onSave: () => Promise<void>;
+  saving: boolean;
+}) {
+  const meta = BLOCK_META[block.kind];
+  return (
+    <div
+      className="rounded-2xl px-4 py-4 space-y-3"
+      style={{ ...GLASS, border: `0.5px dashed ${meta.border}` }}
+    >
+      <div className="flex items-center justify-between">
+        <span
+          className="inline-flex items-center px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
+          style={{ background: meta.bg, border: `0.5px solid ${meta.border}`, color: meta.color, fontFamily: FONT_TEXT }}
+        >
+          Nuevo · {meta.label}
+        </span>
+        <button
+          type="button"
+          onClick={onCancel}
+          aria-label="Cancelar"
+          className="w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      {block.kind === "cardio" && (
+        <>
+          <div>
+            <p style={{ ...LABEL, marginBottom: 6 }}>Máquina</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {MAQUINAS_LIVE.map((m) => {
+                const sel = (block as CardioBlock).maquina === m.key;
+                return (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => {
+                      const validModos = modosForLive(m.key).map((x) => x.key);
+                      const cur = (block as CardioBlock).modo;
+                      const newModo = validModos.includes(cur) ? cur : validModos[0];
+                      onChange({ maquina: m.key, modo: newModo });
+                    }}
+                    className="py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold"
+                    style={{
+                      background: sel ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.04)",
+                      border: `0.5px solid ${sel ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.08)"}`,
+                      color: sel ? "#2abfbf" : "rgba(255,255,255,0.5)",
+                      fontFamily: FONT_TEXT,
+                    }}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <p style={{ ...LABEL, marginBottom: 6 }}>Modo</p>
+            <div className="flex flex-wrap gap-1.5">
+              {modosForLive((block as CardioBlock).maquina).map((m) => {
+                const sel = (block as CardioBlock).modo === m.key;
+                return (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => onChange({ modo: m.key })}
+                    className="px-3 py-2 rounded-lg text-[10px] tracking-[0.12em] uppercase font-semibold"
+                    style={{
+                      background: sel ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.04)",
+                      border: `0.5px solid ${sel ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.08)"}`,
+                      color: sel ? "#2abfbf" : "rgba(255,255,255,0.5)",
+                      fontFamily: FONT_TEXT,
+                    }}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
+      {block.kind === "funcional" && (
+        <>
+          <div>
+            <p style={{ ...LABEL, marginBottom: 6 }}>Formato</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {FORMATOS_LIVE.map((f) => {
+                const sel = (block as FuncionalBlock).formato === f.key;
+                return (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => onChange({ formato: f.key })}
+                    className="py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold"
+                    style={{
+                      background: sel ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.04)",
+                      border: `0.5px solid ${sel ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.08)"}`,
+                      color: sel ? "#2abfbf" : "rgba(255,255,255,0.5)",
+                      fontFamily: FONT_TEXT,
+                    }}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <p style={{ ...LABEL, marginBottom: 4 }}>Tiempo total (min)</p>
+            <input
+              type="number"
+              min={1}
+              value={(block as FuncionalBlock).tiempo_minutos || ""}
+              onChange={(e) => onChange({ tiempo_minutos: e.target.value === "" ? 0 : Number(e.target.value) })}
+              placeholder="min"
+              className="w-24 bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-2 text-[#f0f0f0] text-sm outline-none focus:border-[#2abfbf]"
+            />
+          </div>
+        </>
+      )}
+
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={saving}
+        className="w-full py-3 rounded-xl text-[11px] font-semibold tracking-widest uppercase active:scale-[0.98] disabled:opacity-40"
+        style={{
+          background: "#2abfbf",
+          color: "#000",
+          fontFamily: FONT_TEXT,
+          boxShadow: "0 4px 24px rgba(42,191,191,0.3)",
+        }}
+      >
+        {saving ? "Guardando…" : "Confirmar bloque"}
+      </button>
+    </div>
+  );
 }
