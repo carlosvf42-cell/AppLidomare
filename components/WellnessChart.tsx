@@ -31,14 +31,25 @@ type WellnessRow = {
   puntuacion_total: number;
 };
 
-const METRICS = [
-  { key: "puntuacion_total" as const, label: "Total", color: "#2abfbf", max: 25, normalize: (v: number) => v / 2.5, headline: true },
-  { key: "sueno" as const, label: "Sueño", color: "#7b8cff", max: 5, normalize: (v: number) => v * 2, headline: false },
-  { key: "fatiga" as const, label: "Fatiga", color: "#ffb040", max: 5, normalize: (v: number) => v * 2, headline: false },
-  { key: "estres" as const, label: "Estrés", color: "#ff8080", max: 5, normalize: (v: number) => v * 2, headline: false },
-  { key: "animo" as const, label: "Ánimo", color: "#a8e6a8", max: 5, normalize: (v: number) => v * 2, headline: false },
-  { key: "dolor" as const, label: "Dolor", color: "#c89bff", max: 5, normalize: (v: number) => v * 2, headline: false },
+type MetricKey = "puntuacion_total" | "sueno" | "fatiga" | "estres" | "animo" | "dolor";
+
+const METRICS: ReadonlyArray<{
+  key: MetricKey;
+  label: string;
+  color: string;
+  max: number;
+  normalize: (v: number) => number;
+}> = [
+  { key: "puntuacion_total", label: "Total", color: "#2abfbf", max: 25, normalize: (v) => v / 2.5 },
+  { key: "sueno", label: "Sueño", color: "#378ADD", max: 5, normalize: (v) => v * 2 },
+  { key: "fatiga", label: "Fatiga", color: "#EF9F27", max: 5, normalize: (v) => v * 2 },
+  { key: "estres", label: "Estrés", color: "#E24B4A", max: 5, normalize: (v) => v * 2 },
+  { key: "animo", label: "Ánimo", color: "#639922", max: 5, normalize: (v) => v * 2 },
+  { key: "dolor", label: "Dolor", color: "#9B59B6", max: 5, normalize: (v) => v * 2 },
 ];
+
+const DEFAULT_HIGHLIGHT: MetricKey = "puntuacion_total";
+const DIM_OPACITY = 0.15;
 
 function buildSmoothPath(points: { x: number; y: number }[]): string {
   if (points.length === 0) return "";
@@ -67,6 +78,9 @@ function formatShortDate(s: string): string {
 export default function WellnessChart({ userId: userIdProp }: { userId?: string } = {}) {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<WellnessRow[]>([]);
+  // null = default state (only total highlighted). Otherwise the selected
+  // metric is highlighted and the rest are dimmed.
+  const [selected, setSelected] = useState<MetricKey | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -218,22 +232,30 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
             </g>
           ))}
 
-          {/* Lines */}
+          {/* Lines — only the highlighted line is at full opacity, the rest
+              are dimmed. Selected metric (or total by default) gets thicker
+              stroke and visible point circles. */}
           {METRICS.map((m) => {
+            const isHighlighted = selected === null
+              ? m.key === DEFAULT_HIGHLIGHT
+              : selected === m.key;
             const points = rows.map((r, i) => ({ x: xFor(i), y: yFor(m.normalize(r[m.key])) }));
             const d = buildSmoothPath(points);
             return (
-              <g key={m.key}>
+              <g
+                key={m.key}
+                style={{ opacity: isHighlighted ? 1 : DIM_OPACITY, transition: "opacity 200ms ease" }}
+              >
                 <path
                   d={d}
                   fill="none"
                   stroke={m.color}
-                  strokeWidth={m.headline ? 2 : 1.2}
+                  strokeWidth={isHighlighted ? 2 : 1.2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  opacity={m.headline ? 1 : 0.7}
+                  style={{ transition: "stroke-width 200ms ease" }}
                 />
-                {m.headline && points.map((p, i) => (
+                {isHighlighted && points.map((p, i) => (
                   <circle key={i} cx={p.x} cy={p.y} r={2.5} fill={m.color} />
                 ))}
               </g>
@@ -274,55 +296,41 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
         </svg>
       </div>
 
-      {/* Legend / latest values */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Pills — click to highlight that metric. Click the active pill
+          again to return to the default (total highlighted). Only one
+          metric highlighted at a time. */}
+      <div className="flex flex-wrap gap-1.5">
         {METRICS.map((m) => {
-          const v = last[m.key];
+          const isActive = selected === m.key;
+          const lastVal = last[m.key];
           return (
-            <div
+            <button
               key={m.key}
-              className="rounded-xl px-2.5 py-2"
+              type="button"
+              onClick={() => setSelected((cur) => (cur === m.key ? null : m.key))}
+              className="px-3 py-1.5 rounded-full text-[10px] tracking-[0.15em] uppercase font-semibold inline-flex items-center gap-2 active:scale-[0.97]"
               style={{
-                background: "rgba(255,255,255,0.025)",
-                border: `0.5px solid ${m.color}33`,
+                background: isActive ? m.color : "rgba(255,255,255,0.04)",
+                border: `0.5px solid ${isActive ? m.color : `${m.color}55`}`,
+                color: isActive ? "#080808" : m.color,
+                fontFamily: FONT_TEXT,
+                transition: "background 200ms ease, color 200ms ease, border-color 200ms ease",
               }}
             >
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 2,
-                    background: m.color,
-                    boxShadow: m.headline ? `0 0 6px ${m.color}80` : "none",
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: 9,
-                    letterSpacing: "0.15em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.5)",
-                    fontFamily: FONT_TEXT,
-                  }}
-                >
-                  {m.label}
-                </span>
-              </div>
-              <p
+              <span>{m.label}</span>
+              <span
                 style={{
-                  fontSize: 14,
-                  color: "rgba(255,255,255,0.95)",
-                  fontFamily: FONT_TEXT,
+                  fontSize: 10,
+                  fontWeight: 600,
                   letterSpacing: "0.02em",
+                  color: isActive ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.55)",
+                  textTransform: "none",
                 }}
               >
-                <span style={{ color: m.color }}>{v}</span>
-                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, marginLeft: 2 }}>
-                  /{m.max}
-                </span>
-              </p>
-            </div>
+                {lastVal}
+                <span style={{ opacity: 0.6 }}>/{m.max}</span>
+              </span>
+            </button>
           );
         })}
       </div>
