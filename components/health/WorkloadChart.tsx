@@ -89,7 +89,7 @@ const EYEBROW: React.CSSProperties = {
   letterSpacing: "0.25em",
   textTransform: "uppercase",
   color: "rgba(42,191,191,0.7)",
-  fontFamily: "var(--font-condensed)",
+  fontFamily: "var(--font-ui)",
 };
 
 const BADGE_BASE: React.CSSProperties = {
@@ -98,7 +98,7 @@ const BADGE_BASE: React.CSSProperties = {
   textTransform: "uppercase",
   padding: "4px 10px",
   borderRadius: 999,
-  fontFamily: "var(--font-condensed)",
+  fontFamily: "var(--font-ui)",
   fontWeight: 500,
 };
 
@@ -207,7 +207,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
     return (
       <GlassCard variant="light" style={{ padding: "20px 20px" }}>
         <p style={{ ...EYEBROW, marginBottom: 10 }}>Carga de entrenamiento</p>
-        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-condensed)", letterSpacing: "0.02em", lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em", lineHeight: 1.5 }}>
           Registra tus entrenos con RPE para ver tu carga
         </p>
       </GlassCard>
@@ -290,7 +290,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
               <div key={i} style={{ width: widthPct, textAlign: "center" }}>
                 <div style={{
                   fontSize: 10,
-                  fontFamily: "var(--font-condensed)",
+                  fontFamily: "var(--font-ui)",
                   letterSpacing: "0.05em",
                   color: d.isToday ? "#2abfbf" : "rgba(255,255,255,0.25)",
                   fontWeight: d.isToday ? 500 : 400,
@@ -350,7 +350,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
           <span style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 300, color: "#2abfbf", lineHeight: 1, fontFeatureSettings: "'tnum'" }}>
             {acwr !== null ? acwr.toFixed(2) : "—"}
           </span>
-          <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-condensed)" }}>ACWR</span>
+          <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-ui)" }}>ACWR</span>
           <button
             type="button"
             onClick={() => setShowInfo((v) => !v)}
@@ -358,7 +358,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
             style={{
               fontSize: 12,
               color: showInfo ? "rgba(42,191,191,0.8)" : "rgba(255,255,255,0.3)",
-              fontFamily: "var(--font-condensed)",
+              fontFamily: "var(--font-ui)",
               background: "transparent",
               border: "none",
               padding: 0,
@@ -384,7 +384,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
             marginBottom: 12,
           }}
         >
-          <p style={{ fontFamily: "var(--font-condensed)", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+          <p style={{ fontFamily: "var(--font-ui)", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
             El ACWR (ratio de carga aguda/crónica) compara tu entrenamiento de esta semana con tu media de las 4 semanas anteriores. Entre 0.8 y 1.3 es la zona óptima: suficiente estímulo sin riesgo de lesión.
           </p>
         </div>
@@ -401,8 +401,8 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
         <rect x="30" y="28" width="320" height={64 - 28} fill="rgba(42,191,191,0.05)" />
         <line x1="30" y1="28" x2="350" y2="28" stroke="rgba(42,191,191,0.15)" strokeWidth="0.8" strokeDasharray="3 3" />
         <line x1="30" y1="64" x2="350" y2="64" stroke="rgba(42,191,191,0.15)" strokeWidth="0.8" strokeDasharray="3 3" />
-        <text x="356" y="30.5" fontSize="8" fill="rgba(42,191,191,0.5)" fontFamily="var(--font-condensed)" dominantBaseline="middle">1.3</text>
-        <text x="356" y="66.5" fontSize="8" fill="rgba(42,191,191,0.5)" fontFamily="var(--font-condensed)" dominantBaseline="middle">0.8</text>
+        <text x="356" y="30.5" fontSize="8" fill="rgba(42,191,191,0.5)" fontFamily="var(--font-ui)" dominantBaseline="middle">1.3</text>
+        <text x="356" y="66.5" fontSize="8" fill="rgba(42,191,191,0.5)" fontFamily="var(--font-ui)" dominantBaseline="middle">0.8</text>
 
         {areaPath && <path d={areaPath} fill="url(#wlArea)" />}
 
@@ -439,11 +439,11 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
           const widthPct = `${100 / weekLabels.length}%`;
           return (
             <div key={i} style={{ width: widthPct, textAlign: "center" }}>
-              <div style={{ fontSize: 10, fontFamily: "var(--font-condensed)", letterSpacing: "0.05em", color: isLast ? "#2abfbf" : "rgba(255,255,255,0.25)" }}>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-ui)", letterSpacing: "0.05em", color: isLast ? "#2abfbf" : "rgba(255,255,255,0.25)" }}>
                 {label}
               </div>
               {isLast && (
-                <div style={{ fontSize: 9, fontFamily: "var(--font-condensed)", color: "rgba(42,191,191,0.55)", marginTop: 1 }}>
+                <div style={{ fontSize: 9, fontFamily: "var(--font-ui)", color: "rgba(42,191,191,0.55)", marginTop: 1 }}>
                   {todayLabel}
                 </div>
               )}

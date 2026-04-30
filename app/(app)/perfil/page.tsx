@@ -120,7 +120,7 @@ export default function PerfilPage() {
                   <p
                     className="text-xs truncate mt-0.5"
                     style={{
-                      fontFamily: "var(--font-condensed)",
+                      fontFamily: "var(--font-ui)",
                       color: "rgba(255,255,255,0.4)",
                       letterSpacing: "0.02em",
                     }}
@@ -154,7 +154,7 @@ export default function PerfilPage() {
                         : healthEstado === "ok"
                         ? "#2abfbf"
                         : "var(--fg-2)",
-                      fontFamily: "var(--font-condensed)",
+                      fontFamily: "var(--font-ui)",
                     }}
                   >
                     {healthLoaded ? estadoLabel : "Cargando estado…"}

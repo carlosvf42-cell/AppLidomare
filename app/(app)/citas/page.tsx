@@ -175,7 +175,7 @@ export default function CitasPage() {
                 marginTop: 10,
                 textTransform: "uppercase",
                 lineHeight: 0.9,
-                fontFamily: "var(--font-barlow), 'Barlow Condensed', sans-serif",
+                fontFamily: "var(--font-ui)",
                 letterSpacing: "-0.01em",
               }}>
                 Reservar<br />cita

@@ -19,7 +19,7 @@ const GLASS: React.CSSProperties = {
   borderRadius: 16,
 };
 
-const FONT_TEXT = "var(--font-condensed)";
+const FONT_TEXT = "var(--font-ui)";
 const FONT_TITLE = "var(--font-serif)";
 
 const COPY_DEFAULT =

@@ -4,7 +4,6 @@
   /* ── Font families ─────────────────────────────────────────── */
   --font-ui:        var(--font-inter), -apple-system, 'SF Pro Text', system-ui, sans-serif;
   --font-serif:     var(--font-cormorant), Georgia, 'Times New Roman', serif;
-  --font-condensed: var(--font-barlow), 'Inter', sans-serif;
   --font-mono:      ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* ── Core palette ──────────────────────────────────────────── */
