@@ -27,7 +27,7 @@ const EYEBROW: React.CSSProperties = {
   letterSpacing: "0.25em",
   textTransform: "uppercase",
   color: "rgba(42,191,191,0.7)",
-  fontFamily: "Barlow Condensed, sans-serif",
+  fontFamily: "Cormorant Garamond, serif",
 };
 
 const APP_VERSION = "0.1.0";
@@ -104,7 +104,7 @@ export default function AjustesPage() {
             cursor: "pointer",
           }}
         >
-          <span className="text-xs tracking-[0.15em] uppercase" style={{ color: "#2abfbf", fontFamily: "Barlow Condensed, sans-serif" }}>
+          <span className="text-xs tracking-[0.15em] uppercase" style={{ color: "#2abfbf", fontFamily: "Cormorant Garamond, serif" }}>
             Panel de usuario
           </span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -117,7 +117,7 @@ export default function AjustesPage() {
           <p className="mb-3 px-1" style={EYEBROW}>Mi cuenta</p>
           <div className="rounded-2xl px-5 py-5 space-y-4" style={GLASS}>
             <div>
-              <p className="text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>
+              <p className="text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Cormorant Garamond, serif" }}>
                 Nombre
               </p>
               <p className="text-base" style={{ color: "rgba(255,255,255,0.95)", fontFamily: "Cormorant Garamond, serif", fontWeight: 300 }}>
@@ -125,15 +125,15 @@ export default function AjustesPage() {
               </p>
             </div>
             <div>
-              <p className="text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>
+              <p className="text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Cormorant Garamond, serif" }}>
                 Email
               </p>
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.02em" }}>
                 {email}
               </p>
             </div>
             <div>
-              <p className="text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>
+              <p className="text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Cormorant Garamond, serif" }}>
                 Rol
               </p>
               <span
@@ -142,7 +142,7 @@ export default function AjustesPage() {
                   background: "rgba(42,191,191,0.12)",
                   border: "0.5px solid rgba(42,191,191,0.4)",
                   color: "#2abfbf",
-                  fontFamily: "Barlow Condensed, sans-serif",
+                  fontFamily: "Cormorant Garamond, serif",
                 }}
               >
                 Admin
@@ -157,7 +157,7 @@ export default function AjustesPage() {
                 background: "rgba(255,128,128,0.06)",
                 border: "0.5px solid rgba(255,128,128,0.25)",
                 color: "rgba(255,128,128,0.85)",
-                fontFamily: "Barlow Condensed, sans-serif",
+                fontFamily: "Cormorant Garamond, serif",
               }}
             >
               {signingOut ? "Cerrando sesión…" : "Cerrar sesión"}
@@ -177,15 +177,15 @@ export default function AjustesPage() {
                   border: "0.5px solid rgba(42,191,191,0.3)",
                 }}
               >
-                <span style={{ fontSize: 12, color: "#2abfbf", fontFamily: "Barlow Condensed, sans-serif", fontWeight: 600 }}>
+                <span style={{ fontSize: 12, color: "#2abfbf", fontFamily: "Cormorant Garamond, serif", fontWeight: 600 }}>
                   {displayName.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm truncate" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>
+                <p className="text-sm truncate" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.02em" }}>
                   {displayName}
                 </p>
-                <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>
+                <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Cormorant Garamond, serif" }}>
                   Admin · Acceso total
                 </p>
               </div>
@@ -194,7 +194,7 @@ export default function AjustesPage() {
               className="text-[11px] pt-2"
               style={{
                 color: "rgba(255,255,255,0.35)",
-                fontFamily: "Barlow Condensed, sans-serif",
+                fontFamily: "Cormorant Garamond, serif",
                 lineHeight: 1.6,
                 letterSpacing: "0.02em",
                 borderTop: "0.5px solid rgba(255,255,255,0.06)",
@@ -209,10 +209,10 @@ export default function AjustesPage() {
         <section>
           <p className="mb-3 px-1" style={EYEBROW}>App</p>
           <div className="rounded-2xl px-5 py-4 flex items-center justify-between" style={GLASS}>
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.02em" }}>
               Versión
             </span>
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.05em" }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.05em" }}>
               {APP_VERSION}
             </span>
           </div>

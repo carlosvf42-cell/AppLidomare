@@ -42,7 +42,7 @@ function AntifragilBadge() {
         background: "rgba(42,191,191,0.12)",
         border: "0.5px solid rgba(42,191,191,0.4)",
         color: "#2abfbf",
-        fontFamily: "Barlow Condensed, sans-serif",
+        fontFamily: "Cormorant Garamond, serif",
       }}
     >
       Antifrágil
@@ -225,7 +225,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#080808]">
       {/* Header */}
       <div className="px-5 pt-14 pb-6">
-        <p style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>
+        <p style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Cormorant Garamond, serif" }}>
           Gestión de usuarios
         </p>
         <h1
