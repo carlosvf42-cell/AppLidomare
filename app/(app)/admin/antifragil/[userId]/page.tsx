@@ -345,7 +345,7 @@ export default function ClienteDetailPage() {
           <div className="flex items-center gap-2 mt-0.5">
             <h1
               className="truncate"
-              style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
+              style={{ fontFamily: "var(--font-serif)", fontSize: "1.9rem", fontWeight: 500, lineHeight: 1.1, letterSpacing: "-0.005em", color: "rgba(255,255,255,0.95)" }}
             >
               {nombre}
             </h1>
