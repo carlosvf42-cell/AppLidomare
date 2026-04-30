@@ -10,25 +10,19 @@ function getSupabase() {
   );
 }
 
-const GLASS: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  backdropFilter: "blur(20px) saturate(180%)",
-  WebkitBackdropFilter: "blur(20px) saturate(180%)",
-  border: "0.5px solid rgba(255,255,255,0.08)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)",
-  borderRadius: 16,
-};
-
-const FONT_TEXT = "var(--font-ui)";
-const FONT_TITLE = "var(--font-serif)";
-
-const COPY_DEFAULT =
-  "El equipo clínico de Antifrágil monitorizará tu entrenamiento y recuperación regularmente.";
+const FONT_UI = "var(--font-ui)";
+const FONT_SERIF = "var(--font-serif)";
 
 function diasDesde(iso: string): number {
   const d = new Date(iso);
   const ms = Date.now() - d.getTime();
   return Math.max(0, Math.floor(ms / 86_400_000));
+}
+
+function ultimoAnalisisLabel(hace: number): string {
+  if (hace === 0) return "Último análisis: hoy";
+  if (hace === 1) return "Último análisis: hace 1 día";
+  return `Último análisis: hace ${hace} días`;
 }
 
 export default function MonitorizacionCard() {
@@ -49,7 +43,7 @@ export default function MonitorizacionCard() {
       sieteDiasAtras.setDate(sieteDiasAtras.getDate() - 7);
       const { data } = await supabase
         .from("injury_risk_assessments")
-        .select("mensaje_usuario, created_at, fecha")
+        .select("mensaje_usuario, created_at")
         .eq("user_id", user.id)
         .gte("created_at", sieteDiasAtras.toISOString())
         .order("created_at", { ascending: false })
@@ -61,6 +55,7 @@ export default function MonitorizacionCard() {
         setHace(diasDesde(data.created_at));
       } else {
         setMensaje(null);
+        setHace(null);
       }
       setLoading(false);
     })();
@@ -71,92 +66,105 @@ export default function MonitorizacionCard() {
 
   if (loading) return null;
 
-  return (
-    <div style={{ ...GLASS, padding: "16px 18px" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-        <div
+  // Default state: only the two text lines, no card, no background.
+  if (!mensaje) {
+    return (
+      <div style={{ padding: "0 4px" }}>
+        <p
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            background: "rgba(42,191,191,0.10)",
-            border: "0.5px solid rgba(42,191,191,0.3)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
+            fontSize: 10,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "#2abfbf",
+            fontFamily: FONT_UI,
+            fontWeight: 600,
+            lineHeight: 1,
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M12 3l8 3v6c0 4.5-3.2 8.5-8 9.5-4.8-1-8-5-8-9.5V6l8-3z"
-              stroke="#2abfbf"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path d="M9 12l2 2 4-4" stroke="#2abfbf" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p
-            style={{
-              fontSize: 9,
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "rgba(42,191,191,0.7)",
-              fontFamily: FONT_TEXT,
-              fontWeight: 600,
-              lineHeight: 1,
-            }}
-          >
-            Monitorización activa
-          </p>
-          <p
-            style={{
-              fontSize: 8,
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.3)",
-              fontFamily: FONT_TEXT,
-              fontWeight: 600,
-              marginTop: 3,
-              lineHeight: 1,
-            }}
-          >
-            Supervisado por Antifrágil®
-          </p>
-
-          <p
-            style={{
-              fontSize: 13,
-              color: "rgba(255,255,255,0.85)",
-              fontFamily: FONT_TITLE,
-              fontWeight: 300,
-              lineHeight: 1.45,
-              marginTop: 10,
-              letterSpacing: "0.01em",
-            }}
-          >
-            {mensaje ?? COPY_DEFAULT}
-          </p>
-
-          {mensaje && hace != null && (
-            <p
-              style={{
-                fontSize: 10,
-                color: "rgba(255,255,255,0.3)",
-                fontFamily: FONT_TEXT,
-                marginTop: 8,
-                letterSpacing: "0.04em",
-              }}
-            >
-              {hace === 0 ? "Último análisis: hoy" : hace === 1 ? "Último análisis: hace 1 día" : `Último análisis: hace ${hace} días`}
-            </p>
-          )}
-        </div>
+          Monitorización activa
+        </p>
+        <p
+          style={{
+            fontSize: 9,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.35)",
+            fontFamily: FONT_UI,
+            fontWeight: 500,
+            marginTop: 4,
+            lineHeight: 1,
+          }}
+        >
+          Supervisado por Antifrágil®
+        </p>
       </div>
+    );
+  }
+
+  // With AI message: turquoise-tinted card.
+  return (
+    <div
+      style={{
+        background: "rgba(42, 191, 191, 0.06)",
+        border: "0.5px solid rgba(42, 191, 191, 0.25)",
+        borderRadius: 14,
+        padding: "18px 20px",
+      }}
+    >
+      <p
+        style={{
+          fontSize: 10,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "#2abfbf",
+          fontFamily: FONT_UI,
+          fontWeight: 600,
+          lineHeight: 1,
+        }}
+      >
+        Monitorización activa
+      </p>
+      <p
+        style={{
+          fontSize: 9,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.35)",
+          fontFamily: FONT_UI,
+          fontWeight: 500,
+          marginTop: 4,
+          lineHeight: 1,
+          marginBottom: 14,
+        }}
+      >
+        Supervisado por Antifrágil®
+      </p>
+      <p
+        style={{
+          fontSize: 18,
+          color: "rgba(255,255,255,0.9)",
+          fontFamily: FONT_SERIF,
+          fontWeight: 400,
+          lineHeight: 1.4,
+          letterSpacing: "0.005em",
+        }}
+      >
+        {mensaje}
+      </p>
+      {hace != null && (
+        <p
+          style={{
+            fontSize: 11,
+            color: "rgba(255,255,255,0.3)",
+            fontFamily: FONT_UI,
+            textAlign: "right",
+            marginTop: 12,
+            letterSpacing: "0.02em",
+          }}
+        >
+          {ultimoAnalisisLabel(hace)}
+        </p>
+      )}
     </div>
   );
 }
