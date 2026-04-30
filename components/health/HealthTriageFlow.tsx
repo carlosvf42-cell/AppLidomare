@@ -149,8 +149,8 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
       <div className="max-w-[430px] mx-auto px-4 pt-14 pb-12">
         {step !== "resultado" && (
           <div className="mb-8">
-            <p className="mb-2" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>Perfil de salud</p>
-            <h1 className="mb-4" style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "Cormorant Garamond, serif" }}>
+            <p className="mb-2" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-condensed)" }}>Perfil de salud</p>
+            <h1 className="mb-4" style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)" }}>
               {step === "personal" && "Datos personales"}
               {step === "parq_a" && "Cuestionario PAR-Q"}
               {step === "parq_b" && "Cuestionario PAR-Q"}
@@ -167,118 +167,118 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
           <div className="space-y-4">
             {PERSONAL_FIELDS.map((f) => (
               <div key={f.key}>
-                <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>{f.label}</label>
-                <input type={f.type} value={personal[f.key] || ""} placeholder={f.placeholder} onChange={(e) => setPersonal((p) => ({ ...p, [f.key]: e.target.value }))} className="w-full px-4 py-3 rounded-2xl text-sm outline-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif", colorScheme: "dark" }} />
+                <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>{f.label}</label>
+                <input type={f.type} value={personal[f.key] || ""} placeholder={f.placeholder} onChange={(e) => setPersonal((p) => ({ ...p, [f.key]: e.target.value }))} className="w-full px-4 py-3 rounded-2xl text-sm outline-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-condensed)", colorScheme: "dark" }} />
               </div>
             ))}
             <div>
-              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>Sexo biológico</label>
+              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>Sexo biológico</label>
               <div className="grid grid-cols-2 gap-2">
                 {SEXO_OPTIONS.map((o) => (
                   <button key={o.value} type="button" onClick={() => setSexo(o.value)} className="py-3 rounded-2xl text-xs transition-all" style={sexo === o.value ? GLASS_ACTIVE : GLASS}>
-                    <span style={{ color: sexo === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "Barlow Condensed, sans-serif" }}>{o.label}</span>
+                    <span style={{ color: sexo === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "var(--font-condensed)" }}>{o.label}</span>
                   </button>
                 ))}
               </div>
             </div>
-            <button type="button" onClick={handlePersonalNext} disabled={!personal.fecha_nacimiento || !personal.peso_kg || !personal.altura_cm || !sexo} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30 mt-4" style={{ background: "#2abfbf", color: "#000", fontFamily: "Barlow Condensed, sans-serif", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Continuar</button>
+            <button type="button" onClick={handlePersonalNext} disabled={!personal.fecha_nacimiento || !personal.peso_kg || !personal.altura_cm || !sexo} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30 mt-4" style={{ background: "#2abfbf", color: "#000", fontFamily: "var(--font-condensed)", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Continuar</button>
           </div>
         )}
 
         {step === "parq_a" && (
           <div className="space-y-3">
-            <p className="mb-4" style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.6, letterSpacing: "0.02em" }}>Responde con honestidad. El sentido común es la mejor guía.</p>
+            <p className="mb-4" style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-condensed)", lineHeight: 1.6, letterSpacing: "0.02em" }}>Responde con honestidad. El sentido común es la mejor guía.</p>
             {PARQ_A.map((q, i) => (
               <div key={q.key} className="rounded-2xl p-4" style={GLASS}>
-                <p className="mb-3" style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.5, letterSpacing: "0.03em" }}>
+                <p className="mb-3" style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", fontFamily: "var(--font-condensed)", lineHeight: 1.5, letterSpacing: "0.03em" }}>
                   <span style={{ color: "rgba(42,191,191,0.5)", marginRight: 8 }}>{i + 1}.</span>{q.text}
                 </p>
                 <div className="flex gap-2">
                   {[{ v: true, l: "Sí" }, { v: false, l: "No" }].map(({ v, l }) => (
                     <button key={l} type="button" onClick={() => setAnswer(q.key, v)} className="flex-1 py-2.5 rounded-xl text-xs font-semibold tracking-widest uppercase transition-all"
-                      style={answers[q.key] === v ? { background: v ? "rgba(255,80,80,0.15)" : "rgba(42,191,191,0.12)", border: `0.5px solid ${v ? "rgba(255,80,80,0.4)" : "rgba(42,191,191,0.4)"}`, color: v ? "#ff8080" : "#2abfbf", fontFamily: "Barlow Condensed, sans-serif" } : { ...GLASS, color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}
+                      style={answers[q.key] === v ? { background: v ? "rgba(255,80,80,0.15)" : "rgba(42,191,191,0.12)", border: `0.5px solid ${v ? "rgba(255,80,80,0.4)" : "rgba(42,191,191,0.4)"}`, color: v ? "#ff8080" : "#2abfbf", fontFamily: "var(--font-condensed)" } : { ...GLASS, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}
                     >{l}</button>
                   ))}
                 </div>
               </div>
             ))}
-            <button type="button" onClick={() => setStep("parq_b")} disabled={!allAnswered(PARQ_A)} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30 mt-2" style={{ background: "#2abfbf", color: "#000", fontFamily: "Barlow Condensed, sans-serif", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Continuar</button>
+            <button type="button" onClick={() => setStep("parq_b")} disabled={!allAnswered(PARQ_A)} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30 mt-2" style={{ background: "#2abfbf", color: "#000", fontFamily: "var(--font-condensed)", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Continuar</button>
           </div>
         )}
 
         {step === "parq_b" && (
           <div className="space-y-3">
-            <p className="mb-4" style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.6, letterSpacing: "0.02em" }}>Últimas preguntas del cuestionario PAR-Q.</p>
+            <p className="mb-4" style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-condensed)", lineHeight: 1.6, letterSpacing: "0.02em" }}>Últimas preguntas del cuestionario PAR-Q.</p>
             {PARQ_B.map((q, i) => (
               <div key={q.key} className="rounded-2xl p-4" style={GLASS}>
-                <p className="mb-3" style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", fontFamily: "Barlow Condensed, sans-serif", lineHeight: 1.5, letterSpacing: "0.03em" }}>
+                <p className="mb-3" style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", fontFamily: "var(--font-condensed)", lineHeight: 1.5, letterSpacing: "0.03em" }}>
                   <span style={{ color: "rgba(42,191,191,0.5)", marginRight: 8 }}>{PARQ_A.length + i + 1}.</span>{q.text}
                 </p>
                 <div className="flex gap-2">
                   {[{ v: true, l: "Sí" }, { v: false, l: "No" }].map(({ v, l }) => (
                     <button key={l} type="button" onClick={() => setAnswer(q.key, v)} className="flex-1 py-2.5 rounded-xl text-xs font-semibold tracking-widest uppercase transition-all"
-                      style={answers[q.key] === v ? { background: v ? "rgba(255,160,0,0.15)" : "rgba(42,191,191,0.12)", border: `0.5px solid ${v ? "rgba(255,160,0,0.4)" : "rgba(42,191,191,0.4)"}`, color: v ? "#ffb040" : "#2abfbf", fontFamily: "Barlow Condensed, sans-serif" } : { ...GLASS, color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}
+                      style={answers[q.key] === v ? { background: v ? "rgba(255,160,0,0.15)" : "rgba(42,191,191,0.12)", border: `0.5px solid ${v ? "rgba(255,160,0,0.4)" : "rgba(42,191,191,0.4)"}`, color: v ? "#ffb040" : "#2abfbf", fontFamily: "var(--font-condensed)" } : { ...GLASS, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}
                     >{l}</button>
                   ))}
                 </div>
               </div>
             ))}
-            <button type="button" onClick={() => setStep("contexto")} disabled={!allAnswered(PARQ_B)} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30 mt-2" style={{ background: "#2abfbf", color: "#000", fontFamily: "Barlow Condensed, sans-serif", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Continuar</button>
+            <button type="button" onClick={() => setStep("contexto")} disabled={!allAnswered(PARQ_B)} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30 mt-2" style={{ background: "#2abfbf", color: "#000", fontFamily: "var(--font-condensed)", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Continuar</button>
           </div>
         )}
 
         {step === "contexto" && (
           <div className="space-y-5">
             <div>
-              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>Objetivo principal</label>
+              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>Objetivo principal</label>
               <div className="grid grid-cols-2 gap-2">
                 {OBJETIVO_OPTIONS.map((o) => (
                   <button key={o.value} type="button" onClick={() => setObjetivo(o.value)} className="py-3 px-4 rounded-2xl text-xs text-left transition-all" style={objetivo === o.value ? GLASS_ACTIVE : GLASS}>
-                    <span style={{ color: objetivo === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "Barlow Condensed, sans-serif" }}>{o.label}</span>
+                    <span style={{ color: objetivo === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "var(--font-condensed)" }}>{o.label}</span>
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>¿Cuántos días a la semana entrenas?</label>
+              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>¿Cuántos días a la semana entrenas?</label>
               <div className="grid grid-cols-2 gap-2">
                 {DIAS_OPTIONS.map((o) => (
                   <button key={o.value} type="button" onClick={() => setDiasEntreno(o.value)} className="py-3 px-4 rounded-2xl text-xs transition-all" style={diasEntreno === o.value ? GLASS_ACTIVE : GLASS}>
-                    <span style={{ color: diasEntreno === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "Barlow Condensed, sans-serif" }}>{o.label}</span>
+                    <span style={{ color: diasEntreno === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "var(--font-condensed)" }}>{o.label}</span>
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>¿Llevas más de 3 meses entrenando de forma continuada?</label>
+              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>¿Llevas más de 3 meses entrenando de forma continuada?</label>
               <div className="grid grid-cols-3 gap-2">
                 {[{ v: true, l: "Sí" }, { v: false, l: "No" }, { v: null, l: "Menos de 1 mes" }].map(({ v, l }) => (
                   <button key={l} type="button" onClick={() => setEntrena3meses(v)} className="py-3 rounded-2xl text-xs transition-all" style={entrena3meses === v ? GLASS_ACTIVE : GLASS}>
-                    <span style={{ color: entrena3meses === v ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "Barlow Condensed, sans-serif" }}>{l}</span>
+                    <span style={{ color: entrena3meses === v ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "var(--font-condensed)" }}>{l}</span>
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>¿Tienes alguna zona del cuerpo que te moleste de forma habitual? <span style={{ color: "rgba(255,255,255,0.2)" }}>(opcional)</span></label>
-              <textarea value={zonaMolestia} onChange={(e) => setZonaMolestia(e.target.value)} placeholder="Ej: rodilla derecha, lumbar..." rows={2} className="w-full px-4 py-3 rounded-2xl text-sm outline-none resize-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif" }} />
+              <label className="block text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>¿Tienes alguna zona del cuerpo que te moleste de forma habitual? <span style={{ color: "rgba(255,255,255,0.2)" }}>(opcional)</span></label>
+              <textarea value={zonaMolestia} onChange={(e) => setZonaMolestia(e.target.value)} placeholder="Ej: rodilla derecha, lumbar..." rows={2} className="w-full px-4 py-3 rounded-2xl text-sm outline-none resize-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-condensed)" }} />
             </div>
-            <button type="button" onClick={() => setStep("consentimiento")} disabled={!objetivo || !diasEntreno || entrena3meses === undefined} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30" style={{ background: "#2abfbf", color: "#000", fontFamily: "Barlow Condensed, sans-serif", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Continuar</button>
+            <button type="button" onClick={() => setStep("consentimiento")} disabled={!objetivo || !diasEntreno || entrena3meses === undefined} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30" style={{ background: "#2abfbf", color: "#000", fontFamily: "var(--font-condensed)", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Continuar</button>
           </div>
         )}
 
         {step === "consentimiento" && (
           <div className="space-y-4">
             <div className="rounded-2xl p-4 mb-2" style={{ background: estado === "danger" ? "rgba(255,80,80,0.08)" : estado === "caution" ? "rgba(255,160,0,0.08)" : "rgba(42,191,191,0.08)", border: `0.5px solid ${estado === "danger" ? "rgba(255,80,80,0.25)" : estado === "caution" ? "rgba(255,160,0,0.25)" : "rgba(42,191,191,0.25)"}` }}>
-              <p className="text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif" }}>Resultado del cuestionario</p>
-              <p className="text-lg font-light" style={{ fontFamily: "Cormorant Garamond, serif", color: estado === "danger" ? "#ff8080" : estado === "caution" ? "#ffb040" : "#2abfbf" }}>
+              <p className="text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-condensed)" }}>Resultado del cuestionario</p>
+              <p className="text-lg font-light" style={{ fontFamily: "var(--font-serif)", color: estado === "danger" ? "#ff8080" : estado === "caution" ? "#ffb040" : "#2abfbf" }}>
                 {estado === "danger" && "Se recomienda valoración médica"}
                 {estado === "caution" && "Se recomienda valoración con fisio"}
                 {estado === "ok" && "Apto para entrenamiento"}
               </p>
             </div>
             <div className="rounded-2xl p-4" style={GLASS}>
-              <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>
+              <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-condensed)", letterSpacing: "0.02em" }}>
                 Esta aplicación es una herramienta de apoyo preventivo gestionada por <strong style={{ color: "rgba(255,255,255,0.65)" }}>Antifrágil</strong>. Los resultados del cuestionario y las alertas generadas son <strong style={{ color: "rgba(255,255,255,0.65)" }}>orientativos</strong> y no constituyen un diagnóstico médico. Tus datos de salud serán tratados conforme al <strong style={{ color: "rgba(255,255,255,0.65)" }}>RGPD</strong>. Al aceptar, confirmas que has leído y comprendido que esta app no sustituye a un profesional sanitario.
               </p>
             </div>
@@ -286,10 +286,10 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
               <div className="shrink-0 mt-0.5 flex items-center justify-center rounded" style={{ width: 18, height: 18, background: consentimiento ? "#2abfbf" : "transparent", border: `1.5px solid ${consentimiento ? "#2abfbf" : "rgba(255,255,255,0.2)"}`, transition: "all 0.2s" }}>
                 {consentimiento && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
               </div>
-              <p className="text-xs" style={{ color: consentimiento ? "#2abfbf" : "rgba(255,255,255,0.45)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>He leído y acepto las condiciones. Entiendo que esta app no sustituye a un profesional sanitario.</p>
+              <p className="text-xs" style={{ color: consentimiento ? "#2abfbf" : "rgba(255,255,255,0.45)", fontFamily: "var(--font-condensed)", letterSpacing: "0.02em" }}>He leído y acepto las condiciones. Entiendo que esta app no sustituye a un profesional sanitario.</p>
             </button>
             {error && <p className="text-xs text-center" style={{ color: "#ff8080" }}>{error}</p>}
-            <button type="button" onClick={handleGuardar} disabled={!consentimiento || isSaving} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30" style={{ background: "#2abfbf", color: "#000", fontFamily: "Barlow Condensed, sans-serif", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>{isSaving ? "Guardando…" : "Confirmar y guardar"}</button>
+            <button type="button" onClick={handleGuardar} disabled={!consentimiento || isSaving} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30" style={{ background: "#2abfbf", color: "#000", fontFamily: "var(--font-condensed)", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>{isSaving ? "Guardando…" : "Confirmar y guardar"}</button>
           </div>
         )}
 
@@ -301,19 +301,19 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
               {estado === "danger" && <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#ff8080" strokeWidth="1.5"/><path d="M12 8v5M12 16h.01" stroke="#ff8080" strokeWidth="1.5" strokeLinecap="round"/></svg>}
             </div>
             <div>
-              <p className="mb-2" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>Perfil de salud completado</p>
-              <h2 className="mb-3" style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.15, fontFamily: "Cormorant Garamond, serif", color: estado === "danger" ? "#ff8080" : estado === "caution" ? "#ffb040" : "#2abfbf" }}>
+              <p className="mb-2" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-condensed)" }}>Perfil de salud completado</p>
+              <h2 className="mb-3" style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.15, fontFamily: "var(--font-serif)", color: estado === "danger" ? "#ff8080" : estado === "caution" ? "#ffb040" : "#2abfbf" }}>
                 {estado === "ok" && "Todo en orden"}
                 {estado === "caution" && "Recomendamos valoración"}
                 {estado === "danger" && "Consulta con un profesional"}
               </h2>
-              <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)", fontFamily: "Barlow Condensed, sans-serif", maxWidth: 300, margin: "0 auto" }}>
+              <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-condensed)", maxWidth: 300, margin: "0 auto" }}>
                 {estado === "ok" && "Puedes comenzar a entrenar con normalidad. Recuerda registrar tu bienestar antes de cada sesión."}
                 {estado === "caution" && "Puedes usar la app con normalidad. Te recomendamos una valoración con nuestro fisio de Antifrágil antes de empezar."}
                 {estado === "danger" && "Te recomendamos visitar a tu médico o fisioterapeuta antes de comenzar a entrenar. Puedes seguir usando la app con normalidad."}
               </p>
             </div>
-            <button type="button" onClick={onComplete} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all" style={{ background: "#2abfbf", color: "#000", fontFamily: "Barlow Condensed, sans-serif", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Ir a la app</button>
+            <button type="button" onClick={onComplete} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all" style={{ background: "#2abfbf", color: "#000", fontFamily: "var(--font-condensed)", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>Ir a la app</button>
           </div>
         )}
       </div>

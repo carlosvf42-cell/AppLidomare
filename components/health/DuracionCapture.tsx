@@ -16,7 +16,7 @@ interface DuracionCaptureProps {
 export default function DuracionCapture({ duracion, onDuracionChange }: DuracionCaptureProps) {
   return (
     <div className="rounded-2xl px-4 py-4" style={GLASS}>
-      <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(42,191,191,0.6)", fontFamily: "Barlow Condensed, sans-serif", textAlign: "center" }}>
+      <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(42,191,191,0.6)", fontFamily: "var(--font-condensed)", textAlign: "center" }}>
         Duración
       </p>
       <div className="flex flex-col items-center">
@@ -32,7 +32,7 @@ export default function DuracionCapture({ duracion, onDuracionChange }: Duracion
           style={{
             background: "transparent",
             border: "none",
-            fontFamily: "Cormorant Garamond, serif",
+            fontFamily: "var(--font-serif)",
             fontSize: "2.25rem",
             fontWeight: 300,
             lineHeight: 1.1,
@@ -42,7 +42,7 @@ export default function DuracionCapture({ duracion, onDuracionChange }: Duracion
             marginTop: 2,
           }}
         />
-        <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif", marginTop: 4 }}>
+        <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-condensed)", marginTop: 4 }}>
           min
         </p>
       </div>

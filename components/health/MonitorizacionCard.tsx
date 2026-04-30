@@ -19,8 +19,8 @@ const GLASS: React.CSSProperties = {
   borderRadius: 16,
 };
 
-const FONT_TEXT = "Barlow Condensed, sans-serif";
-const FONT_TITLE = "Cormorant Garamond, serif";
+const FONT_TEXT = "var(--font-condensed)";
+const FONT_TITLE = "var(--font-serif)";
 
 const COPY_DEFAULT =
   "El equipo clínico de Antifrágil monitorizará tu entrenamiento y recuperación regularmente.";

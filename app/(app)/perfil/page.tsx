@@ -109,7 +109,7 @@ export default function PerfilPage() {
                   <h2
                     className="font-light truncate"
                     style={{
-                      fontFamily: "Cormorant Garamond, serif",
+                      fontFamily: "var(--font-serif)",
                       fontSize: "1.5rem",
                       lineHeight: 1.15,
                       color: "rgba(255,255,255,0.95)",
@@ -120,7 +120,7 @@ export default function PerfilPage() {
                   <p
                     className="text-xs truncate mt-0.5"
                     style={{
-                      fontFamily: "Barlow Condensed, sans-serif",
+                      fontFamily: "var(--font-condensed)",
                       color: "rgba(255,255,255,0.4)",
                       letterSpacing: "0.02em",
                     }}
@@ -154,7 +154,7 @@ export default function PerfilPage() {
                         : healthEstado === "ok"
                         ? "#2abfbf"
                         : "var(--fg-2)",
-                      fontFamily: "Barlow Condensed, sans-serif",
+                      fontFamily: "var(--font-condensed)",
                     }}
                   >
                     {healthLoaded ? estadoLabel : "Cargando estado…"}

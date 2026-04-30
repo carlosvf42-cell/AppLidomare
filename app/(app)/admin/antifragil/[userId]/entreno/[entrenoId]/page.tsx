@@ -85,7 +85,7 @@ export default function EntrenoExistentePage() {
   if (error) {
     return (
       <div className="min-h-screen p-8" style={{ background: "#080808" }}>
-        <p className="text-xs text-center" style={{ color: "#ff8080", fontFamily: "Cormorant Garamond, serif" }}>
+        <p className="text-xs text-center" style={{ color: "#ff8080", fontFamily: "var(--font-serif)" }}>
           {error}
         </p>
       </div>

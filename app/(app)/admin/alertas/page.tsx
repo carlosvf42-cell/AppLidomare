@@ -27,7 +27,7 @@ const EYEBROW: React.CSSProperties = {
   letterSpacing: "0.25em",
   textTransform: "uppercase",
   color: "rgba(42,191,191,0.7)",
-  fontFamily: "Cormorant Garamond, serif",
+  fontFamily: "var(--font-serif)",
 };
 
 type Alerta = {
@@ -203,7 +203,7 @@ export default function AlertasPage() {
         <h1
           className="mt-0.5"
           style={{
-            fontFamily: "Cormorant Garamond, serif",
+            fontFamily: "var(--font-serif)",
             fontSize: "1.75rem",
             fontWeight: 300,
             lineHeight: 1.1,
@@ -225,7 +225,7 @@ export default function AlertasPage() {
             background: "rgba(42,191,191,0.08)",
             border: "0.5px dashed rgba(42,191,191,0.4)",
             color: "#2abfbf",
-            fontFamily: "Cormorant Garamond, serif",
+            fontFamily: "var(--font-serif)",
           }}
         >
           {analizando.activo
@@ -247,7 +247,7 @@ export default function AlertasPage() {
                   background: sel ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.04)",
                   border: `0.5px solid ${sel ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.08)"}`,
                   color: sel ? "#2abfbf" : "rgba(255,255,255,0.5)",
-                  fontFamily: "Cormorant Garamond, serif",
+                  fontFamily: "var(--font-serif)",
                 }}
               >
                 {t === "pendientes" ? "Pendientes" : "Revisadas"}
@@ -261,7 +261,7 @@ export default function AlertasPage() {
             className="rounded-2xl px-4 py-3"
             style={{ background: "rgba(255,128,128,0.08)", border: "0.5px solid rgba(255,128,128,0.35)" }}
           >
-            <p className="text-xs" style={{ color: "rgba(255,200,200,0.95)", fontFamily: "Cormorant Garamond, serif" }}>
+            <p className="text-xs" style={{ color: "rgba(255,200,200,0.95)", fontFamily: "var(--font-serif)" }}>
               {error}
             </p>
           </div>
@@ -274,11 +274,11 @@ export default function AlertasPage() {
           </div>
         ) : alertas.length === 0 ? (
           <div className="rounded-2xl px-6 py-10 text-center" style={GLASS}>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.6 }}>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)", lineHeight: 1.6 }}>
               {tab === "pendientes" ? "No hay alertas pendientes" : "Sin alertas revisadas todavía"}
             </p>
             {tab === "pendientes" && (
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "Cormorant Garamond, serif", marginTop: 8 }}>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-serif)", marginTop: 8 }}>
                 Pulsa "Analizar todos" para generar nuevos análisis con la IA.
               </p>
             )}
@@ -297,7 +297,7 @@ export default function AlertasPage() {
                         href={`/admin/antifragil/${a.user_id}`}
                         className="truncate"
                         style={{
-                          fontFamily: "Cormorant Garamond, serif",
+                          fontFamily: "var(--font-serif)",
                           fontSize: 18,
                           fontWeight: 300,
                           color: "rgba(255,255,255,0.95)",
@@ -313,14 +313,14 @@ export default function AlertasPage() {
                         background: meta.bg,
                         border: `0.5px solid ${meta.border}`,
                         color: meta.color,
-                        fontFamily: "Cormorant Garamond, serif",
+                        fontFamily: "var(--font-serif)",
                       }}
                     >
                       {meta.label}
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px]" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.04em" }}>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px]" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)", letterSpacing: "0.04em" }}>
                     {cat && <span>{cat.icon} {cat.label}</span>}
                     {a.acwr != null && <span>ACWR {Number(a.acwr).toFixed(2)}</span>}
                     {a.wellness_score != null && <span>Wellness {a.wellness_score}/25</span>}
@@ -329,10 +329,10 @@ export default function AlertasPage() {
 
                   {a.razonamiento_ia && (
                     <div>
-                      <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "Cormorant Garamond, serif" }}>
+                      <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)" }}>
                         Razonamiento clínico
                       </p>
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-serif)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
                         {a.razonamiento_ia}
                       </p>
                     </div>
@@ -340,10 +340,10 @@ export default function AlertasPage() {
 
                   {a.recomendacion_ia && (
                     <div>
-                      <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "Cormorant Garamond, serif" }}>
+                      <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-serif)" }}>
                         Recomendación
                       </p>
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-serif)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
                         {a.recomendacion_ia}
                       </p>
                     </div>
@@ -359,7 +359,7 @@ export default function AlertasPage() {
                         background: "rgba(42,191,191,0.12)",
                         border: "0.5px solid rgba(42,191,191,0.35)",
                         color: "#2abfbf",
-                        fontFamily: "Cormorant Garamond, serif",
+                        fontFamily: "var(--font-serif)",
                       }}
                     >
                       {marcando === a.id ? "Marcando…" : "Marcar revisada"}
@@ -367,7 +367,7 @@ export default function AlertasPage() {
                   )}
 
                   {tab === "revisadas" && a.visto_en && (
-                    <p className="text-[10px] text-right" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "Cormorant Garamond, serif" }}>
+                    <p className="text-[10px] text-right" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-serif)" }}>
                       Revisada · {formatFecha(a.visto_en.split("T")[0])}
                     </p>
                   )}

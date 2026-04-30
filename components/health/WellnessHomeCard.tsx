@@ -113,7 +113,7 @@ export default function WellnessHomeCard() {
                 <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 300 }}>Check-in no registrado</div>
               </div>
             </div>
-            <button type="button" onClick={() => setShowOverlay(true)} className="shrink-0 text-[10px] tracking-[0.15em] uppercase" style={{ color: "var(--accent)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Barlow Condensed, sans-serif" }}>
+            <button type="button" onClick={() => setShowOverlay(true)} className="shrink-0 text-[10px] tracking-[0.15em] uppercase" style={{ color: "var(--accent)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-condensed)" }}>
               Completar ahora
             </button>
           </div>

@@ -160,68 +160,68 @@ export default function SaludPage() {
             </svg>
           </Link>
           <div>
-            <p style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Barlow Condensed, sans-serif" }}>Perfil de salud</p>
-            <h1 style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "Cormorant Garamond, serif" }}>Mi perfil</h1>
+            <p style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-condensed)" }}>Perfil de salud</p>
+            <h1 style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)" }}>Mi perfil</h1>
           </div>
         </div>
 
         {/* Estado badge */}
         <div className="rounded-2xl p-4 mb-5" style={{ background: estadoBg, border: `0.5px solid ${estadoBorder}` }}>
-          <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif", marginBottom: 4 }}>Estado actual</p>
-          <p style={{ fontSize: "1.25rem", fontWeight: 300, fontFamily: "Cormorant Garamond, serif", color: estadoColor }}>{estadoLabel}</p>
+          <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-condensed)", marginBottom: 4 }}>Estado actual</p>
+          <p style={{ fontSize: "1.25rem", fontWeight: 300, fontFamily: "var(--font-serif)", color: estadoColor }}>{estadoLabel}</p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>Fecha de nacimiento</label>
-            <input type="date" value={profile.fecha_nacimiento} onChange={(e) => setProfile((p) => ({ ...p, fecha_nacimiento: e.target.value }))} className="w-full px-4 py-3 rounded-2xl text-sm outline-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif", colorScheme: "dark" }} />
+            <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>Fecha de nacimiento</label>
+            <input type="date" value={profile.fecha_nacimiento} onChange={(e) => setProfile((p) => ({ ...p, fecha_nacimiento: e.target.value }))} className="w-full px-4 py-3 rounded-2xl text-sm outline-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-condensed)", colorScheme: "dark" }} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>Peso (kg)</label>
-              <input type="number" value={profile.peso_kg} onChange={(e) => setProfile((p) => ({ ...p, peso_kg: e.target.value }))} className="w-full px-4 py-3 rounded-2xl text-sm outline-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif" }} />
+              <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>Peso (kg)</label>
+              <input type="number" value={profile.peso_kg} onChange={(e) => setProfile((p) => ({ ...p, peso_kg: e.target.value }))} className="w-full px-4 py-3 rounded-2xl text-sm outline-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-condensed)" }} />
             </div>
             <div>
-              <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>Altura (cm)</label>
-              <input type="number" value={profile.altura_cm} onChange={(e) => setProfile((p) => ({ ...p, altura_cm: e.target.value }))} className="w-full px-4 py-3 rounded-2xl text-sm outline-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif" }} />
+              <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>Altura (cm)</label>
+              <input type="number" value={profile.altura_cm} onChange={(e) => setProfile((p) => ({ ...p, altura_cm: e.target.value }))} className="w-full px-4 py-3 rounded-2xl text-sm outline-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-condensed)" }} />
             </div>
           </div>
 
           <div>
-            <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>Sexo biológico</label>
+            <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>Sexo biológico</label>
             <div className="grid grid-cols-2 gap-2">
               {SEXO_OPTIONS.map((o) => (
                 <button key={o.value} type="button" onClick={() => setProfile((p) => ({ ...p, sexo: o.value }))} className="py-3 rounded-2xl text-xs transition-all" style={profile.sexo === o.value ? GLASS_ACTIVE : GLASS}>
-                  <span style={{ color: profile.sexo === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "Barlow Condensed, sans-serif" }}>{o.label}</span>
+                  <span style={{ color: profile.sexo === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "var(--font-condensed)" }}>{o.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>Objetivo principal</label>
+            <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>Objetivo principal</label>
             <div className="grid grid-cols-2 gap-2">
               {OBJETIVO_OPTIONS.map((o) => (
                 <button key={o.value} type="button" onClick={() => setProfile((p) => ({ ...p, objetivo: o.value }))} className="py-3 px-4 rounded-2xl text-xs text-left transition-all" style={profile.objetivo === o.value ? GLASS_ACTIVE : GLASS}>
-                  <span style={{ color: profile.objetivo === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "Barlow Condensed, sans-serif" }}>{o.label}</span>
+                  <span style={{ color: profile.objetivo === o.value ? "#2abfbf" : "rgba(255,255,255,0.5)", fontFamily: "var(--font-condensed)" }}>{o.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "Barlow Condensed, sans-serif" }}>Zona de molestia o lesión <span style={{ color: "rgba(255,255,255,0.2)" }}>(opcional)</span></label>
-            <textarea value={profile.zona_molestia} onChange={(e) => setProfile((p) => ({ ...p, zona_molestia: e.target.value }))} placeholder="Ej: rodilla derecha, lumbar..." rows={2} className="w-full px-4 py-3 rounded-2xl text-sm outline-none resize-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif" }} />
+            <label className="block mb-2" style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-condensed)" }}>Zona de molestia o lesión <span style={{ color: "rgba(255,255,255,0.2)" }}>(opcional)</span></label>
+            <textarea value={profile.zona_molestia} onChange={(e) => setProfile((p) => ({ ...p, zona_molestia: e.target.value }))} placeholder="Ej: rodilla derecha, lumbar..." rows={2} className="w-full px-4 py-3 rounded-2xl text-sm outline-none resize-none" style={{ ...GLASS, color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-condensed)" }} />
           </div>
 
-          {saveMsg && <p className="text-xs text-center" style={{ color: saveMsg === "Cambios guardados" ? "#2abfbf" : "#ff8080", fontFamily: "Barlow Condensed, sans-serif" }}>{saveMsg}</p>}
+          {saveMsg && <p className="text-xs text-center" style={{ color: saveMsg === "Cambios guardados" ? "#2abfbf" : "#ff8080", fontFamily: "var(--font-condensed)" }}>{saveMsg}</p>}
 
-          <button type="button" onClick={handleSave} disabled={isSaving} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30" style={{ background: "#2abfbf", color: "#000", fontFamily: "Barlow Condensed, sans-serif", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>
+          <button type="button" onClick={handleSave} disabled={isSaving} className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30" style={{ background: "#2abfbf", color: "#000", fontFamily: "var(--font-condensed)", boxShadow: "0 4px 24px rgba(42,191,191,0.3)" }}>
             {isSaving ? "Guardando…" : "Guardar cambios"}
           </button>
 
-          <button type="button" onClick={() => setForceTriage(true)} className="w-full pt-4 text-[10px] tracking-[0.2em] uppercase transition-colors" style={{ color: "rgba(255,255,255,0.35)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "Barlow Condensed, sans-serif" }}>
+          <button type="button" onClick={() => setForceTriage(true)} className="w-full pt-4 text-[10px] tracking-[0.2em] uppercase transition-colors" style={{ color: "rgba(255,255,255,0.35)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-condensed)" }}>
             Repetir cuestionario PAR-Q
           </button>
         </div>

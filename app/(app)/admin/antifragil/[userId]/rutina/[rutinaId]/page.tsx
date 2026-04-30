@@ -122,7 +122,7 @@ export default function AdminEditarRutinaPage() {
       <div className="min-h-screen p-8" style={{ background: "#080808" }}>
         <p
           className="text-xs text-center"
-          style={{ color: "#ff8080", fontFamily: "Cormorant Garamond, serif" }}
+          style={{ color: "#ff8080", fontFamily: "var(--font-serif)" }}
         >
           {error}
         </p>
@@ -161,7 +161,7 @@ export default function AdminEditarRutinaPage() {
                 letterSpacing: "0.25em",
                 textTransform: "uppercase",
                 color: "rgba(42,191,191,0.7)",
-                fontFamily: "Cormorant Garamond, serif",
+                fontFamily: "var(--font-serif)",
               }}
             >
               Rutina · {clienteNombre || "cliente"}
@@ -169,7 +169,7 @@ export default function AdminEditarRutinaPage() {
             <h1
               className="truncate"
               style={{
-                fontFamily: "Cormorant Garamond, serif",
+                fontFamily: "var(--font-serif)",
                 fontSize: "1.75rem",
                 fontWeight: 300,
                 lineHeight: 1.1,

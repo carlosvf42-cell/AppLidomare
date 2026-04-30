@@ -69,7 +69,7 @@ const EYEBROW: React.CSSProperties = {
   letterSpacing: "0.25em",
   textTransform: "uppercase",
   color: "rgba(42,191,191,0.7)",
-  fontFamily: "Cormorant Garamond, serif",
+  fontFamily: "var(--font-serif)",
 };
 
 function TipoIcon({ tipo, color }: { tipo: string; color: string }) {
@@ -105,10 +105,10 @@ function TipoIcon({ tipo, color }: { tipo: string; color: string }) {
 function DatoPersonal({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[9px] tracking-[0.18em] uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Cormorant Garamond, serif" }}>
+      <p className="text-[9px] tracking-[0.18em] uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-serif)" }}>
         {label}
       </p>
-      <p className="text-sm" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.02em" }}>
+      <p className="text-sm" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em" }}>
         {value}
       </p>
     </div>
@@ -322,9 +322,9 @@ export default function ClienteDetailPage() {
               <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </Link>
-          <h1 className="text-lg font-light" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "Cormorant Garamond, serif" }}>Cliente</h1>
+          <h1 className="text-lg font-light" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-serif)" }}>Cliente</h1>
         </div>
-        <p className="text-xs text-center py-8" style={{ color: "#ff8080", fontFamily: "Cormorant Garamond, serif" }}>{error ?? "No se pudo cargar"}</p>
+        <p className="text-xs text-center py-8" style={{ color: "#ff8080", fontFamily: "var(--font-serif)" }}>{error ?? "No se pudo cargar"}</p>
       </div>
     );
   }
@@ -345,7 +345,7 @@ export default function ClienteDetailPage() {
           <div className="flex items-center gap-2 mt-0.5">
             <h1
               className="truncate"
-              style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
+              style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
             >
               {nombre}
             </h1>
@@ -355,13 +355,13 @@ export default function ClienteDetailPage() {
                 background: "rgba(42,191,191,0.12)",
                 border: "0.5px solid rgba(42,191,191,0.4)",
                 color: "#2abfbf",
-                fontFamily: "Cormorant Garamond, serif",
+                fontFamily: "var(--font-serif)",
               }}
             >
               Antifrágil
             </span>
           </div>
-          <p className="truncate mt-1" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "Cormorant Garamond, serif" }}>
+          <p className="truncate mt-1" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-serif)" }}>
             {data.user.email}
           </p>
         </div>
@@ -411,13 +411,13 @@ export default function ClienteDetailPage() {
           ) : rutinaActiva ? (
             <div className="rounded-2xl px-5 py-5 space-y-3" style={GLASS}>
               <div>
-                <p className="text-[10px] tracking-[0.18em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Cormorant Garamond, serif" }}>
+                <p className="text-[10px] tracking-[0.18em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-serif)" }}>
                   Rutina activa
                 </p>
                 <p
                   className="truncate"
                   style={{
-                    fontFamily: "Cormorant Garamond, serif",
+                    fontFamily: "var(--font-serif)",
                     fontSize: 20,
                     fontWeight: 300,
                     color: "rgba(255,255,255,0.95)",
@@ -435,7 +435,7 @@ export default function ClienteDetailPage() {
                     background: "rgba(42,191,191,0.12)",
                     border: "0.5px solid rgba(42,191,191,0.35)",
                     color: "#2abfbf",
-                    fontFamily: "Cormorant Garamond, serif",
+                    fontFamily: "var(--font-serif)",
                     textDecoration: "none",
                   }}
                 >
@@ -448,7 +448,7 @@ export default function ClienteDetailPage() {
                     background: "rgba(255,255,255,0.05)",
                     border: "0.5px solid rgba(255,255,255,0.15)",
                     color: "rgba(255,255,255,0.85)",
-                    fontFamily: "Cormorant Garamond, serif",
+                    fontFamily: "var(--font-serif)",
                     textDecoration: "none",
                   }}
                 >
@@ -458,7 +458,7 @@ export default function ClienteDetailPage() {
             </div>
           ) : (
             <div className="rounded-2xl px-5 py-6 text-center space-y-3" style={GLASS}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.5 }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-serif)", lineHeight: 1.5 }}>
                 Este cliente no tiene rutina asignada
               </p>
               <Link
@@ -468,7 +468,7 @@ export default function ClienteDetailPage() {
                   background: "rgba(42,191,191,0.12)",
                   border: "0.5px solid rgba(42,191,191,0.35)",
                   color: "#2abfbf",
-                  fontFamily: "Cormorant Garamond, serif",
+                  fontFamily: "var(--font-serif)",
                   textDecoration: "none",
                 }}
               >
@@ -488,7 +488,7 @@ export default function ClienteDetailPage() {
             style={{
               background: "#2abfbf",
               color: "#000",
-              fontFamily: "Cormorant Garamond, serif",
+              fontFamily: "var(--font-serif)",
               boxShadow: "0 4px 24px rgba(42,191,191,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
               border: "none",
               cursor: iniciandoVacio ? "wait" : "pointer",
@@ -503,7 +503,7 @@ export default function ClienteDetailPage() {
               background: "rgba(255,255,255,0.04)",
               border: "0.5px solid rgba(255,255,255,0.12)",
               color: "rgba(255,255,255,0.6)",
-              fontFamily: "Cormorant Garamond, serif",
+              fontFamily: "var(--font-serif)",
               textDecoration: "none",
             }}
           >
@@ -523,7 +523,7 @@ export default function ClienteDetailPage() {
               background: "rgba(42,191,191,0.08)",
               border: "0.5px dashed rgba(42,191,191,0.4)",
               color: "#2abfbf",
-              fontFamily: "Cormorant Garamond, serif",
+              fontFamily: "var(--font-serif)",
             }}
           >
             {analizando ? "Analizando…" : "Analizar ahora"}
@@ -542,37 +542,37 @@ export default function ClienteDetailPage() {
                   <span style={{ fontSize: 16 }}>{m.emoji}</span>
                   <span
                     className="px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
-                    style={{ background: m.bg, border: `0.5px solid ${m.border}`, color: m.color, fontFamily: "Cormorant Garamond, serif" }}
+                    style={{ background: m.bg, border: `0.5px solid ${m.border}`, color: m.color, fontFamily: "var(--font-serif)" }}
                   >
                     {m.label}
                   </span>
                 </div>
                 {analisis.razonamiento && (
                   <div>
-                    <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "Cormorant Garamond, serif" }}>
+                    <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)" }}>
                       Razonamiento
                     </p>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-serif)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
                       {analisis.razonamiento}
                     </p>
                   </div>
                 )}
                 {analisis.recomendacion && (
                   <div>
-                    <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "Cormorant Garamond, serif" }}>
+                    <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-serif)" }}>
                       Recomendación
                     </p>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-serif)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
                       {analisis.recomendacion}
                     </p>
                   </div>
                 )}
                 {analisis.mensaje_usuario && (
                   <div className="rounded-xl px-3 py-2.5" style={{ background: "rgba(42,191,191,0.06)", border: "0.5px solid rgba(42,191,191,0.25)" }}>
-                    <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "Cormorant Garamond, serif" }}>
+                    <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-serif)" }}>
                       Mensaje al usuario
                     </p>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.95)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
                       {analisis.mensaje_usuario}
                     </p>
                   </div>
@@ -593,7 +593,7 @@ export default function ClienteDetailPage() {
             <div className="flex-1 text-left">
               <p style={EYEBROW}>Siguientes entrenos</p>
             </div>
-            <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "Cormorant Garamond, serif" }}>
+            <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-serif)" }}>
               {data.entrenos.length}
             </span>
             <Chevron open={siguientesOpen} />
@@ -601,10 +601,10 @@ export default function ClienteDetailPage() {
 
           {siguientesOpen && (data.entrenos.length === 0 ? (
             <div className="mt-3 rounded-2xl px-5 py-8 text-center" style={GLASS}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.5 }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)", lineHeight: 1.5 }}>
                 Sin entrenos programados
               </p>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "Cormorant Garamond, serif", marginTop: 6, letterSpacing: "0.02em" }}>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-serif)", marginTop: 6, letterSpacing: "0.02em" }}>
                 Programa el próximo entreno desde "Entrenar ahora"
               </p>
             </div>
@@ -622,7 +622,7 @@ export default function ClienteDetailPage() {
                             background: meta.bg,
                             border: `0.5px solid ${meta.border}`,
                             color: meta.color,
-                            fontFamily: "Cormorant Garamond, serif",
+                            fontFamily: "var(--font-serif)",
                           }}
                         >
                           <TipoIcon tipo={e.tipo} color={meta.color} />
@@ -631,7 +631,7 @@ export default function ClienteDetailPage() {
                       </div>
                       <p
                         className="truncate"
-                        style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.02em" }}
+                        style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em" }}
                       >
                         {e.nombre || "Sin nombre"}
                       </p>
@@ -692,7 +692,7 @@ export default function ClienteDetailPage() {
                           background: "rgba(42,191,191,0.12)",
                           border: "0.5px solid rgba(42,191,191,0.35)",
                           color: "#2abfbf",
-                          fontFamily: "Cormorant Garamond, serif",
+                          fontFamily: "var(--font-serif)",
                           textDecoration: "none",
                         }}
                       >
@@ -717,7 +717,7 @@ export default function ClienteDetailPage() {
             <div className="flex-1 text-left">
               <p style={EYEBROW}>Historial</p>
             </div>
-            <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "Cormorant Garamond, serif" }}>
+            <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-serif)" }}>
               {data.sesiones.length}
             </span>
             <Chevron open={historialOpen} />
@@ -725,7 +725,7 @@ export default function ClienteDetailPage() {
 
           {historialOpen && (data.sesiones.length === 0 ? (
             <div className="mt-3 rounded-2xl px-5 py-8 text-center" style={GLASS}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.5 }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)", lineHeight: 1.5 }}>
                 Sin sesiones completadas todavía
               </p>
             </div>
@@ -744,21 +744,21 @@ export default function ClienteDetailPage() {
                           background: meta.bg,
                           border: `0.5px solid ${meta.border}`,
                           color: meta.color,
-                          fontFamily: "Cormorant Garamond, serif",
+                          fontFamily: "var(--font-serif)",
                         }}
                       >
                         <TipoIcon tipo={tipo} color={meta.color} />
                         {meta.label || "—"}
                       </span>
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.02em" }}>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em" }}>
                         {formatFecha(s.fecha)}
                       </span>
                     </div>
-                    <p className="truncate mb-1" style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.02em" }}>
+                    <p className="truncate mb-1" style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em" }}>
                       {nombreEntreno}
                     </p>
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.02em" }}>
+                      <div className="flex items-center gap-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em" }}>
                         {s.duracion_minutos != null && (
                           <span>{s.duracion_minutos} min</span>
                         )}
@@ -775,7 +775,7 @@ export default function ClienteDetailPage() {
                           background: "rgba(42,191,191,0.08)",
                           border: "0.5px solid rgba(42,191,191,0.25)",
                           color: "#2abfbf",
-                          fontFamily: "Cormorant Garamond, serif",
+                          fontFamily: "var(--font-serif)",
                         }}
                       >
                         {duplicandoId === s.entreno_id ? "Duplicando…" : "Repetir"}

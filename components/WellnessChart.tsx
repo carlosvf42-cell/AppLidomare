@@ -18,8 +18,8 @@ const GLASS: React.CSSProperties = {
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)",
 };
 
-const FONT_TEXT = "Barlow Condensed, sans-serif";
-const FONT_TITLE = "Cormorant Garamond, serif";
+const FONT_TEXT = "var(--font-condensed)";
+const FONT_TITLE = "var(--font-serif)";
 
 type WellnessRow = {
   fecha: string;

@@ -86,14 +86,14 @@ export default function AdminNuevaRutinaPage() {
                 letterSpacing: "0.25em",
                 textTransform: "uppercase",
                 color: "rgba(42,191,191,0.7)",
-                fontFamily: "Cormorant Garamond, serif",
+                fontFamily: "var(--font-serif)",
               }}
             >
               Rutina · {clienteNombre || "cliente"}
             </p>
             <h1
               style={{
-                fontFamily: "Cormorant Garamond, serif",
+                fontFamily: "var(--font-serif)",
                 fontSize: "1.75rem",
                 fontWeight: 300,
                 lineHeight: 1.1,

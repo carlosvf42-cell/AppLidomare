@@ -89,7 +89,7 @@ const EYEBROW: React.CSSProperties = {
   letterSpacing: "0.25em",
   textTransform: "uppercase",
   color: "rgba(42,191,191,0.7)",
-  fontFamily: "Barlow Condensed, sans-serif",
+  fontFamily: "var(--font-condensed)",
 };
 
 const BADGE_BASE: React.CSSProperties = {
@@ -98,7 +98,7 @@ const BADGE_BASE: React.CSSProperties = {
   textTransform: "uppercase",
   padding: "4px 10px",
   borderRadius: 999,
-  fontFamily: "Barlow Condensed, sans-serif",
+  fontFamily: "var(--font-condensed)",
   fontWeight: 500,
 };
 
@@ -207,7 +207,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
     return (
       <GlassCard variant="light" style={{ padding: "20px 20px" }}>
         <p style={{ ...EYEBROW, marginBottom: 10 }}>Carga de entrenamiento</p>
-        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em", lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-condensed)", letterSpacing: "0.02em", lineHeight: 1.5 }}>
           Registra tus entrenos con RPE para ver tu carga
         </p>
       </GlassCard>
@@ -238,7 +238,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
         <p style={{ ...EYEBROW, marginBottom: 4 }}>Carga de entrenamiento</p>
 
         <div className="flex items-center justify-between mb-3">
-          <h3 style={{ fontFamily: "Cormorant Garamond, serif", fontSize: 22, fontWeight: 300, color: "rgba(255,255,255,0.95)", lineHeight: 1.1 }}>
+          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 300, color: "rgba(255,255,255,0.95)", lineHeight: 1.1 }}>
             Esta semana
           </h3>
           <span style={{ ...BADGE_BASE, background: zone.bg, border: `0.5px solid ${zone.border}`, color: zone.color }}>
@@ -290,7 +290,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
               <div key={i} style={{ width: widthPct, textAlign: "center" }}>
                 <div style={{
                   fontSize: 10,
-                  fontFamily: "Barlow Condensed, sans-serif",
+                  fontFamily: "var(--font-condensed)",
                   letterSpacing: "0.05em",
                   color: d.isToday ? "#2abfbf" : "rgba(255,255,255,0.25)",
                   fontWeight: d.isToday ? 500 : 400,
@@ -347,10 +347,10 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
 
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-baseline gap-2">
-          <span style={{ fontFamily: "Cormorant Garamond, serif", fontSize: 28, fontWeight: 300, color: "#2abfbf", lineHeight: 1, fontFeatureSettings: "'tnum'" }}>
+          <span style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 300, color: "#2abfbf", lineHeight: 1, fontFeatureSettings: "'tnum'" }}>
             {acwr !== null ? acwr.toFixed(2) : "—"}
           </span>
-          <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "Barlow Condensed, sans-serif" }}>ACWR</span>
+          <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-condensed)" }}>ACWR</span>
           <button
             type="button"
             onClick={() => setShowInfo((v) => !v)}
@@ -358,7 +358,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
             style={{
               fontSize: 12,
               color: showInfo ? "rgba(42,191,191,0.8)" : "rgba(255,255,255,0.3)",
-              fontFamily: "Barlow Condensed, sans-serif",
+              fontFamily: "var(--font-condensed)",
               background: "transparent",
               border: "none",
               padding: 0,
@@ -384,7 +384,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
             marginBottom: 12,
           }}
         >
-          <p style={{ fontFamily: "Barlow Condensed, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+          <p style={{ fontFamily: "var(--font-condensed)", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
             El ACWR (ratio de carga aguda/crónica) compara tu entrenamiento de esta semana con tu media de las 4 semanas anteriores. Entre 0.8 y 1.3 es la zona óptima: suficiente estímulo sin riesgo de lesión.
           </p>
         </div>
@@ -401,8 +401,8 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
         <rect x="30" y="28" width="320" height={64 - 28} fill="rgba(42,191,191,0.05)" />
         <line x1="30" y1="28" x2="350" y2="28" stroke="rgba(42,191,191,0.15)" strokeWidth="0.8" strokeDasharray="3 3" />
         <line x1="30" y1="64" x2="350" y2="64" stroke="rgba(42,191,191,0.15)" strokeWidth="0.8" strokeDasharray="3 3" />
-        <text x="356" y="30.5" fontSize="8" fill="rgba(42,191,191,0.5)" fontFamily="Barlow Condensed, sans-serif" dominantBaseline="middle">1.3</text>
-        <text x="356" y="66.5" fontSize="8" fill="rgba(42,191,191,0.5)" fontFamily="Barlow Condensed, sans-serif" dominantBaseline="middle">0.8</text>
+        <text x="356" y="30.5" fontSize="8" fill="rgba(42,191,191,0.5)" fontFamily="var(--font-condensed)" dominantBaseline="middle">1.3</text>
+        <text x="356" y="66.5" fontSize="8" fill="rgba(42,191,191,0.5)" fontFamily="var(--font-condensed)" dominantBaseline="middle">0.8</text>
 
         {areaPath && <path d={areaPath} fill="url(#wlArea)" />}
 
@@ -439,11 +439,11 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
           const widthPct = `${100 / weekLabels.length}%`;
           return (
             <div key={i} style={{ width: widthPct, textAlign: "center" }}>
-              <div style={{ fontSize: 10, fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.05em", color: isLast ? "#2abfbf" : "rgba(255,255,255,0.25)" }}>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-condensed)", letterSpacing: "0.05em", color: isLast ? "#2abfbf" : "rgba(255,255,255,0.25)" }}>
                 {label}
               </div>
               {isLast && (
-                <div style={{ fontSize: 9, fontFamily: "Barlow Condensed, sans-serif", color: "rgba(42,191,191,0.55)", marginTop: 1 }}>
+                <div style={{ fontSize: 9, fontFamily: "var(--font-condensed)", color: "rgba(42,191,191,0.55)", marginTop: 1 }}>
                   {todayLabel}
                 </div>
               )}

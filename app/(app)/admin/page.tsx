@@ -42,7 +42,7 @@ function AntifragilBadge() {
         background: "rgba(42,191,191,0.12)",
         border: "0.5px solid rgba(42,191,191,0.4)",
         color: "#2abfbf",
-        fontFamily: "Cormorant Garamond, serif",
+        fontFamily: "var(--font-serif)",
       }}
     >
       Antifrágil
@@ -225,12 +225,12 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#080808]">
       {/* Header */}
       <div className="px-5 pt-14 pb-6">
-        <p style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "Cormorant Garamond, serif" }}>
+        <p style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-serif)" }}>
           Gestión de usuarios
         </p>
         <h1
           className="mt-0.5"
-          style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
+          style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
         >
           Alumnos
         </h1>
@@ -377,7 +377,7 @@ export default function AdminPage() {
                       <p
                         className="truncate"
                         style={{
-                          fontFamily: "Cormorant Garamond, serif",
+                          fontFamily: "var(--font-serif)",
                           fontSize: 17,
                           fontWeight: 300,
                           letterSpacing: "0.01em",
