@@ -374,7 +374,18 @@ export default function AdminPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-[#f0f0f0] text-sm font-light truncate">{u.email}</p>
+                      <p
+                        className="truncate"
+                        style={{
+                          fontFamily: "Cormorant Garamond, serif",
+                          fontSize: 17,
+                          fontWeight: 300,
+                          letterSpacing: "0.01em",
+                          color: "rgba(255,255,255,0.95)",
+                        }}
+                      >
+                        {u.email}
+                      </p>
                       {u.is_antifragil && <AntifragilBadge />}
                     </div>
                     <p className="text-[#555] text-xs mt-0.5">

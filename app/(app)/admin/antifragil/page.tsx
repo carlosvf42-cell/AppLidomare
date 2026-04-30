@@ -289,7 +289,7 @@ export default function AntifragilListPage() {
                             {meta.label}
                           </span>
                         )}
-                        <p className="truncate" style={{ fontSize: 14, color: "rgba(255,255,255,0.9)", fontFamily: "Barlow Condensed, sans-serif", letterSpacing: "0.02em" }}>
+                        <p className="truncate" style={{ fontSize: 16, fontWeight: 300, color: "rgba(255,255,255,0.95)", fontFamily: "Cormorant Garamond, serif", letterSpacing: "0.01em" }}>
                           {nombre}
                         </p>
                       </div>
