@@ -122,7 +122,7 @@ export default function AdminEditarRutinaPage() {
       <div className="min-h-screen p-8" style={{ background: "#080808" }}>
         <p
           className="text-xs text-center"
-          style={{ color: "#ff8080", fontFamily: "var(--font-serif)" }}
+          style={{ color: "#ff8080", fontFamily: "var(--font-ui)" }}
         >
           {error}
         </p>
@@ -161,7 +161,7 @@ export default function AdminEditarRutinaPage() {
                 letterSpacing: "0.25em",
                 textTransform: "uppercase",
                 color: "rgba(42,191,191,0.7)",
-                fontFamily: "var(--font-serif)",
+                fontFamily: "var(--font-ui)",
               }}
             >
               Rutina · {clienteNombre || "cliente"}
@@ -171,7 +171,7 @@ export default function AdminEditarRutinaPage() {
               style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: "1.75rem",
-                fontWeight: 300,
+                fontWeight: 400,
                 lineHeight: 1.1,
                 color: "rgba(255,255,255,0.95)",
               }}

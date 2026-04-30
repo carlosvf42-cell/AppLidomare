@@ -86,7 +86,7 @@ export default function AdminNuevaRutinaPage() {
                 letterSpacing: "0.25em",
                 textTransform: "uppercase",
                 color: "rgba(42,191,191,0.7)",
-                fontFamily: "var(--font-serif)",
+                fontFamily: "var(--font-ui)",
               }}
             >
               Rutina · {clienteNombre || "cliente"}
@@ -95,7 +95,7 @@ export default function AdminNuevaRutinaPage() {
               style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: "1.75rem",
-                fontWeight: 300,
+                fontWeight: 400,
                 lineHeight: 1.1,
                 color: "rgba(255,255,255,0.95)",
               }}

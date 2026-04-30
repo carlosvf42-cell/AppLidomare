@@ -42,7 +42,7 @@ const EYEBROW: React.CSSProperties = {
   letterSpacing: "0.25em",
   textTransform: "uppercase",
   color: "rgba(42,191,191,0.7)",
-  fontFamily: "var(--font-serif)",
+  fontFamily: "var(--font-ui)",
 };
 
 const LABEL: React.CSSProperties = {
@@ -50,10 +50,10 @@ const LABEL: React.CSSProperties = {
   letterSpacing: "0.18em",
   textTransform: "uppercase",
   color: "rgba(255,255,255,0.4)",
-  fontFamily: "var(--font-serif)",
+  fontFamily: "var(--font-ui)",
 };
 
-const FONT_TEXT = "var(--font-serif)";
+const FONT_TEXT = "var(--font-ui)";
 const FONT_TITLE = "var(--font-serif)";
 
 const BLOCK_META: Record<Block["kind"], { label: string; color: string; bg: string; border: string }> = {

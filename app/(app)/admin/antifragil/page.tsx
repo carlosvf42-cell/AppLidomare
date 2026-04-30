@@ -142,7 +142,7 @@ export default function AntifragilListPage() {
     letterSpacing: "0.25em",
     textTransform: "uppercase",
     color: "rgba(42,191,191,0.7)",
-    fontFamily: "var(--font-serif)",
+    fontFamily: "var(--font-ui)",
   };
 
   return (
@@ -151,7 +151,7 @@ export default function AntifragilListPage() {
         <p style={EYEBROW}>Antifrágil · Admin</p>
         <h1
           className="mt-0.5"
-          style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
+          style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 400, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
         >
           Entrenos
         </h1>
@@ -166,7 +166,7 @@ export default function AntifragilListPage() {
             background: "rgba(42,191,191,0.08)",
             border: "0.5px dashed rgba(42,191,191,0.4)",
             color: "#2abfbf",
-            fontFamily: "var(--font-serif)",
+            fontFamily: "var(--font-ui)",
             textDecoration: "none",
           }}
         >
@@ -174,7 +174,7 @@ export default function AntifragilListPage() {
         </Link>
 
         {error && (
-          <p className="text-xs text-center" style={{ color: "#ff8080", fontFamily: "var(--font-serif)" }}>{error}</p>
+          <p className="text-xs text-center" style={{ color: "#ff8080", fontFamily: "var(--font-ui)" }}>{error}</p>
         )}
 
         {/* Clientes Antifrágil */}
@@ -186,10 +186,10 @@ export default function AntifragilListPage() {
             </div>
           ) : users.length === 0 ? (
             <div className="rounded-2xl px-6 py-10 text-center" style={GLASS}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em", lineHeight: 1.6 }}>
                 Aún no hay clientes Antifrágil.
               </p>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-serif)", marginTop: 8 }}>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-ui)", marginTop: 8 }}>
                 Marca alumnos como Antifrágil desde la pestaña Alumnos.
               </p>
             </div>
@@ -198,7 +198,7 @@ export default function AntifragilListPage() {
               {users.map((u) => (
                 <div key={u.id} className="rounded-2xl px-5 py-4" style={GLASS}>
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="truncate min-w-0 flex-1" style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 300, color: "rgba(255,255,255,0.95)" }}>
+                    <p className="truncate min-w-0 flex-1" style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 400, color: "rgba(255,255,255,0.95)" }}>
                       {displayName(u)}
                     </p>
                     <span
@@ -207,13 +207,13 @@ export default function AntifragilListPage() {
                         background: "rgba(42,191,191,0.12)",
                         border: "0.5px solid rgba(42,191,191,0.4)",
                         color: "#2abfbf",
-                        fontFamily: "var(--font-serif)",
+                        fontFamily: "var(--font-ui)",
                       }}
                     >
                       Antifrágil
                     </span>
                   </div>
-                  <p className="truncate mb-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em" }}>
+                  <p className="truncate mb-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
                     {u.email}
                   </p>
                   <div className="flex gap-2">
@@ -225,7 +225,7 @@ export default function AntifragilListPage() {
                       style={{
                         background: "#2abfbf",
                         color: "#000",
-                        fontFamily: "var(--font-serif)",
+                        fontFamily: "var(--font-ui)",
                         boxShadow: "0 4px 16px rgba(42,191,191,0.3), inset 0 1px 0 rgba(255,255,255,0.25)",
                         border: "none",
                         cursor: iniciandoUserId === u.id ? "wait" : "pointer",
@@ -240,7 +240,7 @@ export default function AntifragilListPage() {
                         background: "rgba(42,191,191,0.08)",
                         border: "0.5px solid rgba(42,191,191,0.3)",
                         color: "#2abfbf",
-                        fontFamily: "var(--font-serif)",
+                        fontFamily: "var(--font-ui)",
                         textDecoration: "none",
                       }}
                     >
@@ -258,7 +258,7 @@ export default function AntifragilListPage() {
           <p className="mb-3 px-1" style={EYEBROW}>Sesiones recientes</p>
           {sesiones.length === 0 ? (
             <div className="rounded-2xl px-6 py-8 text-center" style={GLASS}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em", lineHeight: 1.6 }}>
                 Sin sesiones recientes
               </p>
             </div>
@@ -283,21 +283,21 @@ export default function AntifragilListPage() {
                               background: meta.bg,
                               border: `0.5px solid ${meta.border}`,
                               color: meta.color,
-                              fontFamily: "var(--font-serif)",
+                              fontFamily: "var(--font-ui)",
                             }}
                           >
                             {meta.label}
                           </span>
                         )}
-                        <p className="truncate" style={{ fontSize: 16, fontWeight: 300, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)", letterSpacing: "0.01em" }}>
+                        <p className="truncate" style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)", letterSpacing: "0.01em" }}>
                           {nombre}
                         </p>
                       </div>
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em" }}>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
                         {formatFecha(s.fecha)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-serif)", letterSpacing: "0.02em" }}>
+                    <div className="flex items-center gap-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
                       {s.entreno_nombre && <span className="truncate">{s.entreno_nombre}</span>}
                       {s.duracion_minutos != null && <span>{s.duracion_minutos} min</span>}
                       {s.rpe != null && <span>RPE {s.rpe}/10</span>}
