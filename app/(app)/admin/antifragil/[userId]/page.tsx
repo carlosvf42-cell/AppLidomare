@@ -193,6 +193,8 @@ export default function ClienteDetailPage() {
   }
   const [siguientesOpen, setSiguientesOpen] = useState(true);
   const [historialOpen, setHistorialOpen] = useState(false);
+  const [rutinaActiva, setRutinaActiva] = useState<{ id: string; nombre: string } | null>(null);
+  const [rutinaLoading, setRutinaLoading] = useState(true);
 
   async function iniciarEntrenoVacio() {
     if (!token || !userId) return;
@@ -286,6 +288,22 @@ export default function ClienteDetailPage() {
         setLoading(false);
       });
   }, [checking, token, userId]);
+
+  useEffect(() => {
+    if (checking || !userId) return;
+    setRutinaLoading(true);
+    const supabase = getSupabase();
+    supabase
+      .from("rutinas")
+      .select("id, nombre")
+      .eq("user_id", userId)
+      .eq("activa", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        setRutinaActiva(data ? { id: data.id, nombre: data.nombre } : null);
+        setRutinaLoading(false);
+      });
+  }, [checking, userId]);
 
   if (checking || loading) {
     return (
@@ -381,6 +399,83 @@ export default function ClienteDetailPage() {
         <section>
           <p className="mb-3 px-1" style={EYEBROW}>Wellness</p>
           <WellnessChart userId={data.user.id} />
+        </section>
+
+        {/* Rutina de usuario */}
+        <section>
+          <p className="mb-3 px-1" style={EYEBROW}>Rutina de usuario</p>
+          {rutinaLoading ? (
+            <div className="rounded-2xl px-6 py-8 flex items-center justify-center" style={GLASS}>
+              <div className="w-4 h-4 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : rutinaActiva ? (
+            <div className="rounded-2xl px-5 py-5 space-y-3" style={GLASS}>
+              <div>
+                <p className="text-[10px] tracking-[0.18em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "Cormorant Garamond, serif" }}>
+                  Rutina activa
+                </p>
+                <p
+                  className="truncate"
+                  style={{
+                    fontFamily: "Cormorant Garamond, serif",
+                    fontSize: 20,
+                    fontWeight: 300,
+                    color: "rgba(255,255,255,0.95)",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  {rutinaActiva.nombre}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Link
+                  href={`/admin/antifragil/${data.user.id}/rutina/${rutinaActiva.id}`}
+                  className="flex-1 text-center py-2.5 rounded-xl text-[10px] font-semibold tracking-widest uppercase active:scale-[0.98]"
+                  style={{
+                    background: "rgba(42,191,191,0.12)",
+                    border: "0.5px solid rgba(42,191,191,0.35)",
+                    color: "#2abfbf",
+                    fontFamily: "Cormorant Garamond, serif",
+                    textDecoration: "none",
+                  }}
+                >
+                  Ver / editar rutina
+                </Link>
+                <Link
+                  href={`/admin/antifragil/${data.user.id}/rutina/nueva`}
+                  className="flex-1 text-center py-2.5 rounded-xl text-[10px] font-semibold tracking-widest uppercase active:scale-[0.98]"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "0.5px solid rgba(255,255,255,0.15)",
+                    color: "rgba(255,255,255,0.85)",
+                    fontFamily: "Cormorant Garamond, serif",
+                    textDecoration: "none",
+                  }}
+                >
+                  Nueva rutina
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl px-5 py-6 text-center space-y-3" style={GLASS}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", fontFamily: "Cormorant Garamond, serif", lineHeight: 1.5 }}>
+                Este cliente no tiene rutina asignada
+              </p>
+              <Link
+                href={`/admin/antifragil/${data.user.id}/rutina/nueva`}
+                className="inline-block px-5 py-2.5 rounded-xl text-[10px] font-semibold tracking-widest uppercase active:scale-[0.98]"
+                style={{
+                  background: "rgba(42,191,191,0.12)",
+                  border: "0.5px solid rgba(42,191,191,0.35)",
+                  color: "#2abfbf",
+                  fontFamily: "Cormorant Garamond, serif",
+                  textDecoration: "none",
+                }}
+              >
+                Crear rutina
+              </Link>
+            </div>
+          )}
         </section>
 
         {/* CTA: Entrenar ahora — crea entreno vacío y entra DIRECTAMENTE en modo en vivo */}
