@@ -15,6 +15,8 @@ type Rutina = { id: string; nombre: string; rutina_dias: RutinaDia[] };
 
 type SerieForm = { repeticiones: string; peso: string; completada: boolean };
 type EjercicioSession = RutinaEjercicio & { seriesData: SerieForm[] };
+type HistorialSerie = { serie: number; peso: number | null; reps: number | null };
+type HistorialMap = Record<string, HistorialSerie[]>;
 
 function getSupabase() {
   return createBrowserClient(
@@ -25,6 +27,13 @@ function getSupabase() {
 
 function todayISO() {
   return new Date().toISOString().split("T")[0];
+}
+
+function formatHistorialSerie(s: { serie: number; peso: number | null; reps: number | null }): string {
+  const peso = s.peso != null ? `${s.peso}kg` : "";
+  const reps = s.reps != null ? `×${s.reps}` : "";
+  const partes = [peso, reps].filter(Boolean).join("");
+  return `S${s.serie}${partes ? " " + partes : ""}`;
 }
 
 /* ── Draft persistence (localStorage) ──────────────────────── */
@@ -106,6 +115,7 @@ function EntrenarInner() {
   const [wellnessDone, setWellnessDone] = useState(false);
   const [rpe, setRpe] = useState<number | null>(null);
   const [duracionManual, setDuracionManual] = useState("");
+  const [historico, setHistorico] = useState<HistorialMap>({});
 
   useEffect(() => {
     // Free day mode — no routine needed
@@ -156,6 +166,62 @@ function EntrenarInner() {
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    const catalogIds = Array.from(
+      new Set(
+        ejercicios
+          .map((ej) => ej.ejercicio_id)
+          .filter((id): id is string => !!id && !(id in historico))
+      )
+    );
+    if (catalogIds.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      const supabase = getSupabase();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("series_realizadas")
+        .select("numero_serie, peso, repeticiones, ejercicio_catalogo_id, sesion_id, sesiones!inner(id, user_id, fecha)")
+        .eq("sesiones.user_id", user.id)
+        .in("ejercicio_catalogo_id", catalogIds)
+        .order("fecha", { foreignTable: "sesiones", ascending: false })
+        .order("numero_serie", { ascending: true })
+        .limit(300);
+
+      if (cancelled || !data) return;
+
+      const latestSesionByEj = new Map<string, string>();
+      const result: HistorialMap = {};
+      for (const id of catalogIds) result[id] = [];
+
+      for (const row of data as Array<{
+        numero_serie: number;
+        peso: number | null;
+        repeticiones: number | null;
+        ejercicio_catalogo_id: string | null;
+        sesion_id: string;
+      }>) {
+        const catId = row.ejercicio_catalogo_id;
+        if (!catId) continue;
+        if (!latestSesionByEj.has(catId)) latestSesionByEj.set(catId, row.sesion_id);
+        if (latestSesionByEj.get(catId) !== row.sesion_id) continue;
+        result[catId].push({
+          serie: row.numero_serie,
+          peso: row.peso,
+          reps: row.repeticiones,
+        });
+      }
+
+      Object.values(result).forEach((arr) => arr.sort((a, b) => a.serie - b.serie));
+      setHistorico((prev) => ({ ...prev, ...result }));
+    })();
+
+    return () => { cancelled = true; };
+  }, [ejercicios]);
 
   async function maybeShowWellness() {
     if (wellnessDone) return;
@@ -623,6 +689,27 @@ function EntrenarInner() {
                   </button>
                 </div>
               ))}
+              {ej.ejercicio_id && historico[ej.ejercicio_id]?.length ? (
+                <div
+                  className="px-4 py-2 flex items-center gap-1.5"
+                  style={{
+                    color: "rgba(255,255,255,0.35)",
+                    fontFamily: "var(--font-ui)",
+                    fontSize: 12,
+                    borderTop: "0.5px solid rgba(255,255,255,0.05)",
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.4"/>
+                    <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span>
+                    Última vez:{" "}
+                    {historico[ej.ejercicio_id].slice(0, 3).map(formatHistorialSerie).join(" · ")}
+                    {historico[ej.ejercicio_id].length > 3 ? " …" : ""}
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
         ))}
