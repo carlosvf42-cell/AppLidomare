@@ -46,6 +46,7 @@ type Alerta = {
   created_at: string;
   cliente_nombre: string;
   cliente_email: string;
+  cliente_es_antifragil: boolean;
 };
 
 const NIVEL_META: Record<Alerta["nivel_riesgo"], { label: string; color: string; bg: string; border: string; emoji: string }> = {
@@ -114,12 +115,12 @@ export default function AlertasPage() {
     }
 
     const userIds = Array.from(new Set((rows ?? []).map((r: any) => r.user_id)));
-    const usersById = new Map<string, { full_name: string | null; email: string }>();
+    const usersById = new Map<string, { full_name: string | null; email: string; is_antifragil: boolean }>();
     if (userIds.length > 0) {
       const res = await fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } });
       const j = await res.json();
-      const all = (j.users ?? []) as Array<{ id: string; email: string; full_name: string | null }>;
-      for (const u of all) usersById.set(u.id, { email: u.email, full_name: u.full_name });
+      const all = (j.users ?? []) as Array<{ id: string; email: string; full_name: string | null; is_antifragil: boolean }>;
+      for (const u of all) usersById.set(u.id, { email: u.email, full_name: u.full_name, is_antifragil: !!u.is_antifragil });
     }
 
     const list: Alerta[] = (rows ?? []).map((r: any) => {
@@ -128,6 +129,7 @@ export default function AlertasPage() {
         ...r,
         cliente_nombre: u?.full_name?.trim() || u?.email?.split("@")[0] || "—",
         cliente_email: u?.email ?? "",
+        cliente_es_antifragil: u?.is_antifragil ?? false,
       };
     });
     setAlertas(list);
@@ -165,9 +167,9 @@ export default function AlertasPage() {
     setError(null);
     const res = await fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } });
     const j = await res.json();
-    const targets = (j.users ?? []).filter((u: any) => u.is_antifragil);
+    const targets = (j.users ?? []) as Array<{ id: string; email: string; full_name: string | null }>;
     if (targets.length === 0) {
-      setError("No hay clientes Antifrágil");
+      setError("No hay usuarios para analizar");
       return;
     }
     setAnalizando({ activo: true, current: 0, total: targets.length, mensaje: "" });
@@ -199,7 +201,7 @@ export default function AlertasPage() {
   return (
     <div className="min-h-screen" style={{ background: "#080808" }}>
       <div className="px-5 pt-14 pb-6">
-        <p style={EYEBROW}>Supervisión clínica · Antifrágil</p>
+        <p style={EYEBROW}>Supervisión clínica · Todos los usuarios</p>
         <h1
           className="mt-0.5"
           style={{
@@ -230,7 +232,7 @@ export default function AlertasPage() {
         >
           {analizando.activo
             ? `Analizando ${analizando.current} de ${analizando.total}${analizando.mensaje ? ` · ${analizando.mensaje}` : ""}…`
-            : "Analizar todos los Antifrágil"}
+            : "Analizar usuarios"}
         </button>
 
         {/* Tabs */}
@@ -306,6 +308,17 @@ export default function AlertasPage() {
                       >
                         {a.cliente_nombre}
                       </Link>
+                      <span
+                        className="shrink-0 px-2 py-0.5 rounded text-[8px] tracking-[0.2em] uppercase font-semibold"
+                        style={{
+                          background: a.cliente_es_antifragil ? "rgba(42,191,191,0.12)" : "rgba(255,255,255,0.05)",
+                          border: `0.5px solid ${a.cliente_es_antifragil ? "rgba(42,191,191,0.4)" : "rgba(255,255,255,0.15)"}`,
+                          color: a.cliente_es_antifragil ? "#2abfbf" : "rgba(255,255,255,0.5)",
+                          fontFamily: "var(--font-ui)",
+                        }}
+                      >
+                        {a.cliente_es_antifragil ? "Antifrágil" : "Usuario"}
+                      </span>
                     </div>
                     <span
                       className="shrink-0 px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
