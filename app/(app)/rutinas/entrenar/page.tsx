@@ -183,40 +183,62 @@ function EntrenarInner() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("series_realizadas")
-        .select("numero_serie, peso, repeticiones, ejercicio_catalogo_id, sesion_id, sesiones!inner(id, user_id, fecha)")
-        .eq("sesiones.user_id", user.id)
+        .select("numero_serie, peso, repeticiones, ejercicio_catalogo_id, sesion_id, sesiones!inner(fecha)")
         .in("ejercicio_catalogo_id", catalogIds)
-        .order("fecha", { foreignTable: "sesiones", ascending: false })
-        .order("numero_serie", { ascending: true })
-        .limit(300);
+        .limit(500);
 
-      if (cancelled || !data) return;
+      if (cancelled) return;
+      if (error) {
+        console.error("[historico] query error:", error);
+        return;
+      }
+      if (!data) return;
 
-      const latestSesionByEj = new Map<string, string>();
-      const result: HistorialMap = {};
-      for (const id of catalogIds) result[id] = [];
-
-      for (const row of data as Array<{
+      type Row = {
         numero_serie: number;
         peso: number | null;
         repeticiones: number | null;
         ejercicio_catalogo_id: string | null;
         sesion_id: string;
-      }>) {
+        sesiones: { fecha: string } | { fecha: string }[] | null;
+      };
+
+      const byCat = new Map<
+        string,
+        Array<{ sesion_id: string; fecha: string; serie: number; peso: number | null; reps: number | null }>
+      >();
+      for (const row of data as Row[]) {
         const catId = row.ejercicio_catalogo_id;
         if (!catId) continue;
-        if (!latestSesionByEj.has(catId)) latestSesionByEj.set(catId, row.sesion_id);
-        if (latestSesionByEj.get(catId) !== row.sesion_id) continue;
-        result[catId].push({
+        const ses = Array.isArray(row.sesiones) ? row.sesiones[0] : row.sesiones;
+        const fecha = ses?.fecha;
+        if (!fecha) continue;
+        if (!byCat.has(catId)) byCat.set(catId, []);
+        byCat.get(catId)!.push({
+          sesion_id: row.sesion_id,
+          fecha,
           serie: row.numero_serie,
           peso: row.peso,
           reps: row.repeticiones,
         });
       }
 
-      Object.values(result).forEach((arr) => arr.sort((a, b) => a.serie - b.serie));
+      const result: HistorialMap = {};
+      for (const id of catalogIds) result[id] = [];
+      for (const [catId, rows] of byCat) {
+        rows.sort((a, b) =>
+          a.fecha === b.fecha ? a.serie - b.serie : a.fecha < b.fecha ? 1 : -1
+        );
+        const latestSesion = rows[0]?.sesion_id;
+        if (!latestSesion) continue;
+        result[catId] = rows
+          .filter((r) => r.sesion_id === latestSesion)
+          .map((r) => ({ serie: r.serie, peso: r.peso, reps: r.reps }))
+          .sort((a, b) => a.serie - b.serie);
+      }
+
       setHistorico((prev) => ({ ...prev, ...result }));
     })();
 
