@@ -77,6 +77,8 @@ export default function AlertasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [marcando, setMarcando] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ id: string; texto: string } | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [analizando, setAnalizando] = useState<{ activo: boolean; current: number; total: number; mensaje: string }>({
     activo: false,
     current: 0,
@@ -140,6 +142,27 @@ export default function AlertasPage() {
     if (!checking && token) loadAlertas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checking, token, tab]);
+
+  async function guardarEdicion() {
+    if (!editing) return;
+    setSavingEdit(true);
+    setError(null);
+    const supabase = getSupabase();
+    const nuevoTexto = editing.texto.trim() || null;
+    const { error: err } = await supabase
+      .from("injury_risk_assessments")
+      .update({ recomendacion_ia: nuevoTexto })
+      .eq("id", editing.id);
+    setSavingEdit(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setAlertas((prev) =>
+      prev.map((a) => (a.id === editing.id ? { ...a, recomendacion_ia: nuevoTexto } : a))
+    );
+    setEditing(null);
+  }
 
   async function marcarRevisada(id: string) {
     if (!token) return;
@@ -353,9 +376,30 @@ export default function AlertasPage() {
 
                   {a.recomendacion_ia && (
                     <div>
-                      <p className="text-[9px] tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-ui)" }}>
-                        Recomendación
-                      </p>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-ui)" }}>
+                          Recomendación
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setEditing({ id: a.id, texto: a.recomendacion_ia ?? "" })}
+                          className="inline-flex items-center gap-1 text-[10px] tracking-[0.18em] uppercase transition-colors hover:text-white"
+                          style={{
+                            color: "rgba(255,255,255,0.4)",
+                            fontFamily: "var(--font-ui)",
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                          aria-label="Editar recomendación"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                            <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          Editar
+                        </button>
+                      </div>
                       <p className="text-xs" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-ui)", lineHeight: 1.5, letterSpacing: "0.02em" }}>
                         {a.recomendacion_ia}
                       </p>
@@ -390,6 +434,84 @@ export default function AlertasPage() {
           </div>
         )}
       </div>
+
+      {/* Modal: editar recomendación */}
+      {editing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-5"
+          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !savingEdit) setEditing(null);
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl p-5 space-y-4"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              border: "0.5px solid rgba(255,255,255,0.08)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 12px 48px rgba(0,0,0,0.6)",
+            }}
+          >
+            <p
+              className="text-[10px] tracking-[0.2em] uppercase"
+              style={{ color: "#2abfbf", fontFamily: "var(--font-ui)", fontWeight: 600 }}
+            >
+              Editar comentario
+            </p>
+
+            <textarea
+              value={editing.texto}
+              onChange={(e) => setEditing({ id: editing.id, texto: e.target.value })}
+              rows={6}
+              autoFocus
+              placeholder="Escribe el comentario o recomendación clínica…"
+              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none resize-none focus:border-[#2abfbf] transition-colors"
+              style={{
+                background: "rgba(0,0,0,0.3)",
+                border: "0.5px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.9)",
+                fontFamily: "var(--font-ui)",
+                lineHeight: 1.5,
+                letterSpacing: "0.01em",
+              }}
+            />
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                disabled={savingEdit}
+                className="flex-1 py-2.5 rounded-xl text-[10px] tracking-[0.18em] uppercase font-semibold active:scale-[0.98] disabled:opacity-50"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "0.5px solid rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.7)",
+                  fontFamily: "var(--font-ui)",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={guardarEdicion}
+                disabled={savingEdit}
+                className="flex-1 py-2.5 rounded-xl text-[10px] tracking-[0.18em] uppercase font-semibold active:scale-[0.98] disabled:opacity-50"
+                style={{
+                  background: "#2abfbf",
+                  color: "#080808",
+                  fontFamily: "var(--font-ui)",
+                  border: "none",
+                  cursor: savingEdit ? "wait" : "pointer",
+                }}
+              >
+                {savingEdit ? "Guardando…" : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
