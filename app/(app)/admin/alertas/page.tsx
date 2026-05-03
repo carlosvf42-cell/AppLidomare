@@ -151,7 +151,7 @@ export default function AlertasPage() {
     const nuevoTexto = editing.texto.trim() || null;
     const { error: err } = await supabase
       .from("injury_risk_assessments")
-      .update({ recomendacion_ia: nuevoTexto })
+      .update({ recomendacion_ia: nuevoTexto, mensaje_usuario: nuevoTexto })
       .eq("id", editing.id);
     setSavingEdit(false);
     if (err) {
@@ -159,7 +159,11 @@ export default function AlertasPage() {
       return;
     }
     setAlertas((prev) =>
-      prev.map((a) => (a.id === editing.id ? { ...a, recomendacion_ia: nuevoTexto } : a))
+      prev.map((a) =>
+        a.id === editing.id
+          ? { ...a, recomendacion_ia: nuevoTexto, mensaje_usuario: nuevoTexto }
+          : a
+      )
     );
     setEditing(null);
   }
