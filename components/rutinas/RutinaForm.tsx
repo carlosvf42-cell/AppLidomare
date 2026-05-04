@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import EjercicioSelector from "@/components/EjercicioSelector";
+import BlockEditor from "@/components/bloques/BlockEditor";
+import type { Block, CardioBlock, FuncionalBlock } from "@/components/antifragil/types";
 
 export type EjercicioForm = {
   id?: string;
@@ -17,11 +19,13 @@ export type DiaForm = {
   id?: string;
   nombre: string;
   ejercicios: EjercicioForm[];
+  /** Bloques cardio + funcional (multi-tipo en cualquier orden). */
+  blocks?: Block[];
   tieneSesiones?: boolean;
 };
 
 export const EJ_VACIO = (): EjercicioForm => ({ nombre: "", ejercicio_id: null, series: "3", repeticiones: "10" });
-export const DIA_VACIO = (): DiaForm => ({ nombre: "", ejercicios: [EJ_VACIO()] });
+export const DIA_VACIO = (): DiaForm => ({ nombre: "", ejercicios: [EJ_VACIO()], blocks: [] });
 
 const GLASS: React.CSSProperties = {
   background: "rgba(255,255,255,0.07)",
@@ -117,6 +121,80 @@ export default function RutinaForm({ targetUserId, mode, initial, header, redire
     );
   }
 
+  // ── Bloques (cardio + funcional) ─────────────────────────────────────────
+  function setBlocks(diaIdx: number, blocks: Block[]) {
+    setDias((prev) => prev.map((d, i) => (i === diaIdx ? { ...d, blocks } : d)));
+  }
+
+  /** Persiste cardio/funcional para un día. Estrategia: borrar existentes
+   *  y reinsertar. Los registros_* en sesiones quedan con bloque_id=null
+   *  por la FK ON DELETE SET NULL. */
+  async function persistBlocksForDia(supabase: ReturnType<typeof getSupabase>, diaId: string, blocks: Block[]) {
+    // 1. Borrar bloques anteriores
+    await supabase.from("rutina_bloques_cardio").delete().eq("dia_id", diaId);
+    // funcional: la FK rutina_ejercicios_funcional.bloque_id ON DELETE CASCADE
+    // limpia automáticamente los hijos al borrar el padre.
+    await supabase.from("rutina_bloques_funcional").delete().eq("dia_id", diaId);
+
+    // 2. Insertar cardio
+    const cardioRows = blocks
+      .filter((b): b is CardioBlock => b.kind === "cardio")
+      .map((b, i) => ({
+        dia_id: diaId,
+        orden: i,
+        nombre: b.nombre,
+        maquina: b.maquina,
+        modo: b.modo,
+        distancia_metros: b.distancia_metros,
+        calorias_total: b.calorias_total,
+        watts_objetivo: b.watts_objetivo,
+        rondas: b.rondas,
+        duracion_accion_seg: b.duracion_accion_seg,
+        duracion_descanso_seg: b.duracion_descanso_seg,
+        calorias_por_ronda: b.calorias_por_ronda,
+      }));
+    if (cardioRows.length > 0) {
+      const { error: cErr } = await supabase.from("rutina_bloques_cardio").insert(cardioRows);
+      if (cErr) throw new Error(`Cardio: ${cErr.message}`);
+    }
+
+    // 3. Insertar funcional + sus ejercicios
+    const funcBlocks = blocks.filter((b): b is FuncionalBlock => b.kind === "funcional");
+    for (let i = 0; i < funcBlocks.length; i++) {
+      const b = funcBlocks[i];
+      const { data: parent, error: fErr } = await supabase
+        .from("rutina_bloques_funcional")
+        .insert({
+          dia_id: diaId,
+          orden: i,
+          nombre: b.nombre,
+          formato: b.formato,
+          tiempo_minutos: b.tiempo_minutos,
+          duracion_accion_seg: b.duracion_accion_seg,
+          duracion_descanso_seg: b.duracion_descanso_seg,
+        })
+        .select("id")
+        .single();
+      if (fErr || !parent) throw new Error(`Funcional: ${fErr?.message}`);
+      const parentId = (parent as { id: string }).id;
+      if (b.ejercicios.length > 0) {
+        const ejRows = b.ejercicios.map((e, eOrden) => ({
+          bloque_id: parentId,
+          orden: eOrden,
+          tipo: e.tipo,
+          ejercicio_id: e.ejercicio_id,
+          nombre_ejercicio: e.nombre_ejercicio || null,
+          reps_objetivo: e.reps_objetivo,
+          maquina: e.maquina,
+          calorias_objetivo: e.calorias_objetivo,
+          metros_objetivo: e.metros_objetivo,
+        }));
+        const { error: eErr } = await supabase.from("rutina_ejercicios_funcional").insert(ejRows);
+        if (eErr) throw new Error(`Ejercicios funcional: ${eErr.message}`);
+      }
+    }
+  }
+
   // ── Save ──────────────────────────────────────────────────────────────────
   function handleSave(e?: React.FormEvent) {
     e?.preventDefault();
@@ -184,6 +262,19 @@ export default function RutinaForm({ targetUserId, mode, initial, header, redire
           }
         }
 
+        // Bloques cardio + funcional por día
+        try {
+          for (let i = 0; i < dias.length; i++) {
+            const blocks = dias[i].blocks ?? [];
+            if (blocks.length === 0) continue;
+            const diaId = (diasData[i] as { id: string }).id;
+            await persistBlocksForDia(supabase, diaId, blocks);
+          }
+        } catch (e: any) {
+          setError(`Error guardando bloques. ${e?.message ?? ""}`);
+          return;
+        }
+
         router.push(redirectAfterSave(rutinaId));
         router.refresh();
         return;
@@ -205,6 +296,7 @@ export default function RutinaForm({ targetUserId, mode, initial, header, redire
 
       for (let orden = 0; orden < dias.length; orden++) {
         const dia = dias[orden];
+        let diaId: string | null = dia.id ?? null;
         if (dia.id) {
           await supabase
             .from("rutina_dias")
@@ -242,8 +334,9 @@ export default function RutinaForm({ targetUserId, mode, initial, header, redire
             .select("id")
             .single();
           if (newDia) {
+            diaId = (newDia as { id: string }).id;
             const ejRows = dia.ejercicios.map((ej, eOrden) => ({
-              dia_id: (newDia as { id: string }).id,
+              dia_id: diaId,
               nombre: ej.nombre.trim(),
               series: Number(ej.series) || 1,
               repeticiones: Number(ej.repeticiones) || 1,
@@ -251,6 +344,16 @@ export default function RutinaForm({ targetUserId, mode, initial, header, redire
               ...(ej.ejercicio_id ? { ejercicio_id: ej.ejercicio_id } : {}),
             }));
             if (ejRows.length > 0) await supabase.from("rutina_ejercicios").insert(ejRows);
+          }
+        }
+
+        // Bloques cardio + funcional del día (delete + reinsert)
+        if (diaId && (dia.blocks?.length ?? 0) >= 0) {
+          try {
+            await persistBlocksForDia(supabase, diaId, dia.blocks ?? []);
+          } catch (e: any) {
+            setError(`Error guardando bloques del día "${dia.nombre}". ${e?.message ?? ""}`);
+            return;
           }
         }
       }
@@ -446,6 +549,19 @@ export default function RutinaForm({ targetUserId, mode, initial, header, redire
                   </svg>
                   Añadir ejercicio
                 </button>
+
+                {/* Bloques cardio + funcional (AMRAP/EMOM/Tabata/For Time) */}
+                <div style={{ height: "0.5px", background: "rgba(255,255,255,0.07)", marginTop: 8 }} />
+                <p
+                  className="text-[10px] tracking-[0.2em] uppercase pt-1"
+                  style={{ color: "rgba(255,255,255,0.3)" }}
+                >
+                  Bloques (cardio · funcional)
+                </p>
+                <BlockEditor
+                  blocks={dia.blocks ?? []}
+                  onChange={(blocks) => setBlocks(diaIdx, blocks)}
+                />
               </div>
             ))}
           </div>

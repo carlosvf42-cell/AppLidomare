@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import RutinaForm, { type DiaForm } from "@/components/rutinas/RutinaForm";
+import { fromApiBlocks } from "@/components/antifragil/types";
 
 function getSupabase() {
   return createBrowserClient(
@@ -36,7 +37,7 @@ export default function EditarRutinaPage() {
         supabase
           .from("rutinas")
           .select(
-            "id, nombre, user_id, rutina_dias(id, nombre, orden, rutina_ejercicios(id, nombre, series, repeticiones, orden, ejercicio_id))"
+            "id, nombre, user_id, rutina_dias(id, nombre, orden, rutina_ejercicios(id, nombre, series, repeticiones, orden, ejercicio_id), rutina_bloques_cardio(id, orden, nombre, maquina, modo, distancia_metros, calorias_total, watts_objetivo, rondas, duracion_accion_seg, duracion_descanso_seg, calorias_por_ronda), rutina_bloques_funcional(id, orden, nombre, formato, tiempo_minutos, duracion_accion_seg, duracion_descanso_seg, rutina_ejercicios_funcional(id, orden, tipo, ejercicio_id, nombre_ejercicio, reps_objetivo, maquina, calorias_objetivo, metros_objetivo)))"
           )
           .eq("id", rutinaId)
           .single(),
@@ -55,20 +56,30 @@ export default function EditarRutinaPage() {
       const r = rutina as any;
       const dias: DiaForm[] = (r.rutina_dias ?? [])
         .sort((a: any, b: any) => a.orden - b.orden)
-        .map((d: any) => ({
-          id: d.id,
-          nombre: d.nombre,
-          tieneSesiones: sesionDiaIds.has(d.id),
-          ejercicios: (d.rutina_ejercicios ?? [])
-            .sort((a: any, b: any) => a.orden - b.orden)
-            .map((ej: any) => ({
-              id: ej.id,
-              nombre: ej.nombre,
-              ejercicio_id: ej.ejercicio_id ?? null,
-              series: String(ej.series ?? 3),
-              repeticiones: String(ej.repeticiones ?? 10),
-            })),
-        }));
+        .map((d: any) => {
+          const cardioRows = (d.rutina_bloques_cardio ?? []).map((c: any) => ({ ...c, kind: "cardio" }));
+          const funcRows = (d.rutina_bloques_funcional ?? []).map((f: any) => ({
+            ...f,
+            kind: "funcional",
+            ejercicios: f.rutina_ejercicios_funcional ?? [],
+          }));
+          const blocks = fromApiBlocks([...cardioRows, ...funcRows]);
+          return {
+            id: d.id,
+            nombre: d.nombre,
+            tieneSesiones: sesionDiaIds.has(d.id),
+            ejercicios: (d.rutina_ejercicios ?? [])
+              .sort((a: any, b: any) => a.orden - b.orden)
+              .map((ej: any) => ({
+                id: ej.id,
+                nombre: ej.nombre,
+                ejercicio_id: ej.ejercicio_id ?? null,
+                series: String(ej.series ?? 3),
+                repeticiones: String(ej.repeticiones ?? 10),
+              })),
+            blocks,
+          };
+        });
 
       setLoaded({ id: r.id, nombre: r.nombre, user_id: r.user_id, dias });
     })().catch((err) => setError(err?.message ?? "Error cargando la rutina"));
