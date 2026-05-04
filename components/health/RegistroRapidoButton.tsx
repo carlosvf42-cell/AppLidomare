@@ -190,6 +190,19 @@ export default function RegistroRapidoButton({ proximoDiaId }: Props) {
               </button>
             </div>
 
+            <p
+              className="px-5 pb-4"
+              style={{
+                fontSize: 14,
+                color: "rgba(255,255,255,0.45)",
+                fontFamily: FONT_UI,
+                fontWeight: 400,
+                lineHeight: 1.5,
+              }}
+            >
+              Registra tu sesión en segundos. Sin series, solo dinos cómo fue tu entreno para que podamos calcular tu carga y hacer seguimiento de tu progreso.
+            </p>
+
             <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-5">
               <div>
                 <p
