@@ -7,6 +7,7 @@ import { IconFlame, IconCheck, IconPlay } from "@/components/design/icons";
 import WellnessHomeCard from "@/components/health/WellnessHomeCard";
 import MonitorizacionCard from "@/components/health/MonitorizacionCard";
 import WorkloadChart from "@/components/health/WorkloadChart";
+import RegistroRapidoButton from "@/components/health/RegistroRapidoButton";
 
 const HERO_BG = "/images/hero-home.jpg";
 
@@ -359,6 +360,7 @@ export default async function HomePage() {
                   Entrenar ahora
                 </PrimaryBtn>
               </Link>
+              <RegistroRapidoButton proximoDiaId={proximoDia.id} />
             </div>
           ) : (
             <GlassCard variant="light" style={{ padding: "24px 20px", textAlign: "center" }}>
