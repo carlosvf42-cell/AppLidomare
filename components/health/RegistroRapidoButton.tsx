@@ -115,23 +115,37 @@ export default function RegistroRapidoButton({ proximoDiaId }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full py-3 rounded-2xl transition-colors active:scale-[0.98]"
+        className="w-full text-left transition-all active:scale-[0.98]"
         style={{
-          background: "transparent",
-          border: "0.5px solid rgba(255,255,255,0.15)",
-          color: "rgba(255,255,255,0.6)",
+          background: "rgba(42,191,191,0.06)",
+          border: "0.5px solid rgba(42,191,191,0.25)",
+          borderRadius: 14,
+          padding: "18px 20px",
           fontFamily: FONT_UI,
+          cursor: "pointer",
         }}
       >
         <span
-          className="block text-xs uppercase"
-          style={{ letterSpacing: "0.2em", fontWeight: 500 }}
+          className="block uppercase"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.18em",
+            color: "#2abfbf",
+            fontWeight: 600,
+            lineHeight: 1,
+          }}
         >
           ⚡ Registro rápido de entrenamiento
         </span>
         <span
-          className="block text-xs mt-1"
-          style={{ color: "rgba(255,255,255,0.4)", fontWeight: 400 }}
+          className="block"
+          style={{
+            fontSize: 13,
+            color: "rgba(255,255,255,0.7)",
+            fontWeight: 400,
+            marginTop: 8,
+            lineHeight: 1.45,
+          }}
         >
           Para los días que no tienes tiempo. Tu progreso igual cuenta.
         </span>
