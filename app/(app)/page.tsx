@@ -330,6 +330,9 @@ export default async function HomePage() {
         {/* ── Carga semanal ── */}
         {user && <WorkloadChart />}
 
+        {/* ── Registro rápido ── */}
+        {proximoDia && <RegistroRapidoButton proximoDiaId={proximoDia.id} />}
+
         {/* ── Wellness de hoy ── */}
         {user && <WellnessHomeCard />}
 
@@ -360,7 +363,6 @@ export default async function HomePage() {
                   Entrenar ahora
                 </PrimaryBtn>
               </Link>
-              <RegistroRapidoButton proximoDiaId={proximoDia.id} />
             </div>
           ) : (
             <GlassCard variant="light" style={{ padding: "24px 20px", textAlign: "center" }}>

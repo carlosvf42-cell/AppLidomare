@@ -115,7 +115,7 @@ export default function RegistroRapidoButton({ proximoDiaId }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full mt-2 py-3 rounded-2xl transition-colors active:scale-[0.98]"
+        className="w-full py-3 rounded-2xl transition-colors active:scale-[0.98]"
         style={{
           background: "transparent",
           border: "0.5px solid rgba(255,255,255,0.15)",
@@ -127,7 +127,7 @@ export default function RegistroRapidoButton({ proximoDiaId }: Props) {
           className="block text-xs uppercase"
           style={{ letterSpacing: "0.2em", fontWeight: 500 }}
         >
-          ⚡ Registro rápido
+          ⚡ Registro rápido de entrenamiento
         </span>
         <span
           className="block text-xs mt-1"
@@ -178,7 +178,7 @@ export default function RegistroRapidoButton({ proximoDiaId }: Props) {
                   color: "rgba(255,255,255,0.95)",
                 }}
               >
-                Registro rápido
+                Registro rápido de entrenamiento
               </h2>
               <button
                 type="button"
