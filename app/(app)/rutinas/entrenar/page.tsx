@@ -572,7 +572,7 @@ function EntrenarInner() {
         </div>
       </div>
 
-      <div className="px-4 pb-[calc(96px+env(safe-area-inset-bottom))] space-y-3">
+      <div className="px-4 pb-[calc(160px+env(safe-area-inset-bottom))] space-y-3">
 
         {/* Progress */}
         <div className="rounded-2xl px-4 py-3 flex items-center gap-4" style={GLASS}>
