@@ -8,6 +8,14 @@ import EjercicioSelector from "@/components/EjercicioSelector";
 import WellnessCheckIn from "@/components/health/WellnessCheckIn";
 import RPECapture from "@/components/health/RPECapture";
 import DuracionCapture from "@/components/health/DuracionCapture";
+import {
+  CardioBlockTrainer,
+  FuncionalBlockTrainer,
+  makeCardioRondaInput,
+  type CardioRondaInput,
+  type FuncionalEjercicioInput,
+} from "@/components/bloques/BlockTrainers";
+import { fromApiBlocks, type Block, type CardioBlock, type FuncionalBlock } from "@/components/antifragil/types";
 
 type RutinaEjercicio = { id: string; nombre: string; series: number; repeticiones: number; orden: number; ejercicio_id?: string | null };
 type RutinaDia = { id: string; nombre: string; orden: number; rutina_ejercicios: RutinaEjercicio[] };
@@ -116,6 +124,12 @@ function EntrenarInner() {
   const [rpe, setRpe] = useState<number | null>(null);
   const [duracionManual, setDuracionManual] = useState("");
   const [historico, setHistorico] = useState<HistorialMap>({});
+  // Bloques cardio/funcional cargados del día actual
+  const [diaBlocks, setDiaBlocks] = useState<Block[]>([]);
+  // Inputs por bloque cardio (uid → array de rondas)
+  const [cardioInputs, setCardioInputs] = useState<Record<string, CardioRondaInput[]>>({});
+  // Inputs por bloque funcional (bloque uid → ejercicio uid → input)
+  const [funcionalInputs, setFuncionalInputs] = useState<Record<string, Record<string, FuncionalEjercicioInput>>>({});
 
   useEffect(() => {
     // Free day mode — no routine needed
@@ -287,7 +301,51 @@ function EntrenarInner() {
     }));
     setEjercicios(ejs);
     saveDraft(dia.id, inicio, ejs);
+    loadBlocksForDia(dia.id);
     maybeShowWellness();
+  }
+
+  async function loadBlocksForDia(diaId: string) {
+    if (!diaId || diaId === "__libre__") {
+      setDiaBlocks([]);
+      setCardioInputs({});
+      setFuncionalInputs({});
+      return;
+    }
+    const supabase = getSupabase();
+    const [{ data: cardioRows }, { data: funcRows }] = await Promise.all([
+      supabase
+        .from("rutina_bloques_cardio")
+        .select("id, orden, nombre, maquina, modo, distancia_metros, calorias_total, watts_objetivo, rondas, duracion_accion_seg, duracion_descanso_seg, calorias_por_ronda")
+        .eq("dia_id", diaId)
+        .order("orden", { ascending: true }),
+      supabase
+        .from("rutina_bloques_funcional")
+        .select("id, orden, nombre, formato, tiempo_minutos, duracion_accion_seg, duracion_descanso_seg, rutina_ejercicios_funcional(id, orden, tipo, ejercicio_id, nombre_ejercicio, reps_objetivo, maquina, calorias_objetivo, metros_objetivo)")
+        .eq("dia_id", diaId)
+        .order("orden", { ascending: true }),
+    ]);
+    const cardioApi = (cardioRows ?? []).map((r: any) => ({ ...r, kind: "cardio" }));
+    const funcApi = (funcRows ?? []).map((r: any) => ({ ...r, kind: "funcional", ejercicios: r.rutina_ejercicios_funcional ?? [] }));
+    const blocks = fromApiBlocks([...cardioApi, ...funcApi]);
+    setDiaBlocks(blocks);
+
+    // Inicializar inputs vacíos
+    const cardioInit: Record<string, CardioRondaInput[]> = {};
+    const funcInit: Record<string, Record<string, FuncionalEjercicioInput>> = {};
+    for (const b of blocks) {
+      if (b.kind === "cardio") {
+        const rondas = Math.max(1, b.rondas ?? 1);
+        cardioInit[b.uid] = Array.from({ length: rondas }, () => makeCardioRondaInput());
+      } else if (b.kind === "funcional") {
+        funcInit[b.uid] = {};
+        for (const ej of b.ejercicios) {
+          funcInit[b.uid][ej.uid] = { kg: "", reps: "", calorias: "", metros: "", completada: false };
+        }
+      }
+    }
+    setCardioInputs(cardioInit);
+    setFuncionalInputs(funcInit);
   }
 
   function updateSerie(ejIdx: number, sIdx: number, key: keyof SerieForm, value: string | boolean) {
@@ -411,6 +469,66 @@ function EntrenarInner() {
         console.error("Sesion insert error:", sesionErr);
         setSaveError(`No se pudo guardar la sesión. ${sesionErr?.message ?? ""}`);
         return;
+      }
+
+      // Persistir registros de bloques cardio + funcional
+      const cardioRegistros: any[] = [];
+      const funcRegistros: any[] = [];
+      for (const b of diaBlocks) {
+        if (b.kind === "cardio") {
+          const rondas = cardioInputs[b.uid] ?? [];
+          rondas.forEach((r, idx) => {
+            const hasData =
+              r.watts !== "" || r.calorias !== "" || r.distancia !== "" || r.duracion_seg !== "" || r.completada;
+            if (!hasData) return;
+            cardioRegistros.push({
+              sesion_id: sesion.id,
+              bloque_id: b.id ?? null,
+              maquina: b.maquina,
+              numero_ronda: idx + 1,
+              watts: r.watts ? parseInt(r.watts) : null,
+              calorias_real: r.calorias ? parseInt(r.calorias) : null,
+              distancia_metros_real: r.distancia ? parseInt(r.distancia) : null,
+              duracion_seg_real: r.duracion_seg ? parseInt(r.duracion_seg) : null,
+              completada: r.completada,
+            });
+          });
+        } else if (b.kind === "funcional") {
+          const ejInputs = funcionalInputs[b.uid] ?? {};
+          for (const ej of b.ejercicios) {
+            const inp = ejInputs[ej.uid];
+            if (!inp) continue;
+            const hasData =
+              inp.kg !== "" || inp.reps !== "" || inp.calorias !== "" || inp.metros !== "" || inp.completada;
+            if (!hasData) continue;
+            funcRegistros.push({
+              sesion_id: sesion.id,
+              bloque_id: b.id ?? null,
+              ejercicio_funcional_id: ej.id ?? null,
+              nombre_ejercicio: ej.nombre_ejercicio || null,
+              kg: inp.kg ? parseFloat(inp.kg) : null,
+              reps_real: inp.reps ? parseInt(inp.reps) : null,
+              calorias_real: inp.calorias ? parseInt(inp.calorias) : null,
+              metros_real: inp.metros ? parseInt(inp.metros) : null,
+            });
+          }
+        }
+      }
+      if (cardioRegistros.length > 0) {
+        const { error: cErr } = await supabase.from("registros_cardio").insert(cardioRegistros);
+        if (cErr) {
+          console.error("Cardio registros error:", cErr);
+          setSaveError(`Sesión creada pero error en cardio. ${cErr.message}`);
+          return;
+        }
+      }
+      if (funcRegistros.length > 0) {
+        const { error: fErr } = await supabase.from("registros_funcional_user").insert(funcRegistros);
+        if (fErr) {
+          console.error("Funcional registros error:", fErr);
+          setSaveError(`Sesión creada pero error en funcional. ${fErr.message}`);
+          return;
+        }
       }
 
       const seriesRows = ejercicios.flatMap((ej) =>
@@ -785,6 +903,35 @@ function EntrenarInner() {
               Añadir ejercicio extra
             </button>
           )
+        )}
+
+        {/* Bloques cardio + funcional del día */}
+        {diaBlocks.length > 0 && (
+          <div className="space-y-3">
+            {diaBlocks.map((b) => {
+              if (b.kind === "cardio") {
+                return (
+                  <CardioBlockTrainer
+                    key={b.uid}
+                    block={b as CardioBlock}
+                    rondas={cardioInputs[b.uid] ?? [makeCardioRondaInput()]}
+                    onChange={(rondas) => setCardioInputs((prev) => ({ ...prev, [b.uid]: rondas }))}
+                  />
+                );
+              }
+              if (b.kind === "funcional") {
+                return (
+                  <FuncionalBlockTrainer
+                    key={b.uid}
+                    block={b as FuncionalBlock}
+                    inputs={funcionalInputs[b.uid] ?? {}}
+                    onChange={(inputs) => setFuncionalInputs((prev) => ({ ...prev, [b.uid]: inputs }))}
+                  />
+                );
+              }
+              return null;
+            })}
+          </div>
         )}
 
         <DuracionCapture duracion={duracionManual} onDuracionChange={setDuracionManual} />
