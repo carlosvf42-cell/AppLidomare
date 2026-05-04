@@ -39,6 +39,14 @@ type ClienteData = {
   }>;
 };
 
+type SesionCliente = { id: string; fecha: string; dia_nombre: string; rutina_nombre: string };
+
+function formatFechaCorta(dateStr: string) {
+  const [y, m, d] = dateStr.split("-");
+  const date = new Date(Number(y), Number(m) - 1, Number(d));
+  return date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+}
+
 const TIPO_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
   fuerza: { label: "Fuerza", color: "#ff8060", bg: "rgba(255,128,96,0.1)", border: "rgba(255,128,96,0.35)" },
   cardio: { label: "Cardio", color: "#ffb040", bg: "rgba(255,176,64,0.1)", border: "rgba(255,176,64,0.35)" },
@@ -193,6 +201,9 @@ export default function ClienteDetailPage() {
   }
   const [siguientesOpen, setSiguientesOpen] = useState(true);
   const [historialOpen, setHistorialOpen] = useState(false);
+  const [historialClienteOpen, setHistorialClienteOpen] = useState(false);
+  const [historialCliente, setHistorialCliente] = useState<SesionCliente[]>([]);
+  const [historialClienteLoading, setHistorialClienteLoading] = useState(true);
   const [rutinaActiva, setRutinaActiva] = useState<{ id: string; nombre: string } | null>(null);
   const [rutinaLoading, setRutinaLoading] = useState(true);
 
@@ -302,6 +313,30 @@ export default function ClienteDetailPage() {
       .then(({ data }) => {
         setRutinaActiva(data ? { id: data.id, nombre: data.nombre } : null);
         setRutinaLoading(false);
+      });
+  }, [checking, userId]);
+
+  useEffect(() => {
+    if (checking || !userId) return;
+    setHistorialClienteLoading(true);
+    const supabase = getSupabase();
+    supabase
+      .from("sesiones")
+      .select("id, fecha, dia_id, rutina_dias(nombre, rutinas(nombre))")
+      .eq("user_id", userId)
+      .order("fecha", { ascending: false })
+      .limit(30)
+      .then(({ data }) => {
+        const rows = (data ?? []) as any[];
+        setHistorialCliente(
+          rows.map((s) => ({
+            id: s.id,
+            fecha: s.fecha,
+            dia_nombre: s.rutina_dias?.nombre ?? "Día libre",
+            rutina_nombre: s.rutina_dias?.rutinas?.nombre ?? "",
+          }))
+        );
+        setHistorialClienteLoading(false);
       });
   }, [checking, userId]);
 
@@ -706,7 +741,7 @@ export default function ClienteDetailPage() {
           ))}
         </section>
 
-        {/* Historial */}
+        {/* Historial Antifrágil */}
         <section>
           <button
             type="button"
@@ -715,7 +750,7 @@ export default function ClienteDetailPage() {
             style={GLASS}
           >
             <div className="flex-1 text-left">
-              <p style={EYEBROW}>Historial</p>
+              <p style={EYEBROW}>Historial Antifrágil</p>
             </div>
             <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-ui)" }}>
               {data.sesiones.length}
@@ -786,6 +821,61 @@ export default function ClienteDetailPage() {
               })}
             </div>
           ))}
+        </section>
+
+        {/* Historial del cliente — réplica de la vista del usuario en /rutinas */}
+        <section>
+          <button
+            type="button"
+            onClick={() => setHistorialClienteOpen((v) => !v)}
+            className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all active:scale-[0.99]"
+            style={GLASS}
+          >
+            <div className="flex-1 text-left">
+              <p style={EYEBROW}>Historial del cliente</p>
+            </div>
+            <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-ui)" }}>
+              {historialClienteLoading ? "…" : historialCliente.length}
+            </span>
+            <Chevron open={historialClienteOpen} />
+          </button>
+
+          {historialClienteOpen && (
+            historialClienteLoading ? (
+              <div className="mt-3 rounded-2xl px-5 py-8 flex items-center justify-center" style={GLASS}>
+                <div className="w-4 h-4 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : historialCliente.length === 0 ? (
+              <div className="mt-3 rounded-2xl px-5 py-8 text-center" style={GLASS}>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", lineHeight: 1.5 }}>
+                  El cliente todavía no ha registrado ninguna sesión
+                </p>
+              </div>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {historialCliente.map((s) => (
+                  <Link
+                    key={s.id}
+                    href={`/rutinas/sesion/${s.id}`}
+                    className="block w-full rounded-2xl px-4 py-3.5 flex items-center justify-between transition-all active:scale-[0.98]"
+                    style={{ ...GLASS, textDecoration: "none" }}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate" style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
+                        {s.dia_nombre}
+                      </p>
+                      <p className="truncate mt-0.5" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-ui)" }}>
+                        {s.rutina_nombre ? `${s.rutina_nombre} · ` : ""}{formatFechaCorta(s.fecha)}
+                      </p>
+                    </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                      <path d="M9 6l6 6-6 6" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </Link>
+                ))}
+              </div>
+            )
+          )}
         </section>
       </div>
     </div>
