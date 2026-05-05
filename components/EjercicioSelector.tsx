@@ -208,11 +208,11 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
 
         {open && (
           <div
-            className={`absolute left-0 right-0 rounded-xl overflow-hidden z-50 shadow-2xl ${dropUp ? "bottom-full mb-1" : "top-full mt-1"}`}
+            className={`absolute left-0 right-0 rounded-xl overflow-hidden z-50 shadow-2xl flex flex-col ${dropUp ? "bottom-full mb-1" : "top-full mt-1"}`}
             style={{ background: "#141414", border: "1px solid #222", maxHeight: maxDropdownH }}
           >
             {/* Search */}
-            <div className="px-3 pt-2 pb-1.5 border-b border-[#1e1e1e]">
+            <div className="px-3 pt-2 pb-1.5 border-b border-[#1e1e1e] shrink-0">
               <input
                 ref={searchRef}
                 type="text"
@@ -223,7 +223,7 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
               />
             </div>
 
-            <div className="overflow-y-auto" style={{ maxHeight: 230 }}>
+            <div className="overflow-y-auto flex-1 min-h-0">
               {loadingCatalogo ? (
                 <div className="flex items-center justify-center py-6">
                   <div className="w-4 h-4 border border-[#2abfbf] border-t-transparent rounded-full animate-spin" />
@@ -271,8 +271,8 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
               )}
             </div>
 
-            {/* Create button */}
-            <div className="border-t border-[#1e1e1e]">
+            {/* Create button — siempre visible, no se recorta */}
+            <div className="border-t border-[#1e1e1e] shrink-0">
               <button
                 type="button"
                 onClick={() => { setShowModal(true); setOpen(false); }}

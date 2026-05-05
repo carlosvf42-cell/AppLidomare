@@ -110,7 +110,9 @@ export default function SesionDetailPage() {
             rutina_dias(nombre),
             series_realizadas(
               id, numero_serie, repeticiones, peso, completada,
-              rutina_ejercicios(id, nombre, orden)
+              ejercicio_catalogo_id,
+              rutina_ejercicios(id, nombre, orden),
+              ejercicios:ejercicio_catalogo_id(id, nombre)
             )
           `)
           .eq("id", id)
@@ -133,13 +135,31 @@ export default function SesionDetailPage() {
       const d = sesData as any;
 
       const ejMap = new Map<string, EjercicioConSeries>();
+      // Counter para asegurar orden estable de los ad-hoc (sin rutina_ejercicios)
+      let adHocOrden = 9000;
       for (const sr of d.series_realizadas ?? []) {
         const ej = sr.rutina_ejercicios;
-        if (!ej) continue;
-        if (!ejMap.has(ej.id)) {
-          ejMap.set(ej.id, { id: ej.id, nombre: ej.nombre, orden: ej.orden, series: [] });
+        let key: string;
+        let nombre: string;
+        let orden: number;
+        if (ej) {
+          key = `r:${ej.id}`;
+          nombre = ej.nombre;
+          orden = ej.orden;
+        } else if (sr.ejercicio_catalogo_id) {
+          // Bloque fuerza ad-hoc → agrupa por catálogo
+          key = `c:${sr.ejercicio_catalogo_id}`;
+          nombre = sr.ejercicios?.nombre ?? "Ejercicio extra";
+          orden = adHocOrden;
+        } else {
+          // Sin rutina_ejercicio ni catálogo → no se puede agrupar, lo saltamos
+          continue;
         }
-        ejMap.get(ej.id)!.series.push({
+        if (!ejMap.has(key)) {
+          ejMap.set(key, { id: key, nombre, orden, series: [] });
+          if (!ej) adHocOrden++;
+        }
+        ejMap.get(key)!.series.push({
           id: sr.id,
           numero_serie: sr.numero_serie,
           repeticiones: sr.repeticiones,

@@ -81,10 +81,18 @@ interface Props {
    *  como rutina_ejercicios planos). En la pantalla de entrenar
    *  se pasa también "fuerza" para permitir bloques ad-hoc. */
   allowKinds?: Array<"fuerza" | "cardio" | "funcional">;
+  /** Notifica al padre cuando el bottom sheet de "Añadir bloque" se
+   *  abre o cierra, para que pueda ocultar otros elementos fijos
+   *  (ej: footer "Finalizar entrenamiento") y evitar superposiciones. */
+  onAddSheetOpenChange?: (open: boolean) => void;
 }
 
-export default function BlockEditor({ blocks, onChange, allowKinds = ["cardio", "funcional"] }: Props) {
-  const [showAdd, setShowAdd] = useState(false);
+export default function BlockEditor({ blocks, onChange, allowKinds = ["cardio", "funcional"], onAddSheetOpenChange }: Props) {
+  const [showAdd, _setShowAdd] = useState(false);
+  const setShowAdd = (v: boolean) => {
+    _setShowAdd(v);
+    onAddSheetOpenChange?.(v);
+  };
 
   function addBlock(kind: "fuerza" | "cardio" | "funcional") {
     const orden = blocks.length;

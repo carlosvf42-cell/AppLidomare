@@ -126,6 +126,7 @@ function EntrenarInner() {
   const [rpe, setRpe] = useState<number | null>(null);
   const [duracionManual, setDuracionManual] = useState("");
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
+  const [blockSheetOpen, setBlockSheetOpen] = useState(false);
   const [historico, setHistorico] = useState<HistorialMap>({});
   // Bloques cardio/funcional cargados del día actual
   const [diaBlocks, setDiaBlocks] = useState<Block[]>([]);
@@ -997,6 +998,7 @@ function EntrenarInner() {
             <BlockEditor
               blocks={diaBlocks}
               allowKinds={["fuerza", "cardio", "funcional"]}
+              onAddSheetOpenChange={setBlockSheetOpen}
               onChange={(next) => {
                 setDiaBlocks(next);
                 // Cardio: limpia huérfanos + inicializa rondas para bloques nuevos
@@ -1051,10 +1053,19 @@ function EntrenarInner() {
         {saveError && <p className="text-xs text-center px-4" style={{ color: "rgba(255,120,120,0.9)" }}>{saveError}</p>}
       </div>
 
-      {/* Finish button */}
+      {/* Finish button — se oculta cuando hay un sheet/modal abierto
+          para no superponerse (Funcional al final del selector quedaba
+          tapado por el botón). */}
       <div
         className="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 px-4 pb-[calc(56px+env(safe-area-inset-bottom)+8px)] pt-4"
-        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.9) 60%, transparent)", zIndex: 30 }}
+        style={{
+          background: "linear-gradient(to top, rgba(0,0,0,0.9) 60%, transparent)",
+          zIndex: 30,
+          visibility: blockSheetOpen || showFinalizeModal || saved ? "hidden" : "visible",
+          pointerEvents: blockSheetOpen || showFinalizeModal ? "none" : "auto",
+          transition: "opacity 0.15s ease",
+          opacity: blockSheetOpen || showFinalizeModal ? 0 : 1,
+        }}
       >
         <button
           onClick={() => setShowFinalizeModal(true)}
