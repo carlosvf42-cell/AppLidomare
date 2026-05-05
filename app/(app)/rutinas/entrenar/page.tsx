@@ -15,6 +15,7 @@ import {
   type CardioRondaInput,
   type FuncionalEjercicioInput,
 } from "@/components/bloques/BlockTrainers";
+import BlockEditor from "@/components/bloques/BlockEditor";
 import { fromApiBlocks, type Block, type CardioBlock, type FuncionalBlock } from "@/components/antifragil/types";
 
 type RutinaEjercicio = { id: string; nombre: string; series: number; repeticiones: number; orden: number; ejercicio_id?: string | null };
@@ -931,6 +932,56 @@ function EntrenarInner() {
               }
               return null;
             })}
+          </div>
+        )}
+
+        {/* Editor in-line para añadir bloques cardio/funcional ad-hoc
+            (especialmente útil en modo día libre) */}
+        {!saved && (
+          <div>
+            <p
+              className="text-[10px] tracking-[0.2em] uppercase mb-2 px-1"
+              style={{ color: "rgba(255,255,255,0.3)" }}
+            >
+              Bloques (cardio · funcional)
+            </p>
+            <BlockEditor
+              blocks={diaBlocks}
+              onChange={(next) => {
+                setDiaBlocks(next);
+                const validUids = new Set(next.map((b) => b.uid));
+                // Cardio: limpia huérfanos + inicializa rondas para bloques nuevos
+                setCardioInputs((prev) => {
+                  const out: Record<string, CardioRondaInput[]> = {};
+                  for (const b of next) {
+                    if (b.kind !== "cardio") continue;
+                    if (prev[b.uid]) {
+                      out[b.uid] = prev[b.uid];
+                    } else {
+                      const rondas = Math.max(1, b.rondas ?? 1);
+                      out[b.uid] = Array.from({ length: rondas }, () => makeCardioRondaInput());
+                    }
+                  }
+                  return out;
+                });
+                // Funcional: limpia huérfanos + sincroniza ejercicios por bloque
+                setFuncionalInputs((prev) => {
+                  const out: Record<string, Record<string, FuncionalEjercicioInput>> = {};
+                  for (const b of next) {
+                    if (b.kind !== "funcional") continue;
+                    const previo = prev[b.uid] ?? {};
+                    const seg: Record<string, FuncionalEjercicioInput> = {};
+                    for (const ej of b.ejercicios) {
+                      seg[ej.uid] = previo[ej.uid] ?? { kg: "", reps: "", calorias: "", metros: "", completada: false };
+                    }
+                    out[b.uid] = seg;
+                  }
+                  return out;
+                });
+                // Mantén la unused warning del linter en paz
+                void validUids;
+              }}
+            />
           </div>
         )}
 
