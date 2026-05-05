@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 import WellnessCheckIn from "@/components/health/WellnessCheckIn";
 import RPECapture from "@/components/health/RPECapture";
 import EjercicioSelector from "@/components/EjercicioSelector";
@@ -72,6 +73,23 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
   const wellnessIdRef = useRef<string | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Cliente Supabase estable para refrescar el access_token en cada
+  // request — el `token` que llega como prop se captura UNA vez al montar
+  // y caduca a la hora; sin esto, los fetches a las APIs admin empiezan
+  // a devolver 403 "No autorizado" mientras la pantalla sigue abierta.
+  const supabase = useMemo(
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ),
+    []
+  );
+  const getToken = useCallback(async (): Promise<string> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? token;
+  }, [supabase, token]);
 
   const [seriesByEjercicio, setSeriesByEjercicio] = useState<Record<string, FuerzaSerie[]>>({});
   const [rondasByBlock, setRondasByBlock] = useState<Record<string, CardioRonda[]>>({});
@@ -183,7 +201,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
       `/api/admin/antifragil/${userId}/entrenos/${entrenoId}/bloques/${bloqueId}/ejercicios-fuerza`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getToken()}` },
         body: JSON.stringify(payload),
       }
     );
@@ -211,7 +229,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
       `/api/admin/antifragil/${userId}/entrenos/${entrenoId}/bloques/${bloqueId}/ejercicios-funcional`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getToken()}` },
         body: JSON.stringify(payload),
       }
     );
@@ -225,7 +243,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
 
   async function reloadBlocks() {
     const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${await getToken()}` },
     });
     const json = await res.json();
     if (res.ok) applyLoadedBlocks(fromApiBlocks(json.bloques ?? []));
@@ -235,7 +253,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
     const [apiBlock] = toApiBlocks([block]);
     const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}/bloques`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getToken()}` },
       body: JSON.stringify({ bloque: apiBlock }),
     });
     if (!res.ok) {
@@ -280,7 +298,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
     (async () => {
       try {
         const res = await fetch(`/api/admin/antifragil/${userId}/entrenos/${entrenoId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${await getToken()}` },
         });
         const json = await res.json();
         if (cancelled) return;
@@ -309,7 +327,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
     try {
       const res = await fetch(`/api/admin/antifragil/${userId}/sesiones`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getToken()}` },
         body: JSON.stringify({ entreno_id: entrenoId, wellness_entry_id: wellnessId }),
       });
       const json = await res.json();
@@ -330,7 +348,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
   async function submitWellness(answers: { sueno: number; fatiga: number; estres: number; animo: number; dolor: number; omitido: boolean }) {
     const res = await fetch(`/api/admin/antifragil/${userId}/wellness`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getToken()}` },
       body: JSON.stringify(answers),
     });
     const json = await res.json();
@@ -409,7 +427,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
       const duracionFinal = duracionStr.trim() === "" ? computedDuracion : Number(duracionStr);
       const res = await fetch(`/api/admin/antifragil/${userId}/sesiones/${sesionId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getToken()}` },
         body: JSON.stringify({
           rpe,
           comentario: comentario.trim() || null,
