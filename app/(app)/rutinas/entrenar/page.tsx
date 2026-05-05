@@ -6,8 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import EjercicioSelector from "@/components/EjercicioSelector";
 import WellnessCheckIn from "@/components/health/WellnessCheckIn";
-import RPECapture from "@/components/health/RPECapture";
-import DuracionCapture from "@/components/health/DuracionCapture";
 import {
   CardioBlockTrainer,
   FuncionalBlockTrainer,
@@ -124,6 +122,7 @@ function EntrenarInner() {
   const [wellnessDone, setWellnessDone] = useState(false);
   const [rpe, setRpe] = useState<number | null>(null);
   const [duracionManual, setDuracionManual] = useState("");
+  const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [historico, setHistorico] = useState<HistorialMap>({});
   // Bloques cardio/funcional cargados del día actual
   const [diaBlocks, setDiaBlocks] = useState<Block[]>([]);
@@ -152,14 +151,20 @@ function EntrenarInner() {
     const supabase = getSupabase();
     const draft = loadDraft();
 
-    supabase
-      .from("rutinas")
-      .select("id, nombre, rutina_dias(id, nombre, orden, rutina_ejercicios(id, nombre, series, repeticiones, orden, ejercicio_id))")
-      .eq("activa", true)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("rutinas")
+        .select("id, nombre, rutina_dias(id, nombre, orden, rutina_ejercicios(id, nombre, series, repeticiones, orden, ejercicio_id))")
+        .eq("user_id", user.id)
+        .eq("activa", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
         if (data) {
           const r = data as Rutina;
           r.rutina_dias.sort((a, b) => a.orden - b.orden);
@@ -179,7 +184,7 @@ function EntrenarInner() {
           }
         }
         setLoading(false);
-      });
+    })();
   }, []);
 
   useEffect(() => {
@@ -985,19 +990,16 @@ function EntrenarInner() {
           </div>
         )}
 
-        <DuracionCapture duracion={duracionManual} onDuracionChange={setDuracionManual} />
-        <RPECapture rpe={rpe} onRpeChange={setRpe} />
-
         {saveError && <p className="text-xs text-center px-4" style={{ color: "rgba(255,120,120,0.9)" }}>{saveError}</p>}
       </div>
 
       {/* Finish button */}
       <div
         className="fixed bottom-0 left-1/2 w-full max-w-[430px] -translate-x-1/2 px-4 pb-[calc(56px+env(safe-area-inset-bottom)+8px)] pt-4"
-        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.9) 60%, transparent)" }}
+        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.9) 60%, transparent)", zIndex: 30 }}
       >
         <button
-          onClick={handleFinish}
+          onClick={() => setShowFinalizeModal(true)}
           disabled={isSaving || saved}
           className="w-full py-4 rounded-2xl font-semibold text-sm tracking-widest uppercase transition-all disabled:opacity-60"
           style={{
@@ -1009,6 +1011,217 @@ function EntrenarInner() {
         >
           {saved ? "Entrenamiento guardado ✓" : isSaving ? "Guardando…" : "Finalizar entrenamiento"}
         </button>
+      </div>
+
+      {/* Modal de finalizar — RPE + duración + guardar */}
+      {showFinalizeModal && !saved && (
+        <FinalizeModal
+          rpe={rpe}
+          onRpeChange={setRpe}
+          duracion={duracionManual}
+          onDuracionChange={setDuracionManual}
+          isSaving={isSaving}
+          error={saveError}
+          onCancel={() => { if (!isSaving) setShowFinalizeModal(false); }}
+          onSave={() => { handleFinish(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function FinalizeModal({
+  rpe,
+  onRpeChange,
+  duracion,
+  onDuracionChange,
+  isSaving,
+  error,
+  onCancel,
+  onSave,
+}: {
+  rpe: number | null;
+  onRpeChange: (v: number | null) => void;
+  duracion: string;
+  onDuracionChange: (v: string) => void;
+  isSaving: boolean;
+  error: string | null;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  const FONT_UI = "var(--font-ui)";
+  const duracionNum = parseInt(duracion, 10);
+  const canSave = rpe != null && Number.isFinite(duracionNum) && duracionNum > 0;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
+      <button
+        type="button"
+        aria-label="Cancelar"
+        onClick={onCancel}
+        className="absolute inset-0 no-min-h"
+        style={{ background: "transparent", border: "none", cursor: "pointer" }}
+      />
+      <div
+        className="relative w-full"
+        style={{
+          maxWidth: 430,
+          maxHeight: "92vh",
+          display: "flex",
+          flexDirection: "column",
+          background: "rgba(15,15,15,0.95)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: "0.5px solid rgba(255,255,255,0.1)",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
+        }}
+      >
+        <div className="flex justify-center pt-3 pb-1">
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.15)" }} />
+        </div>
+        <div className="flex items-center justify-between px-5 pt-3 pb-4">
+          <h2
+            style={{
+              fontFamily: FONT_UI,
+              fontSize: 14,
+              fontWeight: 600,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.95)",
+            }}
+          >
+            Finalizar entreno
+          </h2>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSaving}
+            aria-label="Cerrar"
+            className="no-min-h"
+            style={{
+              width: 32, height: 32, borderRadius: 16,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(255,255,255,0.06)",
+              border: "0.5px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.6)",
+              cursor: isSaving ? "wait" : "pointer",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-5">
+          <div>
+            <p
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "rgba(42,191,191,0.7)",
+                fontFamily: FONT_UI,
+                marginBottom: 8,
+              }}
+            >
+              Esfuerzo percibido (RPE)
+            </p>
+            <div className="grid grid-cols-10 gap-1.5">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+                const selected = rpe === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => onRpeChange(n)}
+                    className="no-min-h"
+                    style={{
+                      height: 36,
+                      borderRadius: 10,
+                      fontFamily: FONT_UI,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      background: selected ? "#2abfbf" : "rgba(255,255,255,0.06)",
+                      color: selected ? "#080808" : "rgba(255,255,255,0.85)",
+                      border: selected ? "0.5px solid rgba(42,191,191,0.6)" : "0.5px solid rgba(255,255,255,0.08)",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "rgba(42,191,191,0.7)",
+                fontFamily: FONT_UI,
+                marginBottom: 8,
+              }}
+            >
+              Duración
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={duracion}
+                onChange={(e) => onDuracionChange(e.target.value.replace(/[^0-9]/g, ""))}
+                onFocus={(e) => e.target.select()}
+                placeholder="—"
+                className="flex-1 outline-none"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "0.5px solid rgba(255,255,255,0.1)",
+                  borderRadius: 12,
+                  padding: "12px 14px",
+                  color: "rgba(255,255,255,0.95)",
+                  fontFamily: FONT_UI,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  textAlign: "center",
+                }}
+              />
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontFamily: FONT_UI, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                min
+              </span>
+            </div>
+          </div>
+
+          {error && (
+            <p style={{ fontSize: 12, color: "#ff8080", textAlign: "center", fontFamily: FONT_UI }}>
+              {error}
+            </p>
+          )}
+        </div>
+
+        <div className="px-5 pt-3 pb-[calc(20px+env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={!canSave || isSaving}
+            className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all disabled:opacity-30"
+            style={{
+              background: "#2abfbf",
+              color: "#080808",
+              fontFamily: FONT_UI,
+              boxShadow: canSave ? "0 4px 24px rgba(42,191,191,0.35)" : undefined,
+              cursor: canSave && !isSaving ? "pointer" : "not-allowed",
+            }}
+          >
+            {isSaving ? "Guardando…" : "Guardar entreno"}
+          </button>
+        </div>
       </div>
     </div>
   );

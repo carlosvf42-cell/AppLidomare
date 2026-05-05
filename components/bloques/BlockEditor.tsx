@@ -157,15 +157,20 @@ function AddBlockSheet({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className="fixed inset-0 z-[100] flex items-end justify-center"
       style={{ background: "rgba(0,0,0,0.7)" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="w-full max-w-[430px] rounded-t-3xl px-5 pt-6 pb-10 space-y-3"
-        style={{ background: "#0e0e0e", borderTop: "0.5px solid rgba(255,255,255,0.1)" }}
+        className="w-full max-w-[430px] rounded-t-3xl px-5 pt-6 pb-[calc(40px+env(safe-area-inset-bottom))] space-y-3"
+        style={{
+          background: "#0e0e0e",
+          borderTop: "0.5px solid rgba(255,255,255,0.1)",
+          maxHeight: "90vh",
+          overflowY: "auto",
+        }}
       >
         <p style={EYEBROW}>Añadir bloque</p>
         <h3
@@ -694,15 +699,20 @@ function FuncionalForm({
 
       {showAddEj && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
+          className="fixed inset-0 z-[100] flex items-end justify-center"
           style={{ background: "rgba(0,0,0,0.7)" }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowAddEj(false);
           }}
         >
           <div
-            className="w-full max-w-[430px] rounded-t-3xl px-5 pt-6 pb-10 space-y-3"
-            style={{ background: "#0e0e0e", borderTop: "0.5px solid rgba(255,255,255,0.1)" }}
+            className="w-full max-w-[430px] rounded-t-3xl px-5 pt-6 pb-[calc(40px+env(safe-area-inset-bottom))] space-y-3"
+            style={{
+              background: "#0e0e0e",
+              borderTop: "0.5px solid rgba(255,255,255,0.1)",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
           >
             <p style={EYEBROW}>Añadir ejercicio</p>
             <h3
