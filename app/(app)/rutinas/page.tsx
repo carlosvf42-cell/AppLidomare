@@ -390,6 +390,21 @@ export default function RutinasPage() {
                 >
                   Crear mi rutina
                 </Link>
+                <div style={{ height: "0.5px", background: "rgba(255,255,255,0.06)", margin: "8px 0 4px" }} />
+                <Link
+                  href="/rutinas/entrenar?modo=libre"
+                  className="inline-flex items-center gap-2 text-xs tracking-[0.15em] uppercase transition-colors active:scale-[0.98]"
+                  style={{
+                    color: "rgba(42,191,191,0.85)",
+                    textDecoration: "none",
+                    fontFamily: "var(--font-ui)",
+                  }}
+                >
+                  Entrenar ahora sin rutina
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </Link>
               </div>
             )}
           </section>

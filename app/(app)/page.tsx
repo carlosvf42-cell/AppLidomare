@@ -370,7 +370,30 @@ export default async function HomePage() {
               <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 4 }}>Descansa y vuelve la próxima semana</div>
             </GlassCard>
           )
-        ) : null}
+        ) : (
+          // Sin rutina: CTA principal a entreno libre + secundario para crear rutina
+          <div>
+            <Link href="/rutinas/entrenar?modo=libre" style={{ textDecoration: "none" }}>
+              <PrimaryBtn icon={<IconPlay c="#001a1a" />}>
+                Entrenar ahora
+              </PrimaryBtn>
+            </Link>
+            <Link
+              href="/rutinas/nueva"
+              className="block mt-2 text-center w-full py-3 rounded-2xl text-xs tracking-[0.2em] uppercase transition-colors active:scale-[0.98]"
+              style={{
+                background: "transparent",
+                border: "0.5px solid rgba(255,255,255,0.15)",
+                color: "rgba(255,255,255,0.6)",
+                fontFamily: "var(--font-ui)",
+                textDecoration: "none",
+                fontWeight: 500,
+              }}
+            >
+              Crear mi rutina
+            </Link>
+          </div>
+        )}
 
         {/* Footer */}
         <p className="text-center pt-2" style={{ fontSize: 10, color: "var(--faint)", letterSpacing: "0.1em" }}>
