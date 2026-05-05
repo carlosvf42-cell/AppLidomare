@@ -41,6 +41,8 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
   const [catalogo, setCatalogo] = useState<EjercicioRow[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [loadingCatalogo, setLoadingCatalogo] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
+  const [maxDropdownH, setMaxDropdownH] = useState(320);
 
   // Modal crear ejercicio
   const [showModal, setShowModal] = useState(false);
@@ -75,6 +77,29 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
   // Focus search when dropdown opens
   useEffect(() => {
     if (open) setTimeout(() => searchRef.current?.focus(), 50);
+  }, [open]);
+
+  // Decide drop direction (up vs down) según espacio disponible.
+  // Reserva un buffer para footers fijos como "Finalizar entrenamiento".
+  useEffect(() => {
+    if (!open) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const FOOTER_BUFFER = 150; // alto aprox. del footer fijo de entrenar
+    const spaceBelow = window.innerHeight - rect.bottom - FOOTER_BUFFER;
+    const spaceAbove = rect.top - 16;
+    const desired = 320;
+    if (spaceBelow >= desired) {
+      setDropUp(false);
+      setMaxDropdownH(desired);
+    } else if (spaceAbove > spaceBelow) {
+      setDropUp(true);
+      setMaxDropdownH(Math.max(180, Math.min(desired, spaceAbove)));
+    } else {
+      setDropUp(false);
+      setMaxDropdownH(Math.max(180, spaceBelow));
+    }
   }, [open]);
 
   // Close on outside click
@@ -183,8 +208,8 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
 
         {open && (
           <div
-            className="absolute left-0 right-0 top-full mt-1 rounded-xl overflow-hidden z-50 shadow-2xl"
-            style={{ background: "#141414", border: "1px solid #222", maxHeight: 320 }}
+            className={`absolute left-0 right-0 rounded-xl overflow-hidden z-50 shadow-2xl ${dropUp ? "bottom-full mb-1" : "top-full mt-1"}`}
+            style={{ background: "#141414", border: "1px solid #222", maxHeight: maxDropdownH }}
           >
             {/* Search */}
             <div className="px-3 pt-2 pb-1.5 border-b border-[#1e1e1e]">

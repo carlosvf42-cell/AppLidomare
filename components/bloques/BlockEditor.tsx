@@ -13,11 +13,15 @@ import {
   type Block,
   type CardioBlock,
   type CardioModo,
+  type FuerzaBlock,
+  type FuerzaEjercicio,
   type FuncionalBlock,
   type FuncionalEjercicio,
   type FuncionalFormato,
   type Maquina,
   makeCardio,
+  makeFuerza,
+  makeFuerzaEjercicio,
   makeFuncional,
   makeFuncionalEjercicio,
 } from "@/components/antifragil/types";
@@ -72,16 +76,22 @@ const FORMATOS: { key: FuncionalFormato; label: string }[] = [
 interface Props {
   blocks: Block[];
   onChange: (blocks: Block[]) => void;
-  /** Solo permite cardio + funcional. La fuerza se gestiona aparte en RutinaForm. */
-  allowKinds?: Array<"cardio" | "funcional">;
+  /** Tipos permitidos al añadir un bloque nuevo. Por defecto solo
+   *  cardio + funcional (el creador de rutinas gestiona la fuerza
+   *  como rutina_ejercicios planos). En la pantalla de entrenar
+   *  se pasa también "fuerza" para permitir bloques ad-hoc. */
+  allowKinds?: Array<"fuerza" | "cardio" | "funcional">;
 }
 
 export default function BlockEditor({ blocks, onChange, allowKinds = ["cardio", "funcional"] }: Props) {
   const [showAdd, setShowAdd] = useState(false);
 
-  function addBlock(kind: "cardio" | "funcional") {
+  function addBlock(kind: "fuerza" | "cardio" | "funcional") {
     const orden = blocks.length;
-    const newBlock: Block = kind === "cardio" ? makeCardio(orden) : makeFuncional(orden);
+    const newBlock: Block =
+      kind === "cardio" ? makeCardio(orden) :
+      kind === "funcional" ? makeFuncional(orden) :
+      makeFuerza(orden);
     onChange([...blocks, newBlock]);
     setShowAdd(false);
   }
@@ -103,7 +113,7 @@ export default function BlockEditor({ blocks, onChange, allowKinds = ["cardio", 
     onChange(arr.map((b, i) => ({ ...b, orden: i })));
   }
 
-  const filtered = blocks.filter((b) => b.kind !== "fuerza");
+  const filtered = blocks.filter((b) => allowKinds.includes(b.kind));
 
   return (
     <div className="space-y-3">
@@ -151,14 +161,14 @@ function AddBlockSheet({
   onClose,
   allowKinds,
 }: {
-  onPick: (k: "cardio" | "funcional") => void;
+  onPick: (k: "fuerza" | "cardio" | "funcional") => void;
   onClose: () => void;
-  allowKinds: Array<"cardio" | "funcional">;
+  allowKinds: Array<"fuerza" | "cardio" | "funcional">;
 }) {
   return (
     <div
       className="fixed inset-0 z-[100] flex items-end justify-center"
-      style={{ background: "rgba(0,0,0,0.7)" }}
+      style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -184,6 +194,26 @@ function AddBlockSheet({
         >
           Tipo de bloque
         </h3>
+        {allowKinds.includes("fuerza") && (
+          <button
+            type="button"
+            onClick={() => onPick("fuerza")}
+            className="w-full px-5 py-4 rounded-2xl flex items-center justify-between active:scale-[0.99]"
+            style={{
+              background: META_FUERZA.bg,
+              border: `0.5px solid ${META_FUERZA.border}`,
+              color: META_FUERZA.color,
+              fontFamily: FONT_TEXT,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            <span>{META_FUERZA.label}</span>
+            <span style={{ fontSize: 16 }}>→</span>
+          </button>
+        )}
         {allowKinds.includes("cardio") && (
           <button
             type="button"
@@ -271,8 +301,98 @@ function BlockCard({
 
       <NombreField value={block.nombre ?? ""} onChange={(v) => onChange({ nombre: v || null })} placeholder="Nombre del bloque (opcional)" />
 
+      {block.kind === "fuerza" && <FuerzaForm block={block} onChange={onChange} />}
       {block.kind === "cardio" && <CardioForm block={block} onChange={onChange} />}
       {block.kind === "funcional" && <FuncionalForm block={block} onChange={onChange} />}
+    </div>
+  );
+}
+
+/* ─────────────────────── FUERZA ─────────────────────── */
+
+function FuerzaForm({ block, onChange }: { block: FuerzaBlock; onChange: (patch: Partial<FuerzaBlock>) => void }) {
+  function addEj() {
+    onChange({ ejercicios: [...block.ejercicios, makeFuerzaEjercicio(block.ejercicios.length)] });
+  }
+  function updateEj(uid: string, patch: Partial<FuerzaEjercicio>) {
+    onChange({ ejercicios: block.ejercicios.map((e) => (e.uid === uid ? { ...e, ...patch } : e)) });
+  }
+  function removeEj(uid: string) {
+    onChange({
+      ejercicios: block.ejercicios.filter((e) => e.uid !== uid).map((e, i) => ({ ...e, orden: i })),
+    });
+  }
+  function moveEj(uid: string, dir: -1 | 1) {
+    const idx = block.ejercicios.findIndex((e) => e.uid === uid);
+    const target = idx + dir;
+    if (idx < 0 || target < 0 || target >= block.ejercicios.length) return;
+    const arr = block.ejercicios.slice();
+    [arr[idx], arr[target]] = [arr[target], arr[idx]];
+    onChange({ ejercicios: arr.map((e, i) => ({ ...e, orden: i })) });
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <p style={{ ...LABEL, marginBottom: 6 }}>Ejercicios del bloque</p>
+        <div className="space-y-2">
+          {block.ejercicios.map((ej, idx) => (
+            <div
+              key={ej.uid}
+              className="rounded-xl px-3 py-3 space-y-2"
+              style={{ background: "rgba(255,255,255,0.025)", border: "0.5px solid rgba(255,255,255,0.06)" }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] tracking-[0.18em] uppercase font-semibold" style={{ color: "rgba(255,128,96,0.85)", fontFamily: FONT_TEXT }}>
+                  Ejercicio {idx + 1}
+                </span>
+                <div className="flex items-center gap-1">
+                  <IconBtn disabled={idx === 0} onClick={() => moveEj(ej.uid, -1)} label="Subir">
+                    <path d="M6 15l6-6 6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </IconBtn>
+                  <IconBtn disabled={idx === block.ejercicios.length - 1} onClick={() => moveEj(ej.uid, 1)} label="Bajar">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </IconBtn>
+                  <IconBtn
+                    onClick={() => removeEj(ej.uid)}
+                    label="Eliminar"
+                    danger
+                    disabled={block.ejercicios.length <= 1}
+                  >
+                    <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </IconBtn>
+                </div>
+              </div>
+              <div className="flex">
+                <EjercicioSelector
+                  value={ej.nombre_ejercicio}
+                  ejercicioId={ej.ejercicio_id}
+                  onChange={(nombre, ejercicioId) =>
+                    updateEj(ej.uid, { nombre_ejercicio: nombre, ejercicio_id: ejercicioId })
+                  }
+                />
+              </div>
+              <div className="flex gap-2">
+                <NumField label="Series" value={ej.series_objetivo} onChange={(v) => updateEj(ej.uid, { series_objetivo: v ?? 0 })} />
+                <NumField label="Reps" value={ej.reps_objetivo} onChange={(v) => updateEj(ej.uid, { reps_objetivo: v ?? 0 })} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addEj}
+          className="w-full mt-2 py-2 rounded-lg text-[10px] tracking-[0.15em] uppercase font-semibold no-min-h"
+          style={{
+            background: "rgba(255,128,96,0.06)",
+            border: "0.5px dashed rgba(255,128,96,0.3)",
+            color: "rgba(255,128,96,0.85)",
+            fontFamily: FONT_TEXT,
+          }}
+        >
+          + Añadir ejercicio
+        </button>
+      </div>
     </div>
   );
 }
@@ -700,7 +820,7 @@ function FuncionalForm({
       {showAddEj && (
         <div
           className="fixed inset-0 z-[100] flex items-end justify-center"
-          style={{ background: "rgba(0,0,0,0.7)" }}
+          style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowAddEj(false);
           }}

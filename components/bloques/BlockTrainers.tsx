@@ -7,7 +7,7 @@
  * la hace la pantalla de entrenar al finalizar.
  */
 
-import type { CardioBlock, FuncionalBlock, FuncionalEjercicio, Maquina } from "@/components/antifragil/types";
+import type { CardioBlock, FuerzaBlock, FuerzaEjercicio, FuncionalBlock, FuncionalEjercicio, Maquina } from "@/components/antifragil/types";
 
 const FONT_TEXT = "var(--font-ui)";
 
@@ -36,6 +36,175 @@ const FORMATO_LABELS: Record<string, string> = {
   emom: "EMOM",
   tabata: "Tabata",
 };
+
+/* ─────────────────────── Fuerza ─────────────────────── */
+
+export type FuerzaSerieInput = {
+  peso: string;
+  reps: string;
+  completada: boolean;
+};
+
+export function makeFuerzaSerieInput(): FuerzaSerieInput {
+  return { peso: "", reps: "", completada: false };
+}
+
+export function FuerzaBlockTrainer({
+  block,
+  inputs,
+  onChange,
+}: {
+  block: FuerzaBlock;
+  /** Por ejercicio (uid) → array de series logueadas. */
+  inputs: Record<string, FuerzaSerieInput[]>;
+  onChange: (inputs: Record<string, FuerzaSerieInput[]>) => void;
+}) {
+  function updateSerie(ejUid: string, idx: number, patch: Partial<FuerzaSerieInput>) {
+    const list = inputs[ejUid] ?? [];
+    const next = list.map((s, i) => (i === idx ? { ...s, ...patch } : s));
+    onChange({ ...inputs, [ejUid]: next });
+  }
+  function addSerie(ejUid: string) {
+    const list = inputs[ejUid] ?? [];
+    onChange({ ...inputs, [ejUid]: [...list, makeFuerzaSerieInput()] });
+  }
+  function removeSerie(ejUid: string, idx: number) {
+    const list = inputs[ejUid] ?? [];
+    if (list.length <= 1) return;
+    onChange({ ...inputs, [ejUid]: list.filter((_, i) => i !== idx) });
+  }
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ border: "0.5px solid rgba(255,255,255,0.13)" }}>
+      <div className="px-4 py-3" style={{ background: "rgba(255,128,96,0.05)" }}>
+        <span
+          className="inline-flex items-center px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
+          style={{ background: META_FUERZA.bg, border: `0.5px solid ${META_FUERZA.border}`, color: META_FUERZA.color, fontFamily: FONT_TEXT }}
+        >
+          Fuerza
+        </span>
+        {block.nombre && (
+          <p className="mt-1.5" style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontFamily: FONT_TEXT }}>
+            {block.nombre}
+          </p>
+        )}
+      </div>
+
+      <div style={{ background: "rgba(0,0,0,0.25)" }}>
+        {block.ejercicios.length === 0 && (
+          <p className="px-4 py-4 text-center" style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: FONT_TEXT }}>
+            Sin ejercicios definidos
+          </p>
+        )}
+        {block.ejercicios.map((ej) => (
+          <FuerzaEjercicioRows
+            key={ej.uid}
+            ejercicio={ej}
+            series={inputs[ej.uid] ?? []}
+            onUpdate={(idx, patch) => updateSerie(ej.uid, idx, patch)}
+            onAdd={() => addSerie(ej.uid)}
+            onRemove={(idx) => removeSerie(ej.uid, idx)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FuerzaEjercicioRows({
+  ejercicio,
+  series,
+  onUpdate,
+  onAdd,
+  onRemove,
+}: {
+  ejercicio: FuerzaEjercicio;
+  series: FuerzaSerieInput[];
+  onUpdate: (idx: number, patch: Partial<FuerzaSerieInput>) => void;
+  onAdd: () => void;
+  onRemove: (idx: number) => void;
+}) {
+  return (
+    <div className="px-4 py-3" style={{ borderTop: "0.5px solid rgba(255,255,255,0.05)" }}>
+      <p className="truncate mb-2" style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontFamily: FONT_TEXT }}>
+        {ejercicio.nombre_ejercicio || "Ejercicio"}
+        {ejercicio.reps_objetivo ? ` · obj. ${ejercicio.reps_objetivo} reps` : ""}
+      </p>
+      <div className="grid grid-cols-[28px_1fr_1fr_28px] gap-2 items-center mb-1">
+        <span className="text-[8px] tracking-wider uppercase" style={{ color: "rgba(255,255,255,0.2)" }}>ser.</span>
+        <span className="text-[8px] tracking-wider uppercase text-center" style={{ color: "rgba(255,255,255,0.2)" }}>kg</span>
+        <span className="text-[8px] tracking-wider uppercase text-center" style={{ color: "rgba(255,255,255,0.2)" }}>reps</span>
+        <span />
+      </div>
+      {series.map((s, idx) => (
+        <div
+          key={idx}
+          className="grid grid-cols-[28px_1fr_1fr_28px] gap-2 items-center py-1"
+          style={{ background: s.completada ? "rgba(42,191,191,0.04)" : undefined }}
+        >
+          <span className="text-[10px] font-mono" style={{ color: s.completada ? "#2abfbf" : "rgba(255,255,255,0.3)" }}>
+            {String(idx + 1).padStart(2, "0")}
+          </span>
+          <NumberInput value={s.peso} onChange={(v) => onUpdate(idx, { peso: v })} placeholder="—" />
+          <NumberInput value={s.reps} onChange={(v) => onUpdate(idx, { reps: v })} placeholder="—" />
+          <button
+            type="button"
+            onClick={() => onUpdate(idx, { completada: !s.completada })}
+            className="no-min-h"
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              border: `1.5px solid ${s.completada ? "#2abfbf" : "rgba(255,255,255,0.1)"}`,
+              background: s.completada ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.03)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+            }}
+            aria-label="Marcar serie completada"
+          >
+            <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M3.5 9L7.5 13L14.5 5"
+                stroke={s.completada ? "#2abfbf" : "rgba(255,255,255,0.2)"}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      ))}
+      <div className="flex gap-2 mt-1">
+        <button
+          type="button"
+          onClick={onAdd}
+          className="flex-1 py-1.5 rounded-lg text-[10px] tracking-[0.15em] uppercase no-min-h"
+          style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "0.5px dashed rgba(255,255,255,0.15)",
+            color: "rgba(255,255,255,0.5)",
+            fontFamily: FONT_TEXT,
+          }}
+        >
+          + Serie
+        </button>
+        {series.length > 1 && (
+          <button
+            type="button"
+            onClick={() => onRemove(series.length - 1)}
+            className="px-3 py-1.5 rounded-lg text-[10px] tracking-[0.15em] uppercase no-min-h"
+            style={{
+              background: "rgba(255,80,80,0.06)",
+              border: "0.5px solid rgba(255,80,80,0.15)",
+              color: "rgba(255,100,100,0.7)",
+              fontFamily: FONT_TEXT,
+            }}
+          >
+            − Última
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ─────────────────────── Cardio ─────────────────────── */
 

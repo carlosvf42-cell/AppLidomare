@@ -8,13 +8,16 @@ import EjercicioSelector from "@/components/EjercicioSelector";
 import WellnessCheckIn from "@/components/health/WellnessCheckIn";
 import {
   CardioBlockTrainer,
+  FuerzaBlockTrainer,
   FuncionalBlockTrainer,
   makeCardioRondaInput,
+  makeFuerzaSerieInput,
   type CardioRondaInput,
+  type FuerzaSerieInput,
   type FuncionalEjercicioInput,
 } from "@/components/bloques/BlockTrainers";
 import BlockEditor from "@/components/bloques/BlockEditor";
-import { fromApiBlocks, type Block, type CardioBlock, type FuncionalBlock } from "@/components/antifragil/types";
+import { fromApiBlocks, type Block, type CardioBlock, type FuerzaBlock, type FuncionalBlock } from "@/components/antifragil/types";
 
 type RutinaEjercicio = { id: string; nombre: string; series: number; repeticiones: number; orden: number; ejercicio_id?: string | null };
 type RutinaDia = { id: string; nombre: string; orden: number; rutina_ejercicios: RutinaEjercicio[] };
@@ -130,6 +133,8 @@ function EntrenarInner() {
   const [cardioInputs, setCardioInputs] = useState<Record<string, CardioRondaInput[]>>({});
   // Inputs por bloque funcional (bloque uid → ejercicio uid → input)
   const [funcionalInputs, setFuncionalInputs] = useState<Record<string, Record<string, FuncionalEjercicioInput>>>({});
+  // Inputs por bloque fuerza ad-hoc (bloque uid → ejercicio uid → array de series)
+  const [fuerzaBlockInputs, setFuerzaBlockInputs] = useState<Record<string, Record<string, FuerzaSerieInput[]>>>({});
 
   useEffect(() => {
     // Free day mode — no routine needed
@@ -477,11 +482,32 @@ function EntrenarInner() {
         return;
       }
 
-      // Persistir registros de bloques cardio + funcional
+      // Persistir registros de bloques cardio + funcional + fuerza (ad-hoc)
       const cardioRegistros: any[] = [];
       const funcRegistros: any[] = [];
+      const fuerzaBlockSeries: any[] = [];
       for (const b of diaBlocks) {
-        if (b.kind === "cardio") {
+        if (b.kind === "fuerza") {
+          // Bloques fuerza ad-hoc → se persisten en series_realizadas
+          // (ejercicio_id=null, ejercicio_catalogo_id si el ejercicio viene del catálogo)
+          const ejSerieMap = fuerzaBlockInputs[b.uid] ?? {};
+          for (const ej of b.ejercicios) {
+            const series = ejSerieMap[ej.uid] ?? [];
+            series.forEach((s, idx) => {
+              const hasData = s.peso !== "" || s.reps !== "" || s.completada;
+              if (!hasData) return;
+              fuerzaBlockSeries.push({
+                sesion_id: sesion.id,
+                ejercicio_id: null,
+                ejercicio_catalogo_id: ej.ejercicio_id ?? null,
+                numero_serie: idx + 1,
+                peso: s.peso ? parseFloat(s.peso) : null,
+                repeticiones: s.reps ? parseInt(s.reps) : null,
+                completada: s.completada,
+              });
+            });
+          }
+        } else if (b.kind === "cardio") {
           const rondas = cardioInputs[b.uid] ?? [];
           rondas.forEach((r, idx) => {
             const hasData =
@@ -533,6 +559,14 @@ function EntrenarInner() {
         if (fErr) {
           console.error("Funcional registros error:", fErr);
           setSaveError(`Sesión creada pero error en funcional. ${fErr.message}`);
+          return;
+        }
+      }
+      if (fuerzaBlockSeries.length > 0) {
+        const { error: fbErr } = await supabase.from("series_realizadas").insert(fuerzaBlockSeries);
+        if (fbErr) {
+          console.error("Fuerza ad-hoc series error:", fbErr);
+          setSaveError(`Sesión creada pero error en fuerza ad-hoc. ${fbErr.message}`);
           return;
         }
       }
@@ -911,10 +945,20 @@ function EntrenarInner() {
           )
         )}
 
-        {/* Bloques cardio + funcional del día */}
+        {/* Bloques cardio + funcional + fuerza (ad-hoc) del día */}
         {diaBlocks.length > 0 && (
           <div className="space-y-3">
             {diaBlocks.map((b) => {
+              if (b.kind === "fuerza") {
+                return (
+                  <FuerzaBlockTrainer
+                    key={b.uid}
+                    block={b as FuerzaBlock}
+                    inputs={fuerzaBlockInputs[b.uid] ?? {}}
+                    onChange={(inputs) => setFuerzaBlockInputs((prev) => ({ ...prev, [b.uid]: inputs }))}
+                  />
+                );
+              }
               if (b.kind === "cardio") {
                 return (
                   <CardioBlockTrainer
@@ -952,9 +996,9 @@ function EntrenarInner() {
             </p>
             <BlockEditor
               blocks={diaBlocks}
+              allowKinds={["fuerza", "cardio", "funcional"]}
               onChange={(next) => {
                 setDiaBlocks(next);
-                const validUids = new Set(next.map((b) => b.uid));
                 // Cardio: limpia huérfanos + inicializa rondas para bloques nuevos
                 setCardioInputs((prev) => {
                   const out: Record<string, CardioRondaInput[]> = {};
@@ -983,8 +1027,22 @@ function EntrenarInner() {
                   }
                   return out;
                 });
-                // Mantén la unused warning del linter en paz
-                void validUids;
+                // Fuerza ad-hoc: limpia huérfanos + sincroniza ejercicios y series
+                setFuerzaBlockInputs((prev) => {
+                  const out: Record<string, Record<string, FuerzaSerieInput[]>> = {};
+                  for (const b of next) {
+                    if (b.kind !== "fuerza") continue;
+                    const previo = prev[b.uid] ?? {};
+                    const seg: Record<string, FuerzaSerieInput[]> = {};
+                    for (const ej of b.ejercicios) {
+                      const target = Math.max(1, ej.series_objetivo ?? 1);
+                      const ejPrev = previo[ej.uid];
+                      seg[ej.uid] = ejPrev ?? Array.from({ length: target }, () => makeFuerzaSerieInput());
+                    }
+                    out[b.uid] = seg;
+                  }
+                  return out;
+                });
               }}
             />
           </div>
