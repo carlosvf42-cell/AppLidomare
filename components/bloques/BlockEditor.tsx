@@ -7,7 +7,8 @@
  * Este componente NO se mete con la persistencia: solo edita el estado.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import EjercicioSelector from "@/components/EjercicioSelector";
 import {
   type Block,
@@ -70,6 +71,16 @@ const FORMATOS: { key: FuncionalFormato; label: string }[] = [
   { key: "emom", label: "EMOM" },
   { key: "tabata", label: "Tabata" },
 ];
+
+/* Portal helper: monta children en document.body para escapar del
+   stacking context del <main>. Sin esto, el BottomNav (z-50, fuera
+   de main) gana siempre a cualquier z-index dentro de main. */
+function PortalToBody({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted || typeof document === "undefined") return null;
+  return createPortal(children, document.body);
+}
 
 /* ─────────────────────── BlockEditor ─────────────────────── */
 
@@ -152,11 +163,13 @@ export default function BlockEditor({ blocks, onChange, allowKinds = ["cardio", 
       </button>
 
       {showAdd && (
-        <AddBlockSheet
-          onPick={(k) => addBlock(k)}
-          onClose={() => setShowAdd(false)}
-          allowKinds={allowKinds}
-        />
+        <PortalToBody>
+          <AddBlockSheet
+            onPick={(k) => addBlock(k)}
+            onClose={() => setShowAdd(false)}
+            allowKinds={allowKinds}
+          />
+        </PortalToBody>
       )}
     </div>
   );
@@ -826,6 +839,7 @@ function FuncionalForm({
       </div>
 
       {showAddEj && (
+        <PortalToBody>
         <div
           className="fixed inset-0 z-[100] flex items-end justify-center"
           style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
@@ -892,6 +906,7 @@ function FuncionalForm({
             </button>
           </div>
         </div>
+        </PortalToBody>
       )}
     </div>
   );

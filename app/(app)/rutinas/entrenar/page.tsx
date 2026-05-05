@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
@@ -1121,8 +1122,11 @@ function FinalizeModal({
   const FONT_UI = "var(--font-ui)";
   const duracionNum = parseInt(duracion, 10);
   const canSave = rpe != null && Number.isFinite(duracionNum) && duracionNum > 0;
-  return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}>
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted || typeof document === "undefined") return null;
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-end justify-center" style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
       <button
         type="button"
         aria-label="Cancelar"
@@ -1292,7 +1296,8 @@ function FinalizeModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

@@ -10,15 +10,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <AmbientBg />
       </div>
 
-      {/* ── Content ──
-          NO se establece zIndex en main: si crea un stacking context
-          atrapa los z-index de los modales/sheets internos (p. ej.
-          AddBlockSheet z-[100]) y el BottomNav (z-50, fuera de main)
-          acaba pintando por encima. AmbientBg está a position:fixed,
-          z-0 y se ve igualmente por orden de pintado. */}
+      {/* ── Content ── */}
       <main
         className="flex-1"
         style={{
+          position: "relative",
+          zIndex: 1,
           paddingBottom: "calc(62px + env(safe-area-inset-bottom))",
         }}
       >

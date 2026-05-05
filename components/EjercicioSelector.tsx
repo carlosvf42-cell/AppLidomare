@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { createBrowserClient } from "@supabase/ssr";
 import type { Ejercicio, GrupoMuscular } from "@/lib/types";
 
@@ -289,11 +290,12 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
         )}
       </div>
 
-      {/* Modal crear ejercicio */}
-      {showModal && (
+      {/* Modal crear ejercicio — portal al body para escapar del stacking
+          context del <main> (BottomNav z-50 lo taparía si no). */}
+      {showModal && typeof document !== "undefined" && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-end justify-center"
-          style={{ background: "rgba(0,0,0,0.75)" }}
+          style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
         >
           <div
@@ -368,7 +370,8 @@ export default function EjercicioSelector({ value, ejercicioId, onChange }: Prop
               {saving ? "Guardando…" : "Crear y añadir"}
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
