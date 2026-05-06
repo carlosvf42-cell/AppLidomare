@@ -48,10 +48,11 @@ export default function ReportBugButton() {
       const supabase = getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setError("Sesión no válida."); return; }
+      const paginaCanonica = !pathname || pathname === "/" ? "/home" : pathname;
       const { error: err } = await supabase.from("bug_reports").insert({
         user_id: user.id,
         mensaje: texto,
-        pagina: pathname || null,
+        pagina: paginaCanonica,
       });
       if (err) { setError(err.message); return; }
       setDone(true);
@@ -192,7 +193,7 @@ export default function ReportBugButton() {
                         fontFamily: "var(--font-mono)",
                       }}
                     >
-                      {pathname || "/"}
+                      {!pathname || pathname === "/" ? "/home" : pathname}
                     </p>
                   </div>
 

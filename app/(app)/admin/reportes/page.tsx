@@ -275,7 +275,7 @@ export default function ReportesPage() {
                           maxWidth: "60%",
                         }}
                       >
-                        {r.pagina}
+                        {r.pagina === "/" ? "/home" : r.pagina}
                       </span>
                     ) : <span />}
                     <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: FONT_UI }}>
