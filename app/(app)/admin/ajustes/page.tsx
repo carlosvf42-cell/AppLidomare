@@ -181,8 +181,15 @@ export default function AjustesPage() {
                   style={{ background: "rgba(255,176,64,0.10)", border: "0.5px solid rgba(255,176,64,0.30)" }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 8a3 3 0 016 0v1H9V8z" stroke="#ffb040" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M5 13a7 7 0 0114 0v3a7 7 0 01-14 0v-3z" stroke="#ffb040" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"
+                      stroke="#ffb040"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path d="M12 8v4" stroke="#ffb040" strokeWidth="1.6" strokeLinecap="round" />
+                    <circle cx="12" cy="15" r="0.6" fill="#ffb040" />
                   </svg>
                 </div>
                 <div className="min-w-0">
