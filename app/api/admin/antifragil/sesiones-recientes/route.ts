@@ -26,8 +26,9 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = getAdminClient();
     const { data: sesiones, error } = await supabase
-      .from("sesiones_antifragil")
-      .select("id, user_id, fecha, rpe, duracion_minutos, tipo_resumen, entreno_id, entrenos_antifragil(nombre)")
+      .from("sesiones")
+      .select("id, user_id, fecha, rpe, duracion_minutos, tipo_resumen, entreno_id, entrenos_antifragil:entreno_id(nombre)")
+      .eq("origen", "admin")
       .eq("completada", true)
       .order("fecha", { ascending: false })
       .order("created_at", { ascending: false })

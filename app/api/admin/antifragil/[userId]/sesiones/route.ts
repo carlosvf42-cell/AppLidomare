@@ -39,12 +39,14 @@ export async function POST(
     }
 
     const { data: sesion, error } = await supabase
-      .from("sesiones_antifragil")
+      .from("sesiones")
       .insert({
         user_id: userId,
+        dia_id: null,
         entreno_id: body.entreno_id,
         wellness_entry_id: body.wellness_entry_id ?? null,
         completada: false,
+        origen: "admin",
       })
       .select("id")
       .single();

@@ -94,9 +94,9 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
   const [seriesByEjercicio, setSeriesByEjercicio] = useState<Record<string, FuerzaSerie[]>>({});
   const [rondasByBlock, setRondasByBlock] = useState<Record<string, CardioRonda[]>>({});
   const [registrosByBlock, setRegistrosByBlock] = useState<Record<string, Record<string, FuncionalReg>>>({});
-  // Histórico "Última vez" del cliente por ejercicio (catalog_id) —
-  // combina series_realizadas (cliente solo) + series_fuerza_antifragil
-  // (entrenos guiados) y se queda con el día más reciente.
+  // Histórico "Última vez" del cliente por ejercicio (catalog_id).
+  // Lee de series_realizadas (que ya incluye las series migradas de
+  // entrenos guiados — se distingue por sesiones.origen).
   const [historico, setHistorico] = useState<Record<string, { serie: number; peso: number | null; reps: number | null }[]>>({});
 
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -327,9 +327,8 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
   }, [userId, token, entrenoId]);
 
   // Carga "Última vez" del cliente para los catalog_ids de los ejercicios
-  // de fuerza visibles. Mira tanto series_realizadas (entrenos del cliente
-  // solo) como series_fuerza_antifragil (entrenos guiados por admin),
-  // se queda con la sesión más reciente por catálogo.
+  // de fuerza visibles. Tras la unificación, basta con series_realizadas
+  // (incluye ya las series migradas de los antiguos series_fuerza_antifragil).
   useEffect(() => {
     const catalogIds = Array.from(
       new Set(
@@ -343,44 +342,23 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
 
     let cancelled = false;
     (async () => {
-      const [srRes, sfaRes] = await Promise.all([
-        supabase
-          .from("series_realizadas")
-          .select("numero_serie, peso, repeticiones, ejercicio_catalogo_id, sesion_id, sesiones!inner(user_id, fecha)")
-          .eq("sesiones.user_id", userId)
-          .in("ejercicio_catalogo_id", catalogIds)
-          .limit(500),
-        supabase
-          .from("series_fuerza_antifragil")
-          .select("numero_serie, peso, repeticiones, ejercicio_fuerza_id, sesion_id, sesiones_antifragil!inner(user_id, fecha), ejercicios_fuerza!inner(ejercicio_id)")
-          .eq("sesiones_antifragil.user_id", userId)
-          .in("ejercicios_fuerza.ejercicio_id", catalogIds)
-          .limit(500),
-      ]);
+      const { data: srData } = await supabase
+        .from("series_realizadas")
+        .select("numero_serie, peso, repeticiones, ejercicio_catalogo_id, sesion_id, sesiones!inner(user_id, fecha)")
+        .eq("sesiones.user_id", userId)
+        .in("ejercicio_catalogo_id", catalogIds)
+        .limit(500);
       if (cancelled) return;
 
       type Row = { catId: string; sesionKey: string; fecha: string; serie: number; peso: number | null; reps: number | null };
       const rows: Row[] = [];
 
-      for (const r of (srRes.data ?? []) as any[]) {
+      for (const r of (srData ?? []) as any[]) {
         const ses = Array.isArray(r.sesiones) ? r.sesiones[0] : r.sesiones;
         if (!r.ejercicio_catalogo_id || !ses?.fecha) continue;
         rows.push({
           catId: r.ejercicio_catalogo_id,
-          sesionKey: `r:${r.sesion_id}`,
-          fecha: ses.fecha,
-          serie: r.numero_serie,
-          peso: r.peso,
-          reps: r.repeticiones,
-        });
-      }
-      for (const r of (sfaRes.data ?? []) as any[]) {
-        const ses = Array.isArray(r.sesiones_antifragil) ? r.sesiones_antifragil[0] : r.sesiones_antifragil;
-        const ef = Array.isArray(r.ejercicios_fuerza) ? r.ejercicios_fuerza[0] : r.ejercicios_fuerza;
-        if (!ef?.ejercicio_id || !ses?.fecha) continue;
-        rows.push({
-          catId: ef.ejercicio_id,
-          sesionKey: `a:${r.sesion_id}`,
+          sesionKey: r.sesion_id,
           fecha: ses.fecha,
           serie: r.numero_serie,
           peso: r.peso,

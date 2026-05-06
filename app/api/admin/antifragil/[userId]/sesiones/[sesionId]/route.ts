@@ -34,16 +34,17 @@ export async function PATCH(
     const supabase = getAdminClient();
 
     const { data: sesion } = await supabase
-      .from("sesiones_antifragil")
+      .from("sesiones")
       .select("id, user_id, entreno_id")
       .eq("id", sesionId)
+      .eq("origen", "admin")
       .maybeSingle();
     if (!sesion || sesion.user_id !== userId) {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
     }
 
     const { error: updErr } = await supabase
-      .from("sesiones_antifragil")
+      .from("sesiones")
       .update({
         completada: true,
         rpe: body.rpe ?? null,
@@ -56,9 +57,30 @@ export async function PATCH(
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
 
     if (Array.isArray(body.series_fuerza) && body.series_fuerza.length > 0) {
-      const rows = (body.series_fuerza as SerieFuerza[]).map((s) => ({ ...s, sesion_id: sesionId }));
-      const { error } = await supabase.from("series_fuerza_antifragil").insert(rows);
-      if (error) return NextResponse.json({ error: `series_fuerza: ${error.message}` }, { status: 500 });
+      const incoming = body.series_fuerza as SerieFuerza[];
+      // Resolver catalog_id (ejercicios.id) a partir de ejercicio_fuerza_id
+      const fuerzaIds = Array.from(new Set(incoming.map((s) => s.ejercicio_fuerza_id).filter(Boolean)));
+      const catalogMap = new Map<string, string | null>();
+      if (fuerzaIds.length > 0) {
+        const { data: efs } = await supabase
+          .from("ejercicios_fuerza")
+          .select("id, ejercicio_id")
+          .in("id", fuerzaIds);
+        for (const ef of (efs ?? []) as Array<{ id: string; ejercicio_id: string | null }>) {
+          catalogMap.set(ef.id, ef.ejercicio_id);
+        }
+      }
+      const rows = incoming.map((s) => ({
+        sesion_id: sesionId,
+        ejercicio_id: null,
+        ejercicio_catalogo_id: catalogMap.get(s.ejercicio_fuerza_id) ?? null,
+        numero_serie: s.numero_serie,
+        repeticiones: s.repeticiones,
+        peso: s.peso,
+        completada: s.completada,
+      }));
+      const { error } = await supabase.from("series_realizadas").insert(rows);
+      if (error) return NextResponse.json({ error: `series_realizadas: ${error.message}` }, { status: 500 });
     }
     if (Array.isArray(body.series_cardio) && body.series_cardio.length > 0) {
       const rows = (body.series_cardio as SerieCardio[]).map((s) => ({ ...s, sesion_id: sesionId }));

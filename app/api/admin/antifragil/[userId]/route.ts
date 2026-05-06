@@ -48,9 +48,10 @@ export async function GET(
         .eq("estado", "programado")
         .order("created_at", { ascending: true }),
       supabase
-        .from("sesiones_antifragil")
-        .select("id, fecha, completada, duracion_minutos, rpe, comentario, entreno_id, tipo_resumen, entrenos_antifragil(nombre)")
+        .from("sesiones")
+        .select("id, fecha, completada, duracion_minutos, rpe, comentario, entreno_id, tipo_resumen, entrenos_antifragil:entreno_id(nombre)")
         .eq("user_id", userId)
+        .eq("origen", "admin")
         .eq("completada", true)
         .order("fecha", { ascending: false })
         .limit(5),

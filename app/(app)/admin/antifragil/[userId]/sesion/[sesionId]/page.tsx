@@ -138,13 +138,14 @@ export default function SesionAntifragilDetailPage() {
     (async () => {
       const [sesRes, fuerzaRes, cardioRes, funcRes] = await Promise.all([
         supabase
-          .from("sesiones_antifragil")
-          .select("id, fecha, duracion_minutos, rpe, comentario, tipo_resumen, entrenos_antifragil(nombre)")
+          .from("sesiones")
+          .select("id, fecha, duracion_minutos, rpe, comentario, tipo_resumen, entrenos_antifragil:entreno_id(nombre)")
           .eq("id", sesionId)
+          .eq("origen", "admin")
           .maybeSingle(),
         supabase
-          .from("series_fuerza_antifragil")
-          .select("id, numero_serie, peso, repeticiones, completada, bloque_id, ejercicio_fuerza_id, ejercicios_fuerza(orden, nombre_ejercicio, ejercicios:ejercicio_id(nombre))")
+          .from("series_realizadas")
+          .select("id, numero_serie, peso, repeticiones, completada, ejercicio_id, ejercicio_catalogo_id, ejercicios:ejercicio_catalogo_id(nombre)")
           .eq("sesion_id", sesionId),
         supabase
           .from("series_cardio_antifragil")
@@ -174,19 +175,20 @@ export default function SesionAntifragilDetailPage() {
         nombre: ent?.nombre ?? null,
       });
 
-      // Fuerza: agrupa por ejercicio_fuerza_id
+      // Fuerza: tras la unificación las series viven en series_realizadas
+      // y se agrupan por catalog_id (ejercicios.id). Si no hay catalog_id
+      // (ad-hoc sin elegir del catálogo) se agrupan por su propio id.
       const fuerzaMap = new Map<string, FuerzaEjercicioGrupo>();
       for (const r of (fuerzaRes.data ?? []) as any[]) {
-        const ef = Array.isArray(r.ejercicios_fuerza) ? r.ejercicios_fuerza[0] : r.ejercicios_fuerza;
-        const cat = ef && (Array.isArray(ef.ejercicios) ? ef.ejercicios[0] : ef.ejercicios);
-        const key = `${r.ejercicio_fuerza_id ?? r.bloque_id ?? "x"}`;
-        const nombre = cat?.nombre || ef?.nombre_ejercicio || "Ejercicio";
+        const cat = Array.isArray(r.ejercicios) ? r.ejercicios[0] : r.ejercicios;
+        const key = r.ejercicio_catalogo_id ?? `r:${r.id}`;
+        const nombre = cat?.nombre || "Ejercicio";
         if (!fuerzaMap.has(key)) {
           fuerzaMap.set(key, {
-            bloque_id: r.bloque_id ?? null,
-            ejercicio_fuerza_id: r.ejercicio_fuerza_id ?? null,
+            bloque_id: null,
+            ejercicio_fuerza_id: null,
             nombre,
-            orden: ef?.orden ?? 0,
+            orden: 0,
             series: [],
           });
         }
