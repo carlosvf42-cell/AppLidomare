@@ -409,13 +409,21 @@ export default function ProgresoSection() {
     }
     setDiasMes(Array.from({ length: daysInMonth }, (_, i) => ({ day: i + 1, status: dMap.get(i + 1) ?? "none" })));
 
-    // ── Series por grupo muscular (count) ─────────────────────────────────
-    const catIds = [...new Set(series.filter((s) => s.ejercicio_catalogo_id).map((s) => s.ejercicio_catalogo_id as string))];
+    // ── Series por grupo muscular — solo SEMANA ACTUAL (lunes-domingo)
+    // Reusa los `lunes` y `domingoSem` calculados arriba para "Series esta
+    // semana". El conteo se reinicia cada lunes.
+    const lunesISO = lunes.toISOString().split("T")[0];
+    const domingoISO = domingoSem.toISOString().split("T")[0];
+    const sesionesEstaSemanaIds = new Set(
+      allSesiones.filter((s) => s.fecha >= lunesISO && s.fecha <= domingoISO).map((s) => s.id)
+    );
+    const seriesSemana = series.filter((s) => sesionesEstaSemanaIds.has(s.sesion_id));
+    const catIds = [...new Set(seriesSemana.filter((s) => s.ejercicio_catalogo_id).map((s) => s.ejercicio_catalogo_id as string))];
     if (catIds.length > 0) {
       const { data: ejData } = await supabase.from("ejercicios").select("id, grupo_muscular").in("id", catIds);
       const ejMap = new Map((ejData ?? []).map((e: any) => [e.id as string, e.grupo_muscular as string]));
       const gCount = new Map<string, number>();
-      for (const s of series) {
+      for (const s of seriesSemana) {
         if (!s.ejercicio_catalogo_id) continue;
         const g = ejMap.get(s.ejercicio_catalogo_id);
         if (!g) continue;
@@ -426,6 +434,8 @@ export default function ProgresoSection() {
           .sort((a, b) => b[1] - a[1])
           .map(([grupo, count]) => ({ grupo, count }))
       );
+    } else {
+      setGrupos([]);
     }
 
     setLoading(false);
@@ -714,10 +724,10 @@ export default function ProgresoSection() {
 
       {/* ── 6. Series por grupo muscular ── */}
       <div>
-        <SectionLabel>Series por grupo muscular</SectionLabel>
+        <SectionLabel>Series por grupo muscular — esta semana</SectionLabel>
         <Card>
           {grupos.length === 0
-            ? <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>El historial de grupos se construirá con tus próximas sesiones</p>
+            ? <p className="text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.35)" }}>Sin series registradas esta semana</p>
             : <HBars bars={grupos} />}
         </Card>
       </div>
