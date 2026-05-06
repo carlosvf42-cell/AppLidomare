@@ -39,7 +39,18 @@ type ClienteData = {
   }>;
 };
 
-type SesionCliente = { id: string; fecha: string; dia_nombre: string; rutina_nombre: string };
+type SesionCliente = {
+  id: string;
+  fecha: string;
+  origen: "usuario" | "admin";
+  dia_nombre: string | null;
+  rutina_nombre: string | null;
+  entreno_id: string | null;
+  entreno_nombre: string | null;
+  tipo_resumen: string | null;
+  duracion_minutos: number | null;
+  rpe: number | null;
+};
 
 function formatFechaCorta(dateStr: string) {
   const [y, m, d] = dateStr.split("-");
@@ -200,7 +211,6 @@ export default function ClienteDetailPage() {
     }
   }
   const [siguientesOpen, setSiguientesOpen] = useState(true);
-  const [historialOpen, setHistorialOpen] = useState(false);
   const [historialClienteOpen, setHistorialClienteOpen] = useState(false);
   const [historialCliente, setHistorialCliente] = useState<SesionCliente[]>([]);
   const [historialClienteLoading, setHistorialClienteLoading] = useState(true);
@@ -322,19 +332,33 @@ export default function ClienteDetailPage() {
     const supabase = getSupabase();
     supabase
       .from("sesiones")
-      .select("id, fecha, dia_id, rutina_dias(nombre, rutinas(nombre))")
+      .select(
+        "id, fecha, dia_id, origen, tipo_resumen, duracion_minutos, rpe, entreno_id, " +
+        "rutina_dias(nombre, rutinas(nombre)), entrenos_antifragil:entreno_id(nombre)"
+      )
       .eq("user_id", userId)
+      .eq("completada", true)
       .order("fecha", { ascending: false })
-      .limit(30)
+      .limit(50)
       .then(({ data }) => {
         const rows = (data ?? []) as any[];
         setHistorialCliente(
-          rows.map((s) => ({
-            id: s.id,
-            fecha: s.fecha,
-            dia_nombre: s.rutina_dias?.nombre ?? "Día libre",
-            rutina_nombre: s.rutina_dias?.rutinas?.nombre ?? "",
-          }))
+          rows.map((s) => {
+            const rd = Array.isArray(s.rutina_dias) ? s.rutina_dias[0] : s.rutina_dias;
+            const ent = Array.isArray(s.entrenos_antifragil) ? s.entrenos_antifragil[0] : s.entrenos_antifragil;
+            return {
+              id: s.id,
+              fecha: s.fecha,
+              origen: (s.origen ?? "usuario") as "usuario" | "admin",
+              dia_nombre: rd?.nombre ?? null,
+              rutina_nombre: rd?.rutinas?.nombre ?? null,
+              entreno_id: s.entreno_id ?? null,
+              entreno_nombre: ent?.nombre ?? null,
+              tipo_resumen: s.tipo_resumen ?? null,
+              duracion_minutos: s.duracion_minutos ?? null,
+              rpe: s.rpe ?? null,
+            };
+          })
         );
         setHistorialClienteLoading(false);
       });
@@ -741,110 +765,7 @@ export default function ClienteDetailPage() {
           ))}
         </section>
 
-        {/* Historial Antifrágil */}
-        <section>
-          <button
-            type="button"
-            onClick={() => setHistorialOpen((v) => !v)}
-            className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all active:scale-[0.99]"
-            style={GLASS}
-          >
-            <div className="flex-1 text-left">
-              <p style={EYEBROW}>Historial Antifrágil</p>
-            </div>
-            <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-ui)" }}>
-              {data.sesiones.length}
-            </span>
-            <Chevron open={historialOpen} />
-          </button>
-
-          {historialOpen && (data.sesiones.length === 0 ? (
-            <div className="mt-3 rounded-2xl px-5 py-8 text-center" style={GLASS}>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", lineHeight: 1.5 }}>
-                Sin sesiones completadas todavía
-              </p>
-            </div>
-          ) : (
-            <div className="mt-3 space-y-2">
-              {data.sesiones.map((s) => {
-                const tipo = s.entrenos_antifragil?.tipo ?? "";
-                const meta = tipoMeta(tipo);
-                const nombreEntreno = s.entrenos_antifragil?.nombre || "Sin nombre";
-                return (
-                  <div key={s.id} className="rounded-2xl px-4 py-3.5" style={GLASS}>
-                    <Link
-                      href={`/admin/antifragil/${data.user.id}/sesion/${s.id}`}
-                      className="block"
-                      style={{ textDecoration: "none" }}
-                    >
-                      <div className="flex items-center justify-between gap-3 mb-1">
-                        <span
-                          className="shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
-                          style={{
-                            background: meta.bg,
-                            border: `0.5px solid ${meta.border}`,
-                            color: meta.color,
-                            fontFamily: "var(--font-ui)",
-                          }}
-                        >
-                          <TipoIcon tipo={tipo} color={meta.color} />
-                          {meta.label || "—"}
-                        </span>
-                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
-                          {formatFecha(s.fecha)}
-                        </span>
-                      </div>
-                      <p className="truncate mb-1" style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
-                        {nombreEntreno}
-                      </p>
-                    </Link>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
-                        {s.duracion_minutos != null && (
-                          <span>{s.duracion_minutos} min</span>
-                        )}
-                        {s.rpe != null && (
-                          <span>RPE {s.rpe}/10</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Link
-                          href={`/admin/antifragil/${data.user.id}/sesion/${s.id}`}
-                          className="text-[10px] font-semibold tracking-widest uppercase active:scale-[0.97] px-3 py-1.5 rounded-lg"
-                          style={{
-                            background: "rgba(255,255,255,0.04)",
-                            border: "0.5px solid rgba(255,255,255,0.12)",
-                            color: "rgba(255,255,255,0.6)",
-                            fontFamily: "var(--font-ui)",
-                            textDecoration: "none",
-                          }}
-                        >
-                          Ver
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => duplicar(s.entreno_id)}
-                          disabled={duplicandoId === s.entreno_id}
-                          className="text-[10px] font-semibold tracking-widest uppercase active:scale-[0.97] disabled:opacity-40 px-3 py-1.5 rounded-lg"
-                          style={{
-                            background: "rgba(42,191,191,0.08)",
-                            border: "0.5px solid rgba(42,191,191,0.25)",
-                            color: "#2abfbf",
-                            fontFamily: "var(--font-ui)",
-                          }}
-                        >
-                          {duplicandoId === s.entreno_id ? "Duplicando…" : "Repetir"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </section>
-
-        {/* Historial del cliente — réplica de la vista del usuario en /rutinas */}
+        {/* Historial — único listado consolidado: usuario + admin */}
         <section>
           <button
             type="button"
@@ -853,7 +774,7 @@ export default function ClienteDetailPage() {
             style={GLASS}
           >
             <div className="flex-1 text-left">
-              <p style={EYEBROW}>Historial del cliente</p>
+              <p style={EYEBROW}>Historial</p>
             </div>
             <span className="text-[10px] font-mono tabular-nums mr-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-ui)" }}>
               {historialClienteLoading ? "…" : historialCliente.length}
@@ -874,26 +795,116 @@ export default function ClienteDetailPage() {
               </div>
             ) : (
               <div className="mt-3 space-y-2">
-                {historialCliente.map((s) => (
-                  <Link
-                    key={s.id}
-                    href={`/rutinas/sesion/${s.id}`}
-                    className="block w-full rounded-2xl px-4 py-3.5 flex items-center justify-between transition-all active:scale-[0.98]"
-                    style={{ ...GLASS, textDecoration: "none" }}
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate" style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
-                        {s.dia_nombre}
-                      </p>
-                      <p className="truncate mt-0.5" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-ui)" }}>
-                        {s.rutina_nombre ? `${s.rutina_nombre} · ` : ""}{formatFechaCorta(s.fecha)}
-                      </p>
+                {historialCliente.map((s) => {
+                  const isAdmin = s.origen === "admin";
+                  const detailHref = isAdmin
+                    ? `/admin/antifragil/${data.user.id}/sesion/${s.id}`
+                    : `/rutinas/sesion/${s.id}`;
+                  // Título principal: nombre del entreno (admin) o día de rutina (usuario) o "Día libre".
+                  const titulo = isAdmin
+                    ? (s.entreno_nombre || "Sin nombre")
+                    : (s.dia_nombre || "Día libre");
+                  const subtitle = isAdmin
+                    ? formatFechaCorta(s.fecha)
+                    : `${s.rutina_nombre ? `${s.rutina_nombre} · ` : ""}${formatFechaCorta(s.fecha)}`;
+                  const tipo = isAdmin ? (s.tipo_resumen ?? "") : "";
+                  const meta = isAdmin ? tipoMeta(tipo) : null;
+                  return (
+                    <div key={s.id} className="rounded-2xl px-4 py-3.5" style={GLASS}>
+                      <Link href={detailHref} className="block" style={{ textDecoration: "none" }}>
+                        <div className="flex items-center justify-between gap-3 mb-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {isAdmin ? (
+                              <span
+                                className="shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
+                                style={{
+                                  background: "rgba(42,191,191,0.12)",
+                                  border: "0.5px solid rgba(42,191,191,0.4)",
+                                  color: "#2abfbf",
+                                  fontFamily: "var(--font-ui)",
+                                }}
+                              >
+                                Antifrágil
+                              </span>
+                            ) : (
+                              <span
+                                className="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
+                                style={{
+                                  background: "rgba(255,255,255,0.04)",
+                                  border: "0.5px solid rgba(255,255,255,0.12)",
+                                  color: "rgba(255,255,255,0.6)",
+                                  fontFamily: "var(--font-ui)",
+                                }}
+                              >
+                                Cliente
+                              </span>
+                            )}
+                            {isAdmin && meta && tipo && (
+                              <span
+                                className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
+                                style={{
+                                  background: meta.bg,
+                                  border: `0.5px solid ${meta.border}`,
+                                  color: meta.color,
+                                  fontFamily: "var(--font-ui)",
+                                }}
+                              >
+                                <TipoIcon tipo={tipo} color={meta.color} />
+                                {meta.label}
+                              </span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
+                            {formatFecha(s.fecha)}
+                          </span>
+                        </div>
+                        <p className="truncate mb-0.5" style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
+                          {titulo}
+                        </p>
+                        <p className="truncate" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-ui)" }}>
+                          {subtitle}
+                        </p>
+                      </Link>
+                      <div className="flex items-center justify-between gap-3 mt-2">
+                        <div className="flex items-center gap-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
+                          {s.duracion_minutos != null && <span>{s.duracion_minutos} min</span>}
+                          {s.rpe != null && <span>RPE {s.rpe}/10</span>}
+                        </div>
+                        {isAdmin && s.entreno_id && (
+                          <div className="flex items-center gap-1.5">
+                            <Link
+                              href={detailHref}
+                              className="text-[10px] font-semibold tracking-widest uppercase active:scale-[0.97] px-3 py-1.5 rounded-lg"
+                              style={{
+                                background: "rgba(255,255,255,0.04)",
+                                border: "0.5px solid rgba(255,255,255,0.12)",
+                                color: "rgba(255,255,255,0.6)",
+                                fontFamily: "var(--font-ui)",
+                                textDecoration: "none",
+                              }}
+                            >
+                              Ver
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => duplicar(s.entreno_id!)}
+                              disabled={duplicandoId === s.entreno_id}
+                              className="text-[10px] font-semibold tracking-widest uppercase active:scale-[0.97] disabled:opacity-40 px-3 py-1.5 rounded-lg"
+                              style={{
+                                background: "rgba(42,191,191,0.08)",
+                                border: "0.5px solid rgba(42,191,191,0.25)",
+                                color: "#2abfbf",
+                                fontFamily: "var(--font-ui)",
+                              }}
+                            >
+                              {duplicandoId === s.entreno_id ? "Duplicando…" : "Repetir"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
-                      <path d="M9 6l6 6-6 6" stroke="rgba(255,255,255,0.25)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             )
           )}
