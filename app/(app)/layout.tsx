@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import AmbientBg from "@/components/design/AmbientBg";
+import ReportBugButton from "@/components/ReportBugButton";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -45,6 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </main>
 
       <BottomNav />
+      <ReportBugButton />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { useAdminMode } from "@/lib/useAdminMode";
@@ -163,6 +164,41 @@ export default function AjustesPage() {
               {signingOut ? "Cerrando sesión…" : "Cerrar sesión"}
             </button>
           </div>
+        </section>
+
+        {/* Soporte */}
+        <section>
+          <p className="mb-3 px-1" style={EYEBROW}>Soporte</p>
+          <Link
+            href="/admin/reportes"
+            className="block rounded-2xl px-5 py-4 active:scale-[0.99]"
+            style={{ ...GLASS, textDecoration: "none" }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(255,176,64,0.10)", border: "0.5px solid rgba(255,176,64,0.30)" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 8a3 3 0 016 0v1H9V8z" stroke="#ffb040" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M5 13a7 7 0 0114 0v3a7 7 0 01-14 0v-3z" stroke="#ffb040" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-ui)", fontWeight: 400 }}>
+                    Reportes de errores
+                  </p>
+                  <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)" }}>
+                    Listado, estado y triaje
+                  </p>
+                </div>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                <path d="M9 6l6 6-6 6" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </Link>
         </section>
 
         {/* Equipo */}
