@@ -279,11 +279,17 @@ export default function ProgresoSection() {
 
   async function loadAll() {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
 
+    // IMPORTANTE: filtrar explícitamente por user_id. La RLS de admin
+    // (admin ve todas las sesiones) bypassaría el filtro implícito de
+    // user_sesiones para el usuario carlosvf42, devolviendo TODAS las
+    // sesiones de TODOS los clientes y rompiendo los contadores.
     const [sesRes, prsRes, segRes] = await Promise.all([
-      supabase.from("sesiones").select("id, fecha, completada, duracion_minutos"),
-      supabase.from("prs").select("ejercicio_id, peso_max, repeticiones, ejercicios(nombre, grupo_muscular)"),
-      supabase.from("ejercicios_seguidos").select("ejercicio_id, ejercicios(id, nombre, grupo_muscular)"),
+      supabase.from("sesiones").select("id, fecha, completada, duracion_minutos").eq("user_id", user.id),
+      supabase.from("prs").select("ejercicio_id, peso_max, repeticiones, ejercicios(nombre, grupo_muscular)").eq("user_id", user.id),
+      supabase.from("ejercicios_seguidos").select("ejercicio_id, ejercicios(id, nombre, grupo_muscular)").eq("user_id", user.id),
     ]);
 
     const allSesiones  = (sesRes.data ?? []) as SesionRow[];
@@ -315,12 +321,11 @@ export default function ProgresoSection() {
     domingoSem.setDate(lunes.getDate() + 6);
     domingoSem.setHours(23, 59, 59, 999);
 
-    const { data: { user } } = await supabase.auth.getUser();
     const { data: seriesEstaSemanaData } = await supabase
       .from("series_realizadas")
       .select("id, sesiones!inner(fecha, user_id)")
       .eq("completada", true)
-      .eq("sesiones.user_id", user?.id ?? "")
+      .eq("sesiones.user_id", user.id)
       .gte("sesiones.fecha", lunes.toISOString().split("T")[0])
       .lte("sesiones.fecha", domingoSem.toISOString().split("T")[0]);
     setSeriesEstaSemana(seriesEstaSemanaData?.length ?? 0);

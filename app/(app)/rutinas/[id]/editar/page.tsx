@@ -33,6 +33,8 @@ export default function EditarRutinaPage() {
     if (!rutinaId) return;
     const supabase = getSupabase();
     (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push("/login"); return; }
       const [{ data: rutina }, { data: sesionesRows }] = await Promise.all([
         supabase
           .from("rutinas")
@@ -41,7 +43,10 @@ export default function EditarRutinaPage() {
           )
           .eq("id", rutinaId)
           .single(),
-        supabase.from("sesiones").select("dia_id"),
+        // Filtrado por user actual: si admin (carlosvf42), RLS le daría
+        // dia_ids de TODOS los clientes y marcaría días como "tieneSesiones"
+        // que en realidad no le pertenecen.
+        supabase.from("sesiones").select("dia_id").eq("user_id", user.id),
       ]);
 
       if (!rutina) {
