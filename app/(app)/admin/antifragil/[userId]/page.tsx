@@ -772,26 +772,32 @@ export default function ClienteDetailPage() {
                 const nombreEntreno = s.entrenos_antifragil?.nombre || "Sin nombre";
                 return (
                   <div key={s.id} className="rounded-2xl px-4 py-3.5" style={GLASS}>
-                    <div className="flex items-center justify-between gap-3 mb-1">
-                      <span
-                        className="shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
-                        style={{
-                          background: meta.bg,
-                          border: `0.5px solid ${meta.border}`,
-                          color: meta.color,
-                          fontFamily: "var(--font-ui)",
-                        }}
-                      >
-                        <TipoIcon tipo={tipo} color={meta.color} />
-                        {meta.label || "—"}
-                      </span>
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
-                        {formatFecha(s.fecha)}
-                      </span>
-                    </div>
-                    <p className="truncate mb-1" style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
-                      {nombreEntreno}
-                    </p>
+                    <Link
+                      href={`/admin/antifragil/${data.user.id}/sesion/${s.id}`}
+                      className="block"
+                      style={{ textDecoration: "none" }}
+                    >
+                      <div className="flex items-center justify-between gap-3 mb-1">
+                        <span
+                          className="shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] tracking-[0.2em] uppercase font-semibold"
+                          style={{
+                            background: meta.bg,
+                            border: `0.5px solid ${meta.border}`,
+                            color: meta.color,
+                            fontFamily: "var(--font-ui)",
+                          }}
+                        >
+                          <TipoIcon tipo={tipo} color={meta.color} />
+                          {meta.label || "—"}
+                        </span>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
+                          {formatFecha(s.fecha)}
+                        </span>
+                      </div>
+                      <p className="truncate mb-1" style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
+                        {nombreEntreno}
+                      </p>
+                    </Link>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3" style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "var(--font-ui)", letterSpacing: "0.02em" }}>
                         {s.duracion_minutos != null && (
@@ -801,20 +807,35 @@ export default function ClienteDetailPage() {
                           <span>RPE {s.rpe}/10</span>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => duplicar(s.entreno_id)}
-                        disabled={duplicandoId === s.entreno_id}
-                        className="text-[10px] font-semibold tracking-widest uppercase active:scale-[0.97] disabled:opacity-40 px-3 py-1.5 rounded-lg"
-                        style={{
-                          background: "rgba(42,191,191,0.08)",
-                          border: "0.5px solid rgba(42,191,191,0.25)",
-                          color: "#2abfbf",
-                          fontFamily: "var(--font-ui)",
-                        }}
-                      >
-                        {duplicandoId === s.entreno_id ? "Duplicando…" : "Repetir"}
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <Link
+                          href={`/admin/antifragil/${data.user.id}/sesion/${s.id}`}
+                          className="text-[10px] font-semibold tracking-widest uppercase active:scale-[0.97] px-3 py-1.5 rounded-lg"
+                          style={{
+                            background: "rgba(255,255,255,0.04)",
+                            border: "0.5px solid rgba(255,255,255,0.12)",
+                            color: "rgba(255,255,255,0.6)",
+                            fontFamily: "var(--font-ui)",
+                            textDecoration: "none",
+                          }}
+                        >
+                          Ver
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => duplicar(s.entreno_id)}
+                          disabled={duplicandoId === s.entreno_id}
+                          className="text-[10px] font-semibold tracking-widest uppercase active:scale-[0.97] disabled:opacity-40 px-3 py-1.5 rounded-lg"
+                          style={{
+                            background: "rgba(42,191,191,0.08)",
+                            border: "0.5px solid rgba(42,191,191,0.25)",
+                            color: "#2abfbf",
+                            fontFamily: "var(--font-ui)",
+                          }}
+                        >
+                          {duplicandoId === s.entreno_id ? "Duplicando…" : "Repetir"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

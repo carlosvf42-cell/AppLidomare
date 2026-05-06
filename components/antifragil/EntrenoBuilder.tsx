@@ -175,7 +175,7 @@ export default function EntrenoBuilder({ userId, entrenoId, initialNombre, initi
   }
 
   return (
-    <div className="min-h-screen pb-44" style={{ background: "#080808" }}>
+    <div className="min-h-screen" style={{ background: "#080808", paddingBottom: "calc(180px + env(safe-area-inset-bottom))" }}>
       <div className="px-5 pt-14 pb-6 flex items-center gap-3">
         <button
           type="button"
@@ -260,47 +260,46 @@ export default function EntrenoBuilder({ userId, entrenoId, initialNombre, initi
         </button>
       </div>
 
-      {/* Bottom actions */}
+      {/* Bottom actions — botones apilados verticalmente para que el texto
+          completo se lea bien en móvil (antes se cortaba en 2 columnas) */}
       <div
         className="fixed bottom-0 left-0 right-0 flex justify-center pointer-events-none"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{ paddingBottom: "env(safe-area-inset-bottom)", zIndex: 30 }}
       >
         <div
-          className="w-full max-w-[430px] mx-auto px-4 pt-3 pb-3 pointer-events-auto"
+          className="w-full max-w-[430px] mx-auto px-4 pt-3 pb-3 pointer-events-auto space-y-2"
           style={{
-            background: "linear-gradient(to top, rgba(8,8,8,0.95) 60%, rgba(8,8,8,0))",
+            background: "linear-gradient(to top, rgba(8,8,8,0.95) 70%, rgba(8,8,8,0))",
           }}
         >
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleGuardar}
-              disabled={saving !== null}
-              className="flex-1 py-3.5 rounded-2xl text-[11px] font-semibold tracking-widest uppercase active:scale-[0.98] disabled:opacity-40"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "0.5px solid rgba(255,255,255,0.15)",
-                color: "rgba(255,255,255,0.85)",
-                fontFamily: FONT_TEXT,
-              }}
-            >
-              {saving === "siguiente" ? "Guardando…" : "Guardar como siguiente"}
-            </button>
-            <button
-              type="button"
-              onClick={handleEntrenarAhora}
-              disabled={saving !== null}
-              className="flex-1 py-3.5 rounded-2xl text-[11px] font-semibold tracking-widest uppercase active:scale-[0.98] disabled:opacity-40"
-              style={{
-                background: "#2abfbf",
-                color: "#000",
-                fontFamily: FONT_TEXT,
-                boxShadow: "0 4px 24px rgba(42,191,191,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
-              }}
-            >
-              {saving === "ahora" ? "Iniciando…" : "Entrenar ahora"}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleEntrenarAhora}
+            disabled={saving !== null}
+            className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-widest uppercase active:scale-[0.98] disabled:opacity-40"
+            style={{
+              background: "#2abfbf",
+              color: "#000",
+              fontFamily: FONT_TEXT,
+              boxShadow: "0 4px 24px rgba(42,191,191,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
+            }}
+          >
+            {saving === "ahora" ? "Iniciando…" : "Entrenar ahora"}
+          </button>
+          <button
+            type="button"
+            onClick={handleGuardar}
+            disabled={saving !== null}
+            className="w-full py-3 rounded-2xl text-xs font-semibold tracking-widest uppercase active:scale-[0.98] disabled:opacity-40"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "0.5px solid rgba(255,255,255,0.15)",
+              color: "rgba(255,255,255,0.7)",
+              fontFamily: FONT_TEXT,
+            }}
+          >
+            {saving === "siguiente" ? "Guardando…" : "Guardar como siguiente"}
+          </button>
         </div>
       </div>
 

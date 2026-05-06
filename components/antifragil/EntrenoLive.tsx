@@ -94,6 +94,10 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
   const [seriesByEjercicio, setSeriesByEjercicio] = useState<Record<string, FuerzaSerie[]>>({});
   const [rondasByBlock, setRondasByBlock] = useState<Record<string, CardioRonda[]>>({});
   const [registrosByBlock, setRegistrosByBlock] = useState<Record<string, Record<string, FuncionalReg>>>({});
+  // Histórico "Última vez" del cliente por ejercicio (catalog_id) —
+  // combina series_realizadas (cliente solo) + series_fuerza_antifragil
+  // (entrenos guiados) y se queda con el día más reciente.
+  const [historico, setHistorico] = useState<Record<string, { serie: number; peso: number | null; reps: number | null }[]>>({});
 
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [draftBlock, setDraftBlock] = useState<Block | null>(null);
@@ -321,6 +325,92 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
       cancelled = true;
     };
   }, [userId, token, entrenoId]);
+
+  // Carga "Última vez" del cliente para los catalog_ids de los ejercicios
+  // de fuerza visibles. Mira tanto series_realizadas (entrenos del cliente
+  // solo) como series_fuerza_antifragil (entrenos guiados por admin),
+  // se queda con la sesión más reciente por catálogo.
+  useEffect(() => {
+    const catalogIds = Array.from(
+      new Set(
+        blocks
+          .filter((b): b is FuerzaBlock => b.kind === "fuerza")
+          .flatMap((b) => b.ejercicios.map((e) => e.ejercicio_id))
+          .filter((id): id is string => !!id && !(id in historico))
+      )
+    );
+    if (catalogIds.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      const [srRes, sfaRes] = await Promise.all([
+        supabase
+          .from("series_realizadas")
+          .select("numero_serie, peso, repeticiones, ejercicio_catalogo_id, sesion_id, sesiones!inner(user_id, fecha)")
+          .eq("sesiones.user_id", userId)
+          .in("ejercicio_catalogo_id", catalogIds)
+          .limit(500),
+        supabase
+          .from("series_fuerza_antifragil")
+          .select("numero_serie, peso, repeticiones, ejercicio_fuerza_id, sesion_id, sesiones_antifragil!inner(user_id, fecha), ejercicios_fuerza!inner(ejercicio_id)")
+          .eq("sesiones_antifragil.user_id", userId)
+          .in("ejercicios_fuerza.ejercicio_id", catalogIds)
+          .limit(500),
+      ]);
+      if (cancelled) return;
+
+      type Row = { catId: string; sesionKey: string; fecha: string; serie: number; peso: number | null; reps: number | null };
+      const rows: Row[] = [];
+
+      for (const r of (srRes.data ?? []) as any[]) {
+        const ses = Array.isArray(r.sesiones) ? r.sesiones[0] : r.sesiones;
+        if (!r.ejercicio_catalogo_id || !ses?.fecha) continue;
+        rows.push({
+          catId: r.ejercicio_catalogo_id,
+          sesionKey: `r:${r.sesion_id}`,
+          fecha: ses.fecha,
+          serie: r.numero_serie,
+          peso: r.peso,
+          reps: r.repeticiones,
+        });
+      }
+      for (const r of (sfaRes.data ?? []) as any[]) {
+        const ses = Array.isArray(r.sesiones_antifragil) ? r.sesiones_antifragil[0] : r.sesiones_antifragil;
+        const ef = Array.isArray(r.ejercicios_fuerza) ? r.ejercicios_fuerza[0] : r.ejercicios_fuerza;
+        if (!ef?.ejercicio_id || !ses?.fecha) continue;
+        rows.push({
+          catId: ef.ejercicio_id,
+          sesionKey: `a:${r.sesion_id}`,
+          fecha: ses.fecha,
+          serie: r.numero_serie,
+          peso: r.peso,
+          reps: r.repeticiones,
+        });
+      }
+
+      const result: Record<string, { serie: number; peso: number | null; reps: number | null }[]> = {};
+      for (const id of catalogIds) result[id] = [];
+      const byCat = new Map<string, Row[]>();
+      for (const r of rows) {
+        if (!byCat.has(r.catId)) byCat.set(r.catId, []);
+        byCat.get(r.catId)!.push(r);
+      }
+      for (const [catId, arr] of byCat) {
+        arr.sort((a, b) => (a.fecha === b.fecha ? a.serie - b.serie : a.fecha < b.fecha ? 1 : -1));
+        const latestKey = arr[0]?.sesionKey;
+        if (!latestKey) continue;
+        result[catId] = arr
+          .filter((r) => r.sesionKey === latestKey)
+          .map((r) => ({ serie: r.serie, peso: r.peso, reps: r.reps }))
+          .sort((a, b) => a.serie - b.serie);
+      }
+      setHistorico((prev) => ({ ...prev, ...result }));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [blocks, userId, supabase, historico]);
 
   async function startSession(wellnessId: string | null) {
     setError(null);
@@ -581,6 +671,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
               block={b}
               index={idx}
               seriesByEjercicio={seriesByEjercicio}
+              historico={historico}
               cardioRondas={b.kind === "cardio" && b.id ? rondasByBlock[b.id] : undefined}
               funcionalRegs={b.kind === "funcional" && b.id ? registrosByBlock[b.id] : undefined}
               onFuerzaUpdate={(ejId, i, patch) => {
@@ -801,6 +892,7 @@ function BlockTrainer({
   block,
   index,
   seriesByEjercicio,
+  historico,
   cardioRondas,
   funcionalRegs,
   onFuerzaUpdate,
@@ -816,6 +908,7 @@ function BlockTrainer({
   block: Block;
   index: number;
   seriesByEjercicio: Record<string, FuerzaSerie[]>;
+  historico: Record<string, { serie: number; peso: number | null; reps: number | null }[]>;
   cardioRondas?: CardioRonda[];
   funcionalRegs?: Record<string, FuncionalReg>;
   onFuerzaUpdate: (ejercicioId: string, i: number, patch: Partial<FuerzaSerie>) => void;
@@ -865,6 +958,7 @@ function BlockTrainer({
         <FuerzaTrainer
           block={block as FuerzaBlock}
           seriesByEjercicio={seriesByEjercicio}
+          historico={historico}
           onUpdate={onFuerzaUpdate}
           onAddSerie={onAddSerie}
           onRemoveSerie={onRemoveSerie}
@@ -892,9 +986,17 @@ function BlockTrainer({
   );
 }
 
+function formatHistorialSerie(s: { serie: number; peso: number | null; reps: number | null }): string {
+  const peso = s.peso != null ? `${s.peso}kg` : "";
+  const reps = s.reps != null ? `×${s.reps}` : "";
+  const partes = [peso, reps].filter(Boolean).join("");
+  return `S${s.serie}${partes ? " " + partes : ""}`;
+}
+
 function FuerzaTrainer({
   block,
   seriesByEjercicio,
+  historico,
   onUpdate,
   onAddSerie,
   onRemoveSerie,
@@ -902,6 +1004,7 @@ function FuerzaTrainer({
 }: {
   block: FuerzaBlock;
   seriesByEjercicio: Record<string, FuerzaSerie[]>;
+  historico: Record<string, { serie: number; peso: number | null; reps: number | null }[]>;
   onUpdate: (ejercicioId: string, i: number, patch: Partial<FuerzaSerie>) => void;
   onAddSerie: (ejercicioId: string) => void;
   onRemoveSerie: (ejercicioId: string, idx: number) => void;
@@ -987,6 +1090,27 @@ function FuerzaTrainer({
             >
               + Serie
             </button>
+            {ej.ejercicio_id && historico[ej.ejercicio_id]?.length ? (
+              <div
+                className="flex items-center gap-1.5"
+                style={{
+                  color: "rgba(255,255,255,0.4)",
+                  fontFamily: FONT_TEXT,
+                  fontSize: 11,
+                  paddingTop: 2,
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.4"/>
+                  <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>
+                  Última vez:{" "}
+                  {historico[ej.ejercicio_id].slice(0, 3).map(formatHistorialSerie).join(" · ")}
+                  {historico[ej.ejercicio_id].length > 3 ? " …" : ""}
+                </span>
+              </div>
+            ) : null}
           </div>
         );
       })}
