@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import EjercicioSelector from "@/components/EjercicioSelector";
 import WellnessCheckIn from "@/components/health/WellnessCheckIn";
+import RPECapture from "@/components/health/RPECapture";
 import {
   CardioBlockTrainer,
   FuerzaBlockTrainer,
@@ -1188,47 +1189,7 @@ function FinalizeModal({
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-5">
-          <div>
-            <p
-              style={{
-                fontSize: 10,
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "rgba(42,191,191,0.7)",
-                fontFamily: FONT_UI,
-                marginBottom: 8,
-              }}
-            >
-              Esfuerzo percibido (RPE)
-            </p>
-            <div className="grid grid-cols-10 gap-1.5">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
-                const selected = rpe === n;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => onRpeChange(n)}
-                    className="no-min-h"
-                    style={{
-                      height: 36,
-                      borderRadius: 10,
-                      fontFamily: FONT_UI,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      background: selected ? "#2abfbf" : "rgba(255,255,255,0.06)",
-                      color: selected ? "#080808" : "rgba(255,255,255,0.85)",
-                      border: selected ? "0.5px solid rgba(42,191,191,0.6)" : "0.5px solid rgba(255,255,255,0.08)",
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    {n}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <RPECapture rpe={rpe} onRpeChange={onRpeChange} />
 
           <div>
             <p
