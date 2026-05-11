@@ -13,7 +13,7 @@ interface ColorIconProps {
 export function IconHome({ active }: IconProps) {
   const c = active ? ACTIVE : INACTIVE;
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H15v-5H9v5H4a1 1 0 01-1-1V10.5z" stroke={c} strokeWidth="1.4" strokeLinejoin="round" />
     </svg>
   );
@@ -22,7 +22,7 @@ export function IconHome({ active }: IconProps) {
 export function IconGrid({ active }: IconProps) {
   const c = active ? ACTIVE : INACTIVE;
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <rect x="3" y="3" width="7.5" height="7.5" rx="1.5" stroke={c} strokeWidth="1.4" />
       <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" stroke={c} strokeWidth="1.4" />
       <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" stroke={c} strokeWidth="1.4" />
@@ -34,7 +34,7 @@ export function IconGrid({ active }: IconProps) {
 export function IconCal({ active }: IconProps) {
   const c = active ? ACTIVE : INACTIVE;
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <rect x="3" y="5" width="18" height="16" rx="2" stroke={c} strokeWidth="1.4" />
       <path d="M3 10h18M8 3v4M16 3v4" stroke={c} strokeWidth="1.4" strokeLinecap="round" />
     </svg>
@@ -44,7 +44,7 @@ export function IconCal({ active }: IconProps) {
 export function IconUser({ active }: IconProps) {
   const c = active ? ACTIVE : INACTIVE;
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="8" r="4" stroke={c} strokeWidth="1.4" />
       <path d="M4 20c0-3.314 3.582-6 8-6s8 2.686 8 6" stroke={c} strokeWidth="1.4" strokeLinecap="round" />
     </svg>

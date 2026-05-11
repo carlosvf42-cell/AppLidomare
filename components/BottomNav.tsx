@@ -102,8 +102,8 @@ function NavShell({ tabs, pathname }: { tabs: readonly Tab[]; pathname: string }
         maxWidth: 406,
         margin: "0 auto",
         zIndex: 50,
-        height: 64,
-        borderRadius: 28,
+        height: 72,
+        borderRadius: 32,
         display: "flex",
         alignItems: "center",
         overflow: "hidden",
@@ -148,16 +148,16 @@ function NavShell({ tabs, pathname }: { tabs: readonly Tab[]; pathname: string }
             <Link
               key={href}
               href={href}
-              className="flex flex-col items-center justify-center flex-1"
-              style={{ minHeight: 52, textDecoration: "none" }}
+              className="flex flex-col items-center justify-center flex-1 no-min-h"
+              style={{ minHeight: 60, textDecoration: "none", gap: 4 }}
             >
               <Icon active={active} />
               <span
                 style={{
-                  fontSize: 9,
-                  letterSpacing: "0.06em",
-                  color: active ? "var(--accent)" : "var(--muted-2)",
-                  marginTop: 3,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.04em",
+                  color: active ? "var(--accent)" : "rgba(255,255,255,0.65)",
                   lineHeight: 1,
                 }}
               >
@@ -176,7 +176,7 @@ function NavShell({ tabs, pathname }: { tabs: readonly Tab[]; pathname: string }
 function IconDumbbell({ active }: IconProps) {
   const c = active ? "var(--accent)" : "var(--muted-2)";
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <path
         d="M5 9v6M8 7v10M16 7v10M19 9v6M8 12h8"
         stroke={c}
@@ -191,7 +191,7 @@ function IconDumbbell({ active }: IconProps) {
 function IconShield({ active }: IconProps) {
   const c = active ? "var(--accent)" : "var(--muted-2)";
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <path
         d="M12 3l8 3v6c0 4.5-3.2 8.5-8 9.5-4.8-1-8-5-8-9.5V6l8-3z"
         stroke={c}
@@ -207,7 +207,7 @@ function IconShield({ active }: IconProps) {
 function IconUsers({ active }: IconProps) {
   const c = active ? "var(--accent)" : "var(--muted-2)";
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <circle cx="9" cy="8" r="3" stroke={c} strokeWidth="1.5" />
       <circle cx="17" cy="9" r="2" stroke={c} strokeWidth="1.5" />
       <path
@@ -223,7 +223,7 @@ function IconUsers({ active }: IconProps) {
 function IconGear({ active }: IconProps) {
   const c = active ? "var(--accent)" : "var(--muted-2)";
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="3" stroke={c} strokeWidth="1.5" />
       <path
         d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
