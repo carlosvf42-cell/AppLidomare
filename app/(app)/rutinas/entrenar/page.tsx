@@ -790,43 +790,34 @@ function EntrenarInner() {
           >
             {/* Exercise header */}
             <div
-              className="px-4 py-4"
+              className="px-4 py-3"
               style={{ background: "rgba(255,255,255,0.09)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}
             >
-              <p style={{ fontSize: 20, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.005em" }}>{ej.nombre}</p>
+              <p className="text-sm font-light" style={{ color: "rgba(255,255,255,0.88)" }}>{ej.nombre}</p>
             </div>
 
             {/* Series */}
             <div style={{ background: "rgba(0,0,0,0.25)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}>
               {/* Column headers */}
-              <div className="px-4 py-2 grid grid-cols-[36px_56px_1fr_1fr_48px] gap-2 items-center">
-                {["Ser.", "Obj.", "Kg", "Reps", ""].map((h, i) => (
-                  <span
-                    key={i}
-                    className={`text-[12px] font-bold tracking-wider uppercase ${i === 2 || i === 3 ? "text-center" : ""}`}
-                    style={{ color: "rgba(255,255,255,0.55)" }}
-                  >
-                    {h}
-                  </span>
+              <div className="px-4 py-1.5 grid grid-cols-[28px_52px_1fr_1fr_36px] gap-2 items-center">
+                {["ser.", "obj.", "kg", "reps", ""].map((h, i) => (
+                  <span key={i} className={`text-[8px] tracking-wider uppercase ${i === 2 || i === 3 ? "text-center" : ""}`} style={{ color: "rgba(255,255,255,0.2)" }}>{h}</span>
                 ))}
               </div>
 
               {ej.seriesData.map((s, sIdx) => (
                 <div
                   key={sIdx}
-                  className="px-4 py-2.5 grid grid-cols-[36px_56px_1fr_1fr_48px] gap-2 items-center"
+                  className="px-4 py-2 grid grid-cols-[28px_52px_1fr_1fr_36px] gap-2 items-center"
                   style={{
                     background: s.completada ? "rgba(42,191,191,0.06)" : undefined,
                     borderTop: "0.5px solid rgba(255,255,255,0.05)",
                   }}
                 >
-                  <span
-                    className="font-mono"
-                    style={{ fontSize: 16, fontWeight: 700, color: s.completada ? "#2abfbf" : "rgba(255,255,255,0.85)" }}
-                  >
+                  <span className="text-[10px] font-mono" style={{ color: s.completada ? "#2abfbf" : "rgba(255,255,255,0.3)" }}>
                     {String(sIdx + 1).padStart(2, "0")}
                   </span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.55)" }}>×{ej.repeticiones}</span>
+                  <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>×{ej.repeticiones}</span>
 
                   <input
                     type="number" inputMode="decimal" min={0} step={0.5}
@@ -834,15 +825,12 @@ function EntrenarInner() {
                     onChange={(e) => updateSerie(ejIdx, sIdx, "peso", e.target.value)}
                     onFocus={(e) => e.target.select()}
                     placeholder="—"
-                    className="w-full rounded-xl px-2 text-center outline-none transition-colors no-min-h"
+                    className="w-full rounded-lg px-1 py-2 text-xs text-center outline-none transition-colors"
                     style={{
-                      background: "rgba(255,255,255,0.08)",
-                      border: "1px solid rgba(255,255,255,0.20)",
-                      color: "#ffffff",
-                      fontSize: 18,
-                      fontWeight: 700,
-                      height: 52,
-                      opacity: s.completada ? 0.55 : 1,
+                      background: "rgba(255,255,255,0.06)",
+                      border: "0.5px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.9)",
+                      opacity: s.completada ? 0.45 : 1,
                     }}
                   />
                   <input
@@ -850,37 +838,33 @@ function EntrenarInner() {
                     value={s.repeticiones}
                     onChange={(e) => updateSerie(ejIdx, sIdx, "repeticiones", e.target.value)}
                     onFocus={(e) => e.target.select()}
-                    className="w-full rounded-xl px-2 text-center outline-none transition-colors no-min-h"
+                    className="w-full rounded-lg px-1 py-2 text-xs text-center outline-none transition-colors"
                     style={{
-                      background: "rgba(255,255,255,0.08)",
-                      border: "1px solid rgba(255,255,255,0.20)",
-                      color: "#ffffff",
-                      fontSize: 18,
-                      fontWeight: 700,
-                      height: 52,
-                      opacity: s.completada ? 0.55 : 1,
+                      background: "rgba(255,255,255,0.06)",
+                      border: "0.5px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.9)",
+                      opacity: s.completada ? 0.45 : 1,
                     }}
                   />
                   <button
                     type="button"
                     onClick={() => toggleSerie(ejIdx, sIdx)}
-                    aria-label={s.completada ? "Marcar como pendiente" : "Marcar como completada"}
                     style={{
-                      width: 52, height: 52,
-                      borderRadius: 14,
-                      border: `2px solid ${s.completada ? "#2abfbf" : "rgba(255,255,255,0.20)"}`,
-                      background: s.completada ? "rgba(42,191,191,0.18)" : "rgba(255,255,255,0.05)",
+                      width: 44, height: 44,
+                      borderRadius: 10,
+                      border: `1.5px solid ${s.completada ? "#2abfbf" : "rgba(255,255,255,0.1)"}`,
+                      background: s.completada ? "rgba(42,191,191,0.15)" : "rgba(255,255,255,0.03)",
                       backdropFilter: "blur(10px)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       cursor: "pointer",
                       transition: "all 0.2s ease",
                     }}
                   >
-                    <svg width="22" height="22" viewBox="0 0 18 18" fill="none">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                       <path
                         d="M3.5 9L7.5 13L14.5 5"
-                        stroke={s.completada ? "#2abfbf" : "rgba(255,255,255,0.55)"}
-                        strokeWidth="2.3"
+                        stroke={s.completada ? "#2abfbf" : "rgba(255,255,255,0.2)"}
+                        strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
@@ -1088,13 +1072,8 @@ function EntrenarInner() {
         <button
           onClick={() => setShowFinalizeModal(true)}
           disabled={isSaving || saved}
-          className="w-full rounded-2xl uppercase transition-all disabled:opacity-60"
+          className="w-full py-4 rounded-2xl font-semibold text-sm tracking-widest uppercase transition-all disabled:opacity-60"
           style={{
-            minHeight: 64,
-            fontSize: 18,
-            fontWeight: 900,
-            letterSpacing: "0.10em",
-            padding: "18px 20px",
             background: saved ? "rgba(42,191,191,0.15)" : "#2abfbf",
             color: saved ? "#2abfbf" : "#000",
             border: saved ? "0.5px solid rgba(42,191,191,0.3)" : "none",

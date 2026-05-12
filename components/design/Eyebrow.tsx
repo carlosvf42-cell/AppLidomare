@@ -12,10 +12,10 @@ export default function Eyebrow({ children, color, className, style }: Props) {
     <div
       className={className}
       style={{
-        fontSize: 13,
-        letterSpacing: "0.16em",
+        fontSize: 9,
+        letterSpacing: "0.22em",
         textTransform: "uppercase",
-        fontWeight: 700,
+        fontWeight: 500,
         color: color || "var(--accent)",
         ...style,
       }}
