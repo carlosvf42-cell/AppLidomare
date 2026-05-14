@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import GlassCard from "@/components/design/GlassCard";
 import Eyebrow from "@/components/design/Eyebrow";
 import PrimaryBtn from "@/components/design/PrimaryBtn";
-import { IconFlame, IconCheck, IconPlay } from "@/components/design/icons";
+import WeekDots, { type WeekDot } from "@/components/design/WeekDots";
+import { IconFlame, IconPlay } from "@/components/design/icons";
 import WellnessHomeCard from "@/components/health/WellnessHomeCard";
 import MonitorizacionCard from "@/components/health/MonitorizacionCard";
 import WorkloadChart from "@/components/health/WorkloadChart";
@@ -179,18 +180,29 @@ export default async function HomePage() {
       </div>
 
       {/* ── Greeting ── */}
-      <div style={{ padding: "20px 20px 8px", textAlign: "left" }}>
-        <div style={{
-          fontSize: 10,
-          letterSpacing: "0.25em",
-          textTransform: "uppercase",
-          color: "rgba(255,255,255,0.45)",
-          fontWeight: 500,
-        }}>
-          Bienvenido de nuevo,{" "}
-          <span style={{ color: "var(--accent)" }}>
-            {nombreUsuario}
-          </span>
+      <div style={{ padding: "24px 20px 12px" }}>
+        <div
+          style={{
+            fontSize: 13,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.65)",
+            fontWeight: 700,
+            marginBottom: 6,
+          }}
+        >
+          Bienvenido de nuevo
+        </div>
+        <div
+          style={{
+            fontSize: 30,
+            fontWeight: 800,
+            color: "var(--accent)",
+            letterSpacing: "-0.01em",
+            lineHeight: 1.1,
+          }}
+        >
+          {nombreUsuario}
         </div>
       </div>
 
@@ -198,81 +210,56 @@ export default async function HomePage() {
       <div className="px-4 pt-2 pb-6 space-y-5">
 
         {/* ── Calendario semanal ── */}
-        <GlassCard variant="heavy" style={{ padding: "16px 16px" }}>
-          <Eyebrow style={{ marginBottom: 14 }}>Semana actual</Eyebrow>
-          <div className="flex justify-between">
-            {semana.map(({ num, iso, done, started, isToday }, i) => (
-              <div key={iso} className="flex flex-col items-center gap-1.5">
-                <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 14,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 13,
-                    fontWeight: 300,
-                    background: done
-                      ? "var(--accent-20)"
-                      : started
-                      ? "rgba(42,191,191,0.07)"
-                      : "rgba(255,255,255,0.04)",
-                    border: done
-                      ? "1.5px solid var(--accent-60)"
-                      : isToday
-                      ? "1.5px solid var(--accent-45)"
-                      : "1px solid rgba(255,255,255,0.08)",
-                    color: done
-                      ? "var(--accent)"
-                      : isToday
-                      ? "rgba(42,191,191,0.8)"
-                      : "var(--muted-3)",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  {num}
-                </div>
-                <span style={{ fontSize: 8, color: "var(--subtle)", letterSpacing: "0.05em" }}>
-                  {DIAS_LABELS[i]}
-                </span>
-                <div style={{ height: 10 }}>
-                  {done ? <IconCheck /> : null}
-                </div>
-              </div>
-            ))}
-          </div>
+        <GlassCard variant="heavy" style={{ padding: 20 }}>
+          <Eyebrow style={{ marginBottom: 18 }}>Semana actual</Eyebrow>
+          <WeekDots
+            size={40}
+            days={
+              semana.map(({ num, done, isToday }, i): WeekDot => ({
+                label: DIAS_LABELS[i],
+                state: done ? "done" : isToday ? "active" : "empty",
+                num,
+              }))
+            }
+          />
         </GlassCard>
 
         {/* ── Monitorización IA ── */}
         <MonitorizacionCard />
 
         {/* ── Racha ── */}
-        <GlassCard variant="light" style={{ padding: "16px 20px" }}>
+        <GlassCard variant="light" style={{ padding: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                 <IconFlame />
                 <Eyebrow>Racha actual</Eyebrow>
               </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
                 <span
                   style={{
                     fontFamily: "var(--font-ui)",
-                    fontSize: 36,
-                    fontWeight: 300,
+                    fontSize: 48,
+                    fontWeight: 900,
                     fontFeatureSettings: "'tnum'",
-                    color: "var(--fg)",
+                    color: "#ffffff",
                     lineHeight: 1,
                   }}
                 >
                   {racha}
                 </span>
-                <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 400 }}>
+                <span style={{ fontSize: 16, color: "rgba(255,255,255,0.65)", fontWeight: 600 }}>
                   {racha === 1 ? "semana" : "semanas"}
                 </span>
               </div>
-              <div style={{ fontSize: 11, color: racha > 0 ? "var(--accent)" : "var(--ink-3)", marginTop: 4 }}>
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: racha > 0 ? "var(--accent)" : "rgba(255,255,255,0.65)",
+                  marginTop: 8,
+                }}
+              >
                 {racha === 0
                   ? "Entrena esta semana para empezar"
                   : racha >= 4
@@ -311,7 +298,7 @@ export default async function HomePage() {
                   style={{
                     fontFamily: "var(--font-ui)",
                     fontSize: 20,
-                    fontWeight: 300,
+                    fontWeight: 600,
                     fontFeatureSettings: "'tnum'",
                     color: "var(--fg-soft)",
                     lineHeight: 1,
@@ -340,20 +327,22 @@ export default async function HomePage() {
         {rutina ? (
           proximoDia ? (
             <div>
-              <GlassCard variant="lens" style={{ padding: "20px 20px", marginBottom: 12 }}>
+              <GlassCard variant="lens" style={{ padding: 24, marginBottom: 14 }}>
                 <div style={{ position: "relative", zIndex: 1 }}>
                   <Eyebrow>{rutina.nombre}</Eyebrow>
                   <div
                     style={{
-                      fontSize: 22,
-                      fontWeight: 700,
-                      color: "var(--fg-soft)",
-                      marginTop: 6,
+                      fontSize: 28,
+                      fontWeight: 800,
+                      color: "#ffffff",
+                      marginTop: 10,
+                      lineHeight: 1.1,
+                      letterSpacing: "-0.005em",
                     }}
                   >
                     {proximoDia.nombre}
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.65)", marginTop: 10 }}>
                     {proximoDia.rutina_ejercicios.length} ejercicios
                   </div>
                 </div>

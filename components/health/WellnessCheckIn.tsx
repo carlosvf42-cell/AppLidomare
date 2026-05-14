@@ -100,7 +100,7 @@ export default function WellnessCheckIn({ sesionId, onComplete, onSkip, ctaLabel
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="mb-1" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-ui)" }}>Check-in pre-entreno</p>
-              <h1 style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)" }}>¿Cómo estás hoy?</h1>
+              <h1 style={{ fontSize: "2rem", fontWeight: 600, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)" }}>¿Cómo estás hoy?</h1>
             </div>
             <button type="button" onClick={handleOmitir} className="shrink-0 mt-1 text-[10px] tracking-[0.2em] uppercase transition-colors" style={{ color: "rgba(255,255,255,0.35)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-ui)" }}>Omitir hoy</button>
           </div>

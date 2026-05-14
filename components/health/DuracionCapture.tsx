@@ -34,7 +34,7 @@ export default function DuracionCapture({ duracion, onDuracionChange }: Duracion
             border: "none",
             fontFamily: "var(--font-serif)",
             fontSize: "2.25rem",
-            fontWeight: 300,
+            fontWeight: 600,
             lineHeight: 1.1,
             color: "rgba(255,255,255,0.95)",
             width: "100%",

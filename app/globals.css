@@ -29,17 +29,19 @@
   /* Secondary ambient accent (indigo blob only) */
   --ambient-indigo:  rgba(99,102,241,0.22);
 
-  /* ── Foreground tiers ──────────────────────────────────────── */
-  --fg:              rgba(255,255,255,0.92);
-  --fg-soft:         #f0f0f0;
+  /* ── Foreground tiers ──────────────────────────────────────────
+     Rediseño a11y: el texto principal pasa a blanco puro y los
+     tokens "muted" no bajan de 0.55 — siempre legible.            */
+  --fg:              #ffffff;
+  --fg-soft:         #ffffff;
   --fg-2:            rgba(255,255,255,0.85);
-  --fg-3:            rgba(255,255,255,0.55);
-  --text:            rgba(255,255,255,0.92);
-  --muted:           rgba(255,255,255,0.45);
-  --muted-2:         rgba(255,255,255,0.35);
-  --muted-3:         rgba(255,255,255,0.30);
-  --subtle:          rgba(255,255,255,0.20);
-  --faint:           rgba(255,255,255,0.12);
+  --fg-3:            rgba(255,255,255,0.65);
+  --text:            #ffffff;
+  --muted:           rgba(255,255,255,0.65);
+  --muted-2:         rgba(255,255,255,0.55);
+  --muted-3:         rgba(255,255,255,0.55);
+  --subtle:          rgba(255,255,255,0.55);
+  --faint:           rgba(255,255,255,0.40);
 
   /* Near-black tiers */
   --ink-1: #555;
@@ -129,6 +131,8 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
@@ -160,13 +164,78 @@ input:-webkit-autofill:focus {
   caret-color: #fff;
 }
 
-/* ── Touch targets ── */
+/* ── Touch targets — a11y: 56px (antes 44) ── */
 button:not(.no-min-h),
 a:not(.no-min-h) {
-  min-height: 44px;
+  min-height: 56px;
 }
+
+/* ── Inputs nativos: 16px (no auto-zoom iOS) + altura 52 ── */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(.no-min-h),
+textarea:not(.no-min-h) {
+  min-height: 52px;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+textarea {
+  font-size: 16px;
+}
+
+/* ── Tipografía a11y: escala "ds-*" para usar en cualquier sitio sin
+   tener que recordar tamaños. Ref iOS de la app referencia.            */
+.ds-hero       { font-size: 34px; line-height: 1.1;  font-weight: 800; letter-spacing: -0.01em; color: #ffffff; }
+.ds-title      { font-size: 24px; line-height: 1.15; font-weight: 800; letter-spacing: -0.005em; color: #ffffff; }
+.ds-subtitle   { font-size: 16px; line-height: 1.5;  font-weight: 500; color: rgba(255,255,255,0.65); }
+.ds-body       { font-size: 15px; line-height: 1.55; font-weight: 500; color: rgba(255,255,255,0.85); }
+.ds-label      { font-size: 12px; line-height: 1.2;  font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
+.ds-meta       { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.55); }
+.ds-num-hero   { font-size: 40px; font-weight: 900; line-height: 1; font-feature-settings: 'tnum'; color: #ffffff; }
+.ds-num-big    { font-size: 28px; font-weight: 800; line-height: 1; font-feature-settings: 'tnum'; color: #ffffff; }
 
 /* ── Design system utility classes ── */
 .ds-pressable { transition: transform 0.1s ease; }
 .ds-pressable:active { transform: scale(0.98); }
 .ds-pressable:hover { opacity: 0.92; }
+
+/* ── Card base (opt-in via className) ── */
+.ds-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 18px;
+  padding: 20px;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   A11y rescue: clamps globales sobre utilidades de Tailwind heredadas.
+   Hubo una era previa al rediseño en la que se usaba `text-[8..11px]`
+   y `font-light/thin` en toda la app. En vez de tocar 30 archivos uno
+   por uno, elevamos esas clases al piso de legibilidad. Cualquier
+   pantalla específica que necesite el tamaño/peso original debe usar
+   `style={{ fontSize: ..., fontWeight: ... }}` (inline gana siempre).
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Tamaños arbitrarios diminutos → 12-13px legibles + peso 600 mínimo */
+.text-\[8px\],
+.text-\[9px\],
+.text-\[10px\] {
+  font-size: 12px !important;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.text-\[11px\] {
+  font-size: 13px !important;
+  font-weight: 600;
+}
+
+/* text-xs (12px) — sube a 13px sólo cuando es texto plano, no eyebrow */
+.text-xs:not([class*="tracking-"]):not([class*="uppercase"]) {
+  font-size: 13px;
+}
+
+/* Pesos ligeros → mínimo medium para contraste perceptual sobre fondo negro */
+.font-thin,
+.font-extralight {
+  font-weight: 500 !important;
+}
+.font-light {
+  font-weight: 500 !important;
+}

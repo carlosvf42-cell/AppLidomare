@@ -98,8 +98,9 @@ export default function PerfilPage() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 18,
-                    fontWeight: 300,
+                    fontSize: 20,
+                    fontWeight: 800,
+                    letterSpacing: "0.02em",
                     color: "var(--accent)",
                   }}
                 >
@@ -107,22 +108,26 @@ export default function PerfilPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2
-                    className="font-light truncate"
+                    className="truncate"
                     style={{
-                      fontFamily: "var(--font-serif)",
-                      fontSize: "1.5rem",
-                      lineHeight: 1.15,
-                      color: "rgba(255,255,255,0.95)",
+                      fontFamily: "var(--font-ui)",
+                      fontSize: 26,
+                      fontWeight: 800,
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1.1,
+                      color: "#ffffff",
                     }}
                   >
                     Mi perfil
                   </h2>
                   <p
-                    className="text-xs truncate mt-0.5"
+                    className="truncate"
                     style={{
                       fontFamily: "var(--font-ui)",
-                      color: "rgba(255,255,255,0.4)",
-                      letterSpacing: "0.02em",
+                      fontSize: 14,
+                      fontWeight: 500,
+                      color: "rgba(255,255,255,0.55)",
+                      marginTop: 4,
                     }}
                   >
                     {email}
@@ -147,13 +152,15 @@ export default function PerfilPage() {
                     }}
                   />
                   <span
-                    className="text-sm font-light truncate"
+                    className="truncate"
                     style={{
+                      fontSize: 15,
+                      fontWeight: 700,
                       color: !healthLoaded
                         ? "rgba(255,255,255,0.3)"
                         : healthEstado === "ok"
                         ? "#2abfbf"
-                        : "var(--fg-2)",
+                        : "rgba(255,255,255,0.85)",
                       fontFamily: "var(--font-ui)",
                     }}
                   >

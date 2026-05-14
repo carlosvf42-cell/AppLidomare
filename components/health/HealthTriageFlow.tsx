@@ -150,7 +150,7 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
         {step !== "resultado" && (
           <div className="mb-8">
             <p className="mb-2" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-ui)" }}>Perfil de salud</p>
-            <h1 className="mb-4" style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)" }}>
+            <h1 className="mb-4" style={{ fontSize: "2rem", fontWeight: 600, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)" }}>
               {step === "personal" && "Datos personales"}
               {step === "parq_a" && "Cuestionario PAR-Q"}
               {step === "parq_b" && "Cuestionario PAR-Q"}
@@ -302,7 +302,7 @@ export default function HealthTriageFlow({ onComplete }: { onComplete?: () => vo
             </div>
             <div>
               <p className="mb-2" style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-ui)" }}>Perfil de salud completado</p>
-              <h2 className="mb-3" style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.15, fontFamily: "var(--font-serif)", color: estado === "danger" ? "#ff8080" : estado === "caution" ? "#ffb040" : "#2abfbf" }}>
+              <h2 className="mb-3" style={{ fontSize: "2rem", fontWeight: 600, lineHeight: 1.15, fontFamily: "var(--font-serif)", color: estado === "danger" ? "#ff8080" : estado === "caution" ? "#ffb040" : "#2abfbf" }}>
                 {estado === "ok" && "Todo en orden"}
                 {estado === "caution" && "Recomendamos valoración"}
                 {estado === "danger" && "Consulta con un profesional"}
