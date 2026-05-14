@@ -298,7 +298,7 @@ export default async function HomePage() {
                   style={{
                     fontFamily: "var(--font-ui)",
                     fontSize: 20,
-                    fontWeight: 300,
+                    fontWeight: 600,
                     fontFeatureSettings: "'tnum'",
                     color: "var(--fg-soft)",
                     lineHeight: 1,

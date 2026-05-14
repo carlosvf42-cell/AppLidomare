@@ -238,7 +238,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
         <p style={{ ...EYEBROW, marginBottom: 4 }}>Carga de entrenamiento</p>
 
         <div className="flex items-center justify-between mb-3">
-          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 300, color: "rgba(255,255,255,0.95)", lineHeight: 1.1 }}>
+          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 600, color: "rgba(255,255,255,0.95)", lineHeight: 1.1 }}>
             Esta semana
           </h3>
           <span style={{ ...BADGE_BASE, background: zone.bg, border: `0.5px solid ${zone.border}`, color: zone.color }}>
@@ -347,7 +347,7 @@ export default function WorkloadChart({ userId: userIdProp }: { userId?: string 
 
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-baseline gap-2">
-          <span style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 300, color: "#2abfbf", lineHeight: 1, fontFeatureSettings: "'tnum'" }}>
+          <span style={{ fontFamily: "var(--font-serif)", fontSize: 28, fontWeight: 600, color: "#2abfbf", lineHeight: 1, fontFeatureSettings: "'tnum'" }}>
             {acwr !== null ? acwr.toFixed(2) : "—"}
           </span>
           <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-ui)" }}>ACWR</span>

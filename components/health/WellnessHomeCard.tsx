@@ -70,7 +70,7 @@ export default function WellnessHomeCard() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div style={{ minWidth: 0 }}>
                 <Eyebrow style={{ marginBottom: 6 }}>Check-in de hoy</Eyebrow>
-                <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 300 }}>¿Cómo estás antes de entrenar?</div>
+                <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 600 }}>¿Cómo estás antes de entrenar?</div>
               </div>
               <div className="shrink-0" style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(42,191,191,0.12)", border: "0.5px solid rgba(42,191,191,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#2abfbf" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -89,11 +89,11 @@ export default function WellnessHomeCard() {
               </div>
               <div style={{ minWidth: 0 }}>
                 <Eyebrow style={{ marginBottom: 4 }}>Wellness completado</Eyebrow>
-                <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 300 }}>Registro de hoy guardado</div>
+                <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 600 }}>Registro de hoy guardado</div>
               </div>
             </div>
             {entry.puntuacion_total !== null && (
-              <div className="shrink-0" style={{ fontSize: 16, fontWeight: 300, color: "var(--accent)", fontFamily: "var(--font-ui)", fontFeatureSettings: "'tnum'" }}>
+              <div className="shrink-0" style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)", fontFamily: "var(--font-ui)", fontFeatureSettings: "'tnum'" }}>
                 {entry.puntuacion_total}/25
               </div>
             )}
@@ -110,7 +110,7 @@ export default function WellnessHomeCard() {
               </div>
               <div style={{ minWidth: 0 }}>
                 <Eyebrow style={{ marginBottom: 4 }}>Omitido hoy</Eyebrow>
-                <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 300 }}>Check-in no registrado</div>
+                <div style={{ fontSize: 14, color: "var(--fg-2)", fontWeight: 600 }}>Check-in no registrado</div>
               </div>
             </div>
             <button type="button" onClick={() => setShowOverlay(true)} className="shrink-0 text-[10px] tracking-[0.15em] uppercase" style={{ color: "var(--accent)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-ui)" }}>

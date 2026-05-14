@@ -208,7 +208,7 @@ function AddBlockSheet({
           style={{
             fontFamily: FONT_TITLE,
             fontSize: "1.5rem",
-            fontWeight: 300,
+            fontWeight: 600,
             color: "rgba(255,255,255,0.95)",
             marginBottom: 12,
           }}
@@ -861,7 +861,7 @@ function FuncionalForm({
               style={{
                 fontFamily: FONT_TITLE,
                 fontSize: "1.4rem",
-                fontWeight: 300,
+                fontWeight: 600,
                 color: "rgba(255,255,255,0.95)",
                 marginBottom: 12,
               }}

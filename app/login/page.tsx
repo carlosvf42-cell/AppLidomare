@@ -106,7 +106,7 @@ function LoginForm() {
           <div style={{ fontSize: 18, letterSpacing: "0.4em", color: "#333", textTransform: "uppercase" }}>
             Lidomare
           </div>
-          <div style={{ fontSize: 32, letterSpacing: "0.3em", fontWeight: 300, color: "#f0f0f0", textTransform: "uppercase", fontFamily: "var(--font-cormorant), Georgia, serif", marginTop: 4 }}>
+          <div style={{ fontSize: 32, letterSpacing: "0.3em", fontWeight: 600, color: "#f0f0f0", textTransform: "uppercase", fontFamily: "var(--font-cormorant), Georgia, serif", marginTop: 4 }}>
             HEALTH APP
           </div>
           <div style={{ fontSize: 9, letterSpacing: "0.3em", color: "#2abfbf", textTransform: "uppercase", marginTop: 6 }}>

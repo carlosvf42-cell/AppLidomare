@@ -203,3 +203,39 @@ textarea {
   border-radius: 18px;
   padding: 20px;
 }
+
+/* ──────────────────────────────────────────────────────────────────
+   A11y rescue: clamps globales sobre utilidades de Tailwind heredadas.
+   Hubo una era previa al rediseño en la que se usaba `text-[8..11px]`
+   y `font-light/thin` en toda la app. En vez de tocar 30 archivos uno
+   por uno, elevamos esas clases al piso de legibilidad. Cualquier
+   pantalla específica que necesite el tamaño/peso original debe usar
+   `style={{ fontSize: ..., fontWeight: ... }}` (inline gana siempre).
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Tamaños arbitrarios diminutos → 12-13px legibles + peso 600 mínimo */
+.text-\[8px\],
+.text-\[9px\],
+.text-\[10px\] {
+  font-size: 12px !important;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.text-\[11px\] {
+  font-size: 13px !important;
+  font-weight: 600;
+}
+
+/* text-xs (12px) — sube a 13px sólo cuando es texto plano, no eyebrow */
+.text-xs:not([class*="tracking-"]):not([class*="uppercase"]) {
+  font-size: 13px;
+}
+
+/* Pesos ligeros → mínimo medium para contraste perceptual sobre fondo negro */
+.font-thin,
+.font-extralight {
+  font-weight: 500 !important;
+}
+.font-light {
+  font-weight: 500 !important;
+}

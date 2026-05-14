@@ -217,7 +217,7 @@ export default function WellnessChart({ userId: userIdProp }: { userId?: string 
           style={{
             fontFamily: FONT_TITLE,
             fontSize: "1.1rem",
-            fontWeight: 300,
+            fontWeight: 600,
             color: "rgba(255,255,255,0.9)",
           }}
         >
