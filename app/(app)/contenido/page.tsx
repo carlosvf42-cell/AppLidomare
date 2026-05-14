@@ -147,7 +147,7 @@ export default function ContenidoPage() {
               <div style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: 28,
-                fontWeight: 600,
+                fontWeight: 300,
                 color: "#fff",
                 lineHeight: 1.15,
               }}>

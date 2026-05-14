@@ -106,16 +106,7 @@ function Skeleton({ className }: { className?: string }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p
-      className="mb-3 px-0.5"
-      style={{
-        fontSize: 13,
-        fontWeight: 700,
-        letterSpacing: "0.15em",
-        textTransform: "uppercase",
-        color: "var(--accent)",
-      }}
-    >
+    <p className="text-[9px] tracking-[0.22em] uppercase font-medium mb-3 px-0.5" style={{ color: "var(--accent)" }}>
       {children}
     </p>
   );
@@ -131,23 +122,16 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 
 function MetricCell({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <span style={{
         fontFamily: "var(--font-ui)",
-        fontSize: 32,
-        fontWeight: 900,
+        fontSize: 24,
+        fontWeight: 300,
         fontFeatureSettings: "'tnum'",
-        color: "#ffffff",
-        letterSpacing: "-0.02em",
-        lineHeight: 1,
+        color: "var(--fg)",
+        lineHeight: 1.1,
       }}>{value}</span>
-      <span style={{
-        fontSize: 11,
-        fontWeight: 700,
-        letterSpacing: "0.12em",
-        textTransform: "uppercase",
-        color: "rgba(255,255,255,0.65)",
-      }}>{label}</span>
+      <span className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "var(--muted-2)" }}>{label}</span>
     </div>
   );
 }

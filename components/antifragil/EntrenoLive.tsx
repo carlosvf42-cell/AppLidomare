@@ -557,7 +557,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
       <div className="min-h-screen flex flex-col" style={{ background: "#080808" }}>
         <div className="px-5 pt-14 pb-6">
           <p style={EYEBROW}>Antes de empezar</p>
-          <h1 className="mt-0.5" style={{ fontFamily: FONT_TITLE, fontSize: "1.75rem", fontWeight: 600, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}>
+          <h1 className="mt-0.5" style={{ fontFamily: FONT_TITLE, fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}>
             ¿Registrar wellness?
           </h1>
           <p className="mt-3" style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: FONT_TEXT, lineHeight: 1.5, letterSpacing: "0.02em" }}>
@@ -621,7 +621,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
           <p style={EYEBROW}>Entrenando ahora</p>
           <h1
             className="mt-0.5 truncate"
-            style={{ fontFamily: FONT_TITLE, fontSize: "1.75rem", fontWeight: 600, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
+            style={{ fontFamily: FONT_TITLE, fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
           >
             {nombre || "Sin nombre"}
           </h1>
@@ -752,7 +752,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
         <p style={EYEBROW}>Finalizar</p>
         <h1
           className="mt-0.5"
-          style={{ fontFamily: FONT_TITLE, fontSize: "1.75rem", fontWeight: 600, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
+          style={{ fontFamily: FONT_TITLE, fontSize: "1.75rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)" }}
         >
           ¿Cómo ha ido?
         </h1>

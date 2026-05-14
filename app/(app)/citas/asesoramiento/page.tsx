@@ -57,7 +57,7 @@ export default function AsesoramientoPage() {
       <h1
         style={{
           color: "#f0f0f0",
-          fontWeight: 600,
+          fontWeight: 300,
           fontSize: 22,
           textAlign: "center",
           margin: "24px 24px 0",

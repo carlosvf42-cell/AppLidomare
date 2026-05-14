@@ -198,7 +198,7 @@ export default function EntrenoBuilder({ userId, entrenoId, initialNombre, initi
             style={{
               fontFamily: FONT_TITLE,
               fontSize: "1.75rem",
-              fontWeight: 600,
+              fontWeight: 300,
               lineHeight: 1.1,
               color: "rgba(255,255,255,0.95)",
             }}
@@ -326,7 +326,7 @@ export function AddBlockSheet({ onPick, onClose }: { onPick: (k: Block["kind"]) 
           style={{
             fontFamily: FONT_TITLE,
             fontSize: "1.5rem",
-            fontWeight: 600,
+            fontWeight: 300,
             color: "rgba(255,255,255,0.95)",
             marginBottom: 12,
           }}
@@ -969,7 +969,7 @@ function FuncionalForm({
               style={{
                 fontFamily: FONT_TITLE,
                 fontSize: "1.4rem",
-                fontWeight: 600,
+                fontWeight: 300,
                 color: "rgba(255,255,255,0.95)",
                 marginBottom: 12,
               }}

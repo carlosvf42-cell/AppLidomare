@@ -197,31 +197,29 @@ export default function RutinasPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="px-5 pt-14 pb-5 flex items-end justify-between">
+      <div className="px-5 pt-14 pb-4 flex items-center justify-between">
         <div>
-          <p style={{ fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", fontWeight: 700, marginBottom: 6 }}>
-            Entrenamiento
+          <p className="text-[10px] tracking-[0.2em] uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+            entrenamiento
           </p>
-          <h1 style={{ fontSize: 30, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.01em", lineHeight: 1.1 }}>
+          <h1 className="text-xl font-light tracking-tight" style={{ color: "rgba(255,255,255,0.92)" }}>
             Rutinas
           </h1>
         </div>
         <Link
           href="/rutinas/nueva"
-          className="rounded-full flex items-center justify-center no-min-h"
+          className="w-9 h-9 rounded-full flex items-center justify-center"
           style={{
-            width: 48,
-            height: 48,
-            background: "rgba(42,191,191,0.15)",
+            background: "rgba(42,191,191,0.12)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(42,191,191,0.40)",
+            border: "0.5px solid rgba(42,191,191,0.3)",
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1)",
           }}
           aria-label="Nueva rutina"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5v14M5 12h14" stroke="#2abfbf" strokeWidth="2.2" strokeLinecap="round"/>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="#2abfbf" strokeWidth="1.8" strokeLinecap="round"/>
           </svg>
         </Link>
       </div>
@@ -238,25 +236,19 @@ export default function RutinasPage() {
 
           {/* ── Rutina activa ── */}
           <section>
-            <p style={{ fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", fontWeight: 700, marginBottom: 12, paddingLeft: 4 }}>
+            <p className="text-[10px] tracking-[0.2em] uppercase mb-3 px-1" style={{ color: "rgba(255,255,255,0.3)" }}>
               Mi rutina
             </p>
             {rutina ? (
-              <div className="rounded-3xl space-y-4" style={{ ...GLASS, padding: 20 }}>
+              <div className="rounded-3xl px-4 py-4 space-y-3" style={GLASS}>
                 <div className="flex items-start justify-between gap-2">
-                  <h2 style={{ fontSize: 22, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.005em", lineHeight: 1.15 }}>{rutina.nombre}</h2>
+                  <h2 className="text-base font-light" style={{ color: "rgba(255,255,255,0.9)" }}>{rutina.nombre}</h2>
                   <span
-                    className="shrink-0"
+                    className="text-[9px] px-2 py-0.5 rounded-full shrink-0"
                     style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      padding: "4px 10px",
-                      borderRadius: 999,
-                      background: "rgba(42,191,191,0.15)",
+                      background: "rgba(42,191,191,0.12)",
                       color: "#2abfbf",
-                      border: "1px solid rgba(42,191,191,0.40)",
+                      border: "0.5px solid rgba(42,191,191,0.25)",
                     }}
                   >
                     activa
@@ -264,18 +256,15 @@ export default function RutinasPage() {
                 </div>
 
                 {/* Day chips */}
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-1.5 flex-wrap">
                   {rutina.rutina_dias.map((d) => (
                     <span
                       key={d.id}
+                      className="text-[10px] px-2.5 py-1 rounded-full"
                       style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        padding: "6px 12px",
-                        borderRadius: 999,
                         background: "rgba(255,255,255,0.06)",
-                        color: "rgba(255,255,255,0.85)",
-                        border: "1px solid rgba(255,255,255,0.12)",
+                        color: "rgba(255,255,255,0.5)",
+                        border: "0.5px solid rgba(255,255,255,0.1)",
                       }}
                     >
                       {d.nombre}
@@ -287,19 +276,14 @@ export default function RutinasPage() {
                 <button
                   type="button"
                   onClick={() => setShowDiaPicker((v) => !v)}
-                  className="flex items-center justify-center gap-3 w-full rounded-2xl transition-all active:scale-[0.98]"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all active:scale-[0.98]"
                   style={{
-                    minHeight: 64,
-                    padding: "0 24px",
                     background: "#2abfbf",
-                    color: "#001a1a",
-                    fontSize: 17,
-                    fontWeight: 800,
-                    letterSpacing: "0.02em",
-                    boxShadow: "0 8px 32px rgba(42,191,191,0.32), inset 0 1px 0 rgba(255,255,255,0.30)",
+                    color: "#000",
+                    boxShadow: "0 4px 20px rgba(42,191,191,0.35), inset 0 1px 0 rgba(255,255,255,0.25)",
                   }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                     <path d="M5 3l14 9-14 9V3z" fill="currentColor"/>
                   </svg>
                   Entrenar hoy
@@ -379,63 +363,46 @@ export default function RutinasPage() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-3xl text-center space-y-5" style={{ ...GLASS, padding: "32px 24px" }}>
+              <div className="rounded-3xl px-4 py-8 text-center space-y-4" style={GLASS}>
                 <div
-                  className="rounded-2xl flex items-center justify-center mx-auto"
-                  style={{ width: 64, height: 64, background: "rgba(42,191,191,0.12)", border: "1px solid rgba(42,191,191,0.30)" }}
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "0.5px solid rgba(255,255,255,0.1)" }}
                 >
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="10.5" width="3.5" height="3" rx="0.8" stroke="#2abfbf" strokeWidth="1.6"/>
-                    <rect x="18.5" y="10.5" width="3.5" height="3" rx="0.8" stroke="#2abfbf" strokeWidth="1.6"/>
-                    <rect x="4.5" y="8.5" width="3" height="7" rx="0.8" stroke="#2abfbf" strokeWidth="1.6"/>
-                    <rect x="16.5" y="8.5" width="3" height="7" rx="0.8" stroke="#2abfbf" strokeWidth="1.6"/>
-                    <path d="M7.5 12h9" stroke="#2abfbf" strokeWidth="1.6" strokeLinecap="round"/>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <rect x="2" y="10.5" width="3.5" height="3" rx="0.8" stroke="rgba(255,255,255,0.3)" strokeWidth="1.4"/>
+                    <rect x="18.5" y="10.5" width="3.5" height="3" rx="0.8" stroke="rgba(255,255,255,0.3)" strokeWidth="1.4"/>
+                    <rect x="4.5" y="8.5" width="3" height="7" rx="0.8" stroke="rgba(255,255,255,0.3)" strokeWidth="1.4"/>
+                    <rect x="16.5" y="8.5" width="3" height="7" rx="0.8" stroke="rgba(255,255,255,0.3)" strokeWidth="1.4"/>
+                    <path d="M7.5 12h9" stroke="rgba(255,255,255,0.3)" strokeWidth="1.4" strokeLinecap="round"/>
                   </svg>
                 </div>
-                <div>
-                  <p style={{ fontSize: 22, fontWeight: 800, color: "#ffffff", lineHeight: 1.15, letterSpacing: "-0.005em" }}>
-                    Aún no tienes una rutina
-                  </p>
-                  <p style={{ fontSize: 15, fontWeight: 500, color: "rgba(255,255,255,0.65)", marginTop: 8, lineHeight: 1.5 }}>
-                    Crea la tuya o entrena ahora sin una.
-                  </p>
-                </div>
+                <p className="text-sm font-light" style={{ color: "rgba(255,255,255,0.4)" }}>
+                  Aún no tienes una rutina activa
+                </p>
                 <Link
                   href="/rutinas/nueva"
-                  className="rounded-2xl active:scale-[0.98] transition-transform inline-flex items-center justify-center gap-3"
+                  className="inline-block px-6 py-2.5 rounded-2xl text-xs font-semibold tracking-widest uppercase active:scale-[0.98] transition-transform"
                   style={{
-                    minHeight: 64,
-                    padding: "0 28px",
                     background: "#2abfbf",
-                    color: "#001a1a",
-                    fontSize: 17,
-                    fontWeight: 800,
-                    letterSpacing: "0.02em",
-                    boxShadow: "0 8px 32px rgba(42,191,191,0.32), inset 0 1px 0 rgba(255,255,255,0.30)",
-                    textDecoration: "none",
+                    color: "#000",
+                    boxShadow: "0 4px 20px rgba(42,191,191,0.3)",
                   }}
                 >
                   Crear mi rutina
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
                 </Link>
-                <div style={{ height: 1, background: "rgba(255,255,255,0.10)", marginTop: 4 }} />
+                <div style={{ height: "0.5px", background: "rgba(255,255,255,0.06)", margin: "8px 0 4px" }} />
                 <Link
                   href="/rutinas/entrenar?modo=libre"
-                  className="inline-flex items-center gap-2 transition-colors active:scale-[0.98]"
+                  className="inline-flex items-center gap-2 text-xs tracking-[0.15em] uppercase transition-colors active:scale-[0.98]"
                   style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    letterSpacing: "0.05em",
-                    color: "rgba(42,191,191,0.95)",
+                    color: "rgba(42,191,191,0.85)",
                     textDecoration: "none",
                     fontFamily: "var(--font-ui)",
                   }}
                 >
                   Entrenar ahora sin rutina
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </Link>
               </div>

@@ -82,7 +82,7 @@ export default function SplashScreen() {
         <div
           style={{
             fontSize: 26, letterSpacing: "0.25em",
-            fontWeight: 600, color: "#f0f0f0",
+            fontWeight: 300, color: "#f0f0f0",
             textTransform: "uppercase",
             fontFamily: "var(--font-cormorant, Georgia, serif)",
           }}

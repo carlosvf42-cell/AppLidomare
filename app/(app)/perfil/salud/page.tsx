@@ -161,14 +161,14 @@ export default function SaludPage() {
           </Link>
           <div>
             <p style={{ fontSize: 10, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(42,191,191,0.7)", fontFamily: "var(--font-ui)" }}>Perfil de salud</p>
-            <h1 style={{ fontSize: "2rem", fontWeight: 600, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)" }}>Mi perfil</h1>
+            <h1 style={{ fontSize: "2rem", fontWeight: 300, lineHeight: 1.1, color: "rgba(255,255,255,0.95)", fontFamily: "var(--font-serif)" }}>Mi perfil</h1>
           </div>
         </div>
 
         {/* Estado badge */}
         <div className="rounded-2xl p-4 mb-5" style={{ background: estadoBg, border: `0.5px solid ${estadoBorder}` }}>
           <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-ui)", marginBottom: 4 }}>Estado actual</p>
-          <p style={{ fontSize: "1.25rem", fontWeight: 600, fontFamily: "var(--font-serif)", color: estadoColor }}>{estadoLabel}</p>
+          <p style={{ fontSize: "1.25rem", fontWeight: 300, fontFamily: "var(--font-serif)", color: estadoColor }}>{estadoLabel}</p>
         </div>
 
         <div className="space-y-4">
