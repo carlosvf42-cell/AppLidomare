@@ -61,18 +61,16 @@ const STATUS_COLOR = {
 
 type StatusLabel = { label: string; color: string };
 
-// Higher = better (sueño, ánimo): 1-2 Mal, 3 Regular, 4-5 Bien.
+// Higher = better para los 5 campos. Las preguntas del check-in están
+// redactadas para que el valor 5 sea siempre el resultado deseable:
+//   sueño 5 = "Muy bien"          fatiga 5 = "Con mucha energía"
+//   estrés 5 = "Muy bajo"          ánimo 5 = "Muy positivo"
+//   dolor 5 = "Ninguna molestia"
+// Ergo: 1-2 Mal, 3 Regular, 4-5 Bien para todos.
 function statusHigherIsBetter(v: number): StatusLabel {
   if (v >= 4) return { label: "Bien", color: STATUS_COLOR.bien };
   if (v === 3) return { label: "Regular", color: STATUS_COLOR.regular };
   return { label: "Mal", color: STATUS_COLOR.mal };
-}
-
-// Higher = worse (fatiga, estrés, dolor): 1-2 Bien, 3 Regular, 4-5 Mal.
-function statusHigherIsWorse(v: number): StatusLabel {
-  if (v >= 4) return { label: "Mal", color: STATUS_COLOR.mal };
-  if (v === 3) return { label: "Regular", color: STATUS_COLOR.regular };
-  return { label: "Bien", color: STATUS_COLOR.bien };
 }
 
 // Total (raw 5-25): 20-25 Óptimo, 14-19 Precaución, 5-13 Alerta.
@@ -88,11 +86,10 @@ function statusFor(key: MetricKey, raw: number): StatusLabel {
       return statusTotal(raw);
     case "sueno":
     case "animo":
-      return statusHigherIsBetter(raw);
     case "fatiga":
     case "estres":
     case "dolor":
-      return statusHigherIsWorse(raw);
+      return statusHigherIsBetter(raw);
   }
 }
 
@@ -104,18 +101,13 @@ function zonesFor(key: MetricKey): Zone[] {
   switch (key) {
     case "sueno":
     case "animo":
-      // Higher = better. Bad 1-2, Good 4-5.
-      return [
-        { from: 1, to: 2, type: "bad" },
-        { from: 4, to: 5, type: "good" },
-      ];
     case "fatiga":
     case "estres":
     case "dolor":
-      // Higher = worse. Good 1-2, Bad 4-5.
+      // Higher = better en los 5 campos. Bad 1-2, Good 4-5.
       return [
-        { from: 1, to: 2, type: "good" },
-        { from: 4, to: 5, type: "bad" },
+        { from: 1, to: 2, type: "bad" },
+        { from: 4, to: 5, type: "good" },
       ];
     case "puntuacion_total":
       // Raw 5-25 → normalized 1-5. Alerta 5-13 → 1-2.6, Óptimo 20-25 → 4-5.
