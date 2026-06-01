@@ -8,7 +8,7 @@ import { IconHome, IconGrid, IconCal, IconUser } from "@/components/design/icons
 import LensSheen from "@/components/design/LensSheen";
 import { useAdminMode } from "@/lib/useAdminMode";
 
-const ADMIN_EMAIL = "carlosvf42@gmail.com";
+import { isAdmin as checkIsAdmin } from "@/lib/admin";
 
 function getSupabase() {
   return createBrowserClient(
@@ -69,7 +69,7 @@ export default function BottomNav() {
     let cancelled = false;
     getSupabase().auth.getSession().then(({ data }) => {
       if (cancelled) return;
-      setIsAdmin(data.session?.user?.email === ADMIN_EMAIL);
+      setIsAdmin(checkIsAdmin(data.session?.user?.email));
     });
     return () => {
       cancelled = true;

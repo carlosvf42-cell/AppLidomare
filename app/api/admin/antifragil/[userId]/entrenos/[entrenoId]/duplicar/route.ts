@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
-const ADMIN_EMAIL = "carlosvf42@gmail.com";
+import { isAdmin } from "@/lib/admin";
 
 function getAdminClient(): SupabaseClient {
   return createClient(
@@ -16,7 +16,7 @@ async function verifyAdmin(request: NextRequest): Promise<{ ok: boolean; adminId
   if (!authHeader?.startsWith("Bearer ")) return { ok: false };
   const token = authHeader.slice(7);
   const { data } = await getAdminClient().auth.getUser(token);
-  if (data.user?.email !== ADMIN_EMAIL) return { ok: false };
+  if (!data.user || !isAdmin(data.user.email)) return { ok: false };
   return { ok: true, adminId: data.user.id };
 }
 

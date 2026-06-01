@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
-const ADMIN_EMAIL = "carlosvf42@gmail.com";
+import { isAdmin } from "@/lib/admin";
 
 type UsuarioRow = {
   id: string;
@@ -94,7 +94,7 @@ export default function AntifragilListPage() {
     getSupabase()
       .auth.getSession()
       .then(({ data }) => {
-        if (data.session?.user?.email !== ADMIN_EMAIL) {
+        if (!data.session || !isAdmin(data.session.user.email)) {
           router.replace("/");
         } else {
           setToken(data.session.access_token);

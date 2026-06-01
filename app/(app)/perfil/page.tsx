@@ -10,7 +10,7 @@ import { IconArrow } from "@/components/design/icons";
 import ProgresoSection from "@/components/ProgresoSection";
 import { useAdminMode } from "@/lib/useAdminMode";
 
-const ADMIN_EMAIL = "carlosvf42@gmail.com";
+import { isAdmin } from "@/lib/admin";
 
 type HealthEstado = "ok" | "caution" | "danger";
 
@@ -168,7 +168,7 @@ export default function PerfilPage() {
       </div>
 
       {/* Admin mode toggle */}
-      {email === ADMIN_EMAIL && (
+      {isAdmin(email) && (
         <div className="mx-4 mb-3">
           <button
             type="button"
