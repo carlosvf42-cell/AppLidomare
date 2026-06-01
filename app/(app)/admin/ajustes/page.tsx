@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { useAdminMode } from "@/lib/useAdminMode";
 
-const ADMIN_EMAIL = "carlosvf42@gmail.com";
+import { isAdmin } from "@/lib/admin";
 
 function getSupabase() {
   return createBrowserClient(
@@ -45,7 +45,7 @@ export default function AjustesPage() {
     getSupabase()
       .auth.getSession()
       .then(({ data }) => {
-        if (data.session?.user?.email !== ADMIN_EMAIL) {
+        if (!data.session || !isAdmin(data.session.user.email)) {
           router.replace("/");
         } else {
           setEmail(data.session.user.email ?? "");

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
-const ADMIN_EMAIL = "carlosvf42@gmail.com";
+import { isAdmin } from "@/lib/admin";
 
 const FONT_UI = "var(--font-ui)";
 const FONT_SERIF = "var(--font-serif)";
@@ -124,7 +124,7 @@ export default function SesionAntifragilDetailPage() {
     getSupabase()
       .auth.getSession()
       .then(({ data }) => {
-        if (data.session?.user?.email !== ADMIN_EMAIL) {
+        if (!data.session || !isAdmin(data.session.user.email)) {
           router.replace("/");
         } else {
           setChecking(false);

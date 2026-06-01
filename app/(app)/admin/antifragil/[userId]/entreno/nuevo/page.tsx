@@ -7,7 +7,7 @@ import EntrenoBuilder from "@/components/antifragil/EntrenoBuilder";
 import EntrenoLive from "@/components/antifragil/EntrenoLive";
 import type { Block } from "@/components/antifragil/types";
 
-const ADMIN_EMAIL = "carlosvf42@gmail.com";
+import { isAdmin } from "@/lib/admin";
 
 function getSupabase() {
   return createBrowserClient(
@@ -34,7 +34,7 @@ export default function NuevoEntrenoPage() {
     getSupabase()
       .auth.getSession()
       .then(({ data }) => {
-        if (data.session?.user?.email !== ADMIN_EMAIL) {
+        if (!data.session || !isAdmin(data.session.user.email)) {
           router.replace("/");
         } else {
           setToken(data.session.access_token);

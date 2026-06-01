@@ -7,7 +7,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import WorkloadChart from "@/components/health/WorkloadChart";
 import WellnessChart from "@/components/WellnessChart";
 
-const ADMIN_EMAIL = "carlosvf42@gmail.com";
+import { isAdmin } from "@/lib/admin";
 
 type ClienteData = {
   user: {
@@ -286,7 +286,7 @@ export default function ClienteDetailPage() {
     getSupabase()
       .auth.getSession()
       .then(({ data }) => {
-        if (data.session?.user?.email !== ADMIN_EMAIL) {
+        if (!data.session || !isAdmin(data.session.user.email)) {
           router.replace("/");
         } else {
           setToken(data.session.access_token);

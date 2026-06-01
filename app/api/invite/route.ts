@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { NextResponse, type NextRequest } from "next/server";
 
-const ADMIN_EMAIL = "carlosvf42@gmail.com";
+import { isAdmin } from "@/lib/admin";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Admin client — uses service_role key, never exposed to the browser
@@ -19,7 +19,7 @@ async function verifyAdmin(request: NextRequest): Promise<boolean> {
   if (!authHeader?.startsWith("Bearer ")) return false;
   const token = authHeader.slice(7);
   const { data } = await getAdminClient().auth.getUser(token);
-  return data.user?.email === ADMIN_EMAIL;
+  return isAdmin(data.user?.email);
 }
 
 export async function POST(request: NextRequest) {
