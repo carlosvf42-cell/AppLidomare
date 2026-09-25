@@ -8,6 +8,7 @@ import RPECapture from "@/components/health/RPECapture";
 import EjercicioSelector from "@/components/EjercicioSelector";
 import { type Block, type CardioBlock, type FuncionalBlock, type FuerzaBlock, fromApiBlocks, makeCardio, makeFuerza, makeFuncional, tipoResumen, toApiBlocks } from "./types";
 import { AddBlockSheet } from "./EntrenoBuilder";
+import { clearLiveDraft, loadLiveDraft, saveLiveDraft, type LiveDraft } from "@/lib/liveDraft";
 
 const GLASS: React.CSSProperties = {
   background: "rgba(255,255,255,0.04)",
@@ -107,6 +108,8 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
   const [comentario, setComentario] = useState("");
   const [duracionStr, setDuracionStr] = useState<string>("");
   const [finalizing, setFinalizing] = useState(false);
+  const [restored, setRestored] = useState(false);
+  const restoredDuracionRef = useRef<string | null>(null);
 
   function applyLoadedBlocks(loaded: Block[]) {
     setBlocks(loaded);
@@ -314,6 +317,26 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
         const loaded = fromApiBlocks(json.bloques ?? []);
         applyLoadedBlocks(loaded);
         if (json.entreno?.nombre !== undefined) setNombre(json.entreno.nombre);
+
+        // Si hay un borrador de este entreno (la app se cerró a mitad),
+        // restauramos lo marcado y reutilizamos la sesión ya creada.
+        // Va DESPUÉS de applyLoadedBlocks: éste sólo rellena claves vacías.
+        const draft = loadLiveDraft(entrenoId);
+        if (draft && draft.userId === userId && draft.sesionId) {
+          setSeriesByEjercicio((prev) => ({ ...prev, ...(draft.seriesByEjercicio as Record<string, FuerzaSerie[]>) }));
+          setRondasByBlock((prev) => ({ ...prev, ...(draft.rondasByBlock as Record<string, CardioRonda[]>) }));
+          setRegistrosByBlock((prev) => ({ ...prev, ...(draft.registrosByBlock as Record<string, Record<string, FuncionalReg>>) }));
+          setSesionId(draft.sesionId);
+          setStartedAt(draft.startedAt);
+          wellnessIdRef.current = draft.wellnessEntryId;
+          setWellnessEntryId(draft.wellnessEntryId);
+          setRpe(draft.rpe);
+          setComentario(draft.comentario ?? "");
+          restoredDuracionRef.current = draft.phase === "finalize" ? draft.duracionStr || null : null;
+          setRestored(true);
+          setPhase(draft.phase);
+          return;
+        }
         setPhase("wellness-gate");
       } catch (err: any) {
         if (cancelled) return;
@@ -441,9 +464,119 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
   // Pre-fill duracionStr from auto-computed when entering finalize phase.
   useEffect(() => {
     if (phase === "finalize") {
-      setDuracionStr(String(computedDuracion));
+      if (restoredDuracionRef.current) {
+        setDuracionStr(restoredDuracionRef.current);
+        restoredDuracionRef.current = null;
+      } else {
+        setDuracionStr(String(computedDuracion));
+      }
     }
   }, [phase]);
+
+  const isLive = (phase === "training" || phase === "finalize") && !!sesionId && startedAt != null;
+
+  // Autoguardado del borrador en localStorage en cada cambio.
+  const draftRef = useRef<LiveDraft | null>(null);
+  const savedRef = useRef(false);
+  useEffect(() => {
+    if (!isLive || savedRef.current) return;
+    const draft: LiveDraft = {
+      userId,
+      entrenoId,
+      sesionId: sesionId!,
+      wellnessEntryId,
+      startedAt: startedAt!,
+      phase: phase as LiveDraft["phase"],
+      seriesByEjercicio,
+      rondasByBlock,
+      registrosByBlock,
+      rpe,
+      comentario,
+      duracionStr,
+      updatedAt: Date.now(),
+    };
+    draftRef.current = draft;
+    saveLiveDraft(draft, nombre);
+  }, [isLive, userId, entrenoId, sesionId, wellnessEntryId, startedAt, phase, seriesByEjercicio, rondasByBlock, registrosByBlock, rpe, comentario, duracionStr, nombre]);
+
+  // Guardado inmediato justo antes de que iOS congele/descargue la PWA.
+  useEffect(() => {
+    if (!isLive) return;
+    const flush = () => {
+      if (draftRef.current && !savedRef.current) saveLiveDraft({ ...draftRef.current, updatedAt: Date.now() }, nombre);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [isLive, nombre]);
+
+  // Mantener la pantalla encendida mientras se entrena: si el móvil se
+  // bloquea entre series, iOS suele descargar la PWA.
+  useEffect(() => {
+    if (!isLive) return;
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> } };
+    if (!nav.wakeLock) return;
+    let lock: { release: () => Promise<void> } | null = null;
+    let active = true;
+    const request = async () => {
+      try {
+        const l = await nav.wakeLock!.request("screen");
+        if (!active) {
+          l.release().catch(() => {});
+          return;
+        }
+        lock = l;
+      } catch { /* denegado o no soportado */ }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") request();
+    };
+    request();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      active = false;
+      document.removeEventListener("visibilitychange", onVisibility);
+      lock?.release().catch(() => {});
+    };
+  }, [isLive]);
+
+  // Evitar salir por accidente (gesto/botón atrás o recarga).
+  useEffect(() => {
+    if (!isLive) return;
+    window.history.pushState({ lidomareLiveGuard: true }, "", window.location.href);
+    const onPopState = () => {
+      if (savedRef.current) return;
+      const salir = window.confirm("¿Salir del entreno? Lo marcado queda guardado y podrás reanudarlo.");
+      if (salir) {
+        window.removeEventListener("popstate", onPopState);
+        window.history.back();
+      } else {
+        window.history.pushState({ lidomareLiveGuard: true }, "", window.location.href);
+      }
+    };
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (savedRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("popstate", onPopState);
+    window.addEventListener("beforeunload", onBeforeUnload);
+    // Sin "tirar para recargar" mientras se entrena.
+    const html = document.documentElement;
+    const prevOverscroll = html.style.overscrollBehaviorY;
+    html.style.overscrollBehaviorY = "none";
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      html.style.overscrollBehaviorY = prevOverscroll;
+    };
+  }, [isLive]);
 
   async function handleFinalize() {
     if (!sesionId) {
@@ -514,7 +647,9 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
         setError(json.error ?? `No se pudo guardar la sesión (HTTP ${res.status})`);
         return;
       }
-      router.push(`/admin/antifragil/${userId}`);
+      savedRef.current = true;
+      clearLiveDraft(entrenoId);
+      router.replace(`/admin/antifragil/${userId}`);
     } catch (err: any) {
       setFinalizing(false);
       console.error("[Antifrágil] handleFinalize threw", err);
@@ -616,7 +751,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
 
   if (phase === "training") {
     return (
-      <div className="min-h-screen pb-32" style={{ background: "#080808" }}>
+      <div className="min-h-dvh pb-32" style={{ background: "#080808" }}>
         <div className="px-5 pt-14 pb-6">
           <p style={EYEBROW}>Entrenando ahora</p>
           <h1
@@ -628,6 +763,26 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
         </div>
 
         <div className="px-4 space-y-3">
+          {restored && (
+            <div
+              className="rounded-2xl px-4 py-3 flex items-center justify-between gap-3"
+              style={{ background: "rgba(42,191,191,0.08)", border: "0.5px solid rgba(42,191,191,0.35)" }}
+            >
+              <p className="text-xs" style={{ color: "rgba(200,255,255,0.9)", fontFamily: FONT_TEXT, lineHeight: 1.5 }}>
+                Entreno recuperado: se han restaurado los datos que habías marcado.
+              </p>
+              <button
+                type="button"
+                onClick={() => setRestored(false)}
+                aria-label="Cerrar aviso"
+                className="shrink-0 text-[10px] tracking-[0.15em] uppercase font-semibold"
+                style={{ color: "rgba(42,191,191,0.85)", fontFamily: FONT_TEXT }}
+              >
+                OK
+              </button>
+            </div>
+          )}
+
           {error && (
             <div
               className="rounded-2xl px-4 py-3 space-y-1"
@@ -747,7 +902,7 @@ export default function EntrenoLive({ userId, token, entrenoId, nombre: nombrePr
 
   // finalize
   return (
-    <div className="min-h-screen pb-32" style={{ background: "#080808" }}>
+    <div className="min-h-dvh pb-32" style={{ background: "#080808" }}>
       <div className="px-5 pt-14 pb-6">
         <p style={EYEBROW}>Finalizar</p>
         <h1

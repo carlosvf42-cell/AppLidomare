@@ -35,26 +35,22 @@ export async function PATCH(
 
     const { data: sesion } = await supabase
       .from("sesiones")
-      .select("id, user_id, entreno_id")
+      .select("id, user_id, entreno_id, completada")
       .eq("id", sesionId)
       .eq("origen", "admin")
       .maybeSingle();
     if (!sesion || sesion.user_id !== userId) {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
     }
+    // Ya guardada (p. ej. doble toque o reintento tras respuesta perdida).
+    if (sesion.completada) return NextResponse.json({ ok: true });
 
-    const { error: updErr } = await supabase
-      .from("sesiones")
-      .update({
-        completada: true,
-        rpe: body.rpe ?? null,
-        comentario: body.comentario ?? null,
-        duracion_minutos: body.duracion_minutos ?? null,
-        tipo_resumen: body.tipo_resumen ?? null,
-        wellness_entry_id: body.wellness_entry_id ?? null,
-      })
-      .eq("id", sesionId);
-    if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
+    // Guardado repetible: si un intento anterior falló a medias (red, etc.),
+    // borramos lo ya insertado para no duplicar series al reintentar.
+    for (const tabla of ["series_realizadas", "series_cardio_antifragil", "registros_funcional"]) {
+      const { error } = await supabase.from(tabla).delete().eq("sesion_id", sesionId);
+      if (error) return NextResponse.json({ error: `${tabla}: ${error.message}` }, { status: 500 });
+    }
 
     if (Array.isArray(body.series_fuerza) && body.series_fuerza.length > 0) {
       const incoming = body.series_fuerza as SerieFuerza[];
@@ -92,6 +88,20 @@ export async function PATCH(
       const { error } = await supabase.from("registros_funcional").insert(rows);
       if (error) return NextResponse.json({ error: `registros_funcional: ${error.message}` }, { status: 500 });
     }
+
+    // Se marca completada AL FINAL, cuando todas las series están dentro.
+    const { error: updErr } = await supabase
+      .from("sesiones")
+      .update({
+        completada: true,
+        rpe: body.rpe ?? null,
+        comentario: body.comentario ?? null,
+        duracion_minutos: body.duracion_minutos ?? null,
+        tipo_resumen: body.tipo_resumen ?? null,
+        wellness_entry_id: body.wellness_entry_id ?? null,
+      })
+      .eq("id", sesionId);
+    if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
 
     await supabase
       .from("entrenos_antifragil")
