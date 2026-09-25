@@ -38,6 +38,25 @@ export async function POST(
       return NextResponse.json({ error: "Entreno no encontrado" }, { status: 404 });
     }
 
+    // Si ya hay una sesión abierta de este entreno (la app se cerró a mitad
+    // y se vuelve a entrar), la reutilizamos en vez de crear otra huérfana.
+    const { data: abierta } = await supabase
+      .from("sesiones")
+      .select("id")
+      .eq("entreno_id", body.entreno_id)
+      .eq("user_id", userId)
+      .eq("origen", "admin")
+      .eq("completada", false)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (abierta) {
+      if (body.wellness_entry_id) {
+        await supabase.from("sesiones").update({ wellness_entry_id: body.wellness_entry_id }).eq("id", abierta.id);
+      }
+      return NextResponse.json({ id: abierta.id });
+    }
+
     const { data: sesion, error } = await supabase
       .from("sesiones")
       .insert({

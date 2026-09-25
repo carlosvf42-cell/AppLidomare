@@ -8,6 +8,7 @@ import WorkloadChart from "@/components/health/WorkloadChart";
 import WellnessChart from "@/components/WellnessChart";
 
 import { isAdmin } from "@/lib/admin";
+import { clearLiveDraft, loadLiveActive, type LiveActive } from "@/lib/liveDraft";
 
 type ClienteData = {
   user: {
@@ -216,6 +217,21 @@ export default function ClienteDetailPage() {
   const [historialClienteLoading, setHistorialClienteLoading] = useState(true);
   const [rutinaActiva, setRutinaActiva] = useState<{ id: string; nombre: string } | null>(null);
   const [rutinaLoading, setRutinaLoading] = useState(true);
+
+  // Entreno en vivo a medias de este cliente (la app se cerró sin guardar).
+  const [liveActive, setLiveActive] = useState<LiveActive | null>(null);
+  useEffect(() => {
+    const a = loadLiveActive();
+    setLiveActive(a && a.userId === userId ? a : null);
+  }, [userId]);
+
+  function descartarYEmpezar() {
+    if (!liveActive) return;
+    if (!confirm("¿Descartar el entreno en curso? Se perderá lo que marcaste sin guardar.")) return;
+    clearLiveDraft(liveActive.entrenoId);
+    setLiveActive(null);
+    iniciarEntrenoVacio();
+  }
 
   async function iniciarEntrenoVacio() {
     if (!token || !userId) return;
@@ -539,6 +555,38 @@ export default function ClienteDetailPage() {
 
         {/* CTA: Entrenar ahora — crea entreno vacío y entra DIRECTAMENTE en modo en vivo */}
         <div className="space-y-2">
+          {liveActive ? (
+            <>
+              <button
+                type="button"
+                onClick={() => router.push(`/admin/antifragil/${liveActive.userId}/entreno/${liveActive.entrenoId}/live`)}
+                className="w-full py-4 rounded-2xl text-sm font-semibold tracking-widest uppercase transition-all active:scale-[0.98] text-center"
+                style={{
+                  background: "#2abfbf",
+                  color: "#000",
+                  fontFamily: "var(--font-ui)",
+                  boxShadow: "0 4px 24px rgba(42,191,191,0.4), inset 0 1px 0 rgba(255,255,255,0.25)",
+                  border: "none",
+                }}
+              >
+                Reanudar entreno en curso
+              </button>
+              <button
+                type="button"
+                onClick={descartarYEmpezar}
+                disabled={iniciandoVacio}
+                className="block w-full py-2.5 rounded-xl text-[10px] font-semibold tracking-widest uppercase transition-all text-center disabled:opacity-60"
+                style={{
+                  background: "rgba(255,128,128,0.06)",
+                  border: "0.5px solid rgba(255,128,128,0.25)",
+                  color: "rgba(255,128,128,0.8)",
+                  fontFamily: "var(--font-ui)",
+                }}
+              >
+                {iniciandoVacio ? "Iniciando…" : "Descartar y empezar uno nuevo"}
+              </button>
+            </>
+          ) : (
           <button
             type="button"
             onClick={iniciarEntrenoVacio}
@@ -555,6 +603,7 @@ export default function ClienteDetailPage() {
           >
             {iniciandoVacio ? "Iniciando…" : "Entrenar ahora"}
           </button>
+          )}
           <Link
             href={`/admin/antifragil/${data.user.id}/entreno/nuevo`}
             className="block w-full py-2.5 rounded-xl text-[10px] font-semibold tracking-widest uppercase transition-all text-center"
